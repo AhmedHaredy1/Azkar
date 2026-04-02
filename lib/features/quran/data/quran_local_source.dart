@@ -15,7 +15,9 @@ class QuranLocalSource {
     final decoded = json.decode(jsonString);
 
     List<dynamic> jsonList;
-    if (decoded is Map<String, dynamic> && decoded.containsKey('data')) {
+    if (decoded is Map<String, dynamic> && decoded.containsKey('surahs')) {
+      jsonList = decoded['surahs'] as List<dynamic>;
+    } else if (decoded is Map<String, dynamic> && decoded.containsKey('data')) {
       final data = decoded['data'];
       if (data is Map<String, dynamic> && data.containsKey('surahs')) {
         jsonList = data['surahs'] as List<dynamic>;

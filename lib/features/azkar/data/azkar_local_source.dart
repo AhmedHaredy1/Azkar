@@ -12,7 +12,9 @@ class AzkarLocalSource {
     if (_cachedCategories != null) return _cachedCategories!;
 
     final jsonString = await rootBundle.loadString(AppAssets.azkarData);
-    final List<dynamic> jsonList = json.decode(jsonString) as List<dynamic>;
+    final decoded = json.decode(jsonString);
+    final List<dynamic> jsonList =
+        decoded is Map<String, dynamic> ? (decoded['categories'] as List<dynamic>? ?? []) : decoded as List<dynamic>;
     _cachedCategories = jsonList
         .map((e) => AzkarCategory.fromJson(e as Map<String, dynamic>))
         .toList();

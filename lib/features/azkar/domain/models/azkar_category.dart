@@ -19,8 +19,8 @@ class Dhikr {
     return Dhikr(
       id: json['id']?.toString() ?? '',
       categoryId: catId,
-      textAr: json['text'] as String? ?? '',
-      repetitions: json['count'] as int? ?? 1,
+      textAr: json['textAr'] as String? ?? json['text'] as String? ?? '',
+      repetitions: json['repetitions'] as int? ?? json['count'] as int? ?? 1,
       source: json['source'] as String? ?? '',
       note: json['note'] as String? ?? '',
     );
@@ -47,7 +47,7 @@ class AzkarCategory {
     final azkarJson = json['azkar'] as List<dynamic>? ?? [];
     return AzkarCategory(
       id: id,
-      nameAr: json['name'] as String? ?? '',
+      nameAr: json['nameAr'] as String? ?? json['name'] as String? ?? '',
       icon: json['icon'] as String? ?? '',
       sortOrder: json['sortOrder'] as int? ?? 0,
       azkarList: azkarJson.map((e) => Dhikr.fromJson(e as Map<String, dynamic>, id)).toList(),

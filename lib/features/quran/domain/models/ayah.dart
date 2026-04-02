@@ -14,7 +14,7 @@ class Ayah {
   factory Ayah.fromJson(Map<String, dynamic> json) {
     return Ayah(
       number: json['number'] as int? ?? json['numberInSurah'] as int? ?? 0,
-      textAr: json['text'] as String? ?? '',
+      textAr: json['textAr'] as String? ?? json['text'] as String? ?? '',
       juz: json['juz'] as int? ?? 1,
       page: json['page'] as int? ?? 1,
     );
