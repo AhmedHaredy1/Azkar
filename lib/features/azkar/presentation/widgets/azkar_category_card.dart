@@ -14,50 +14,107 @@ class AzkarCategoryCard extends StatelessWidget {
     required this.onTap,
   });
 
-  IconData _getIcon() {
-    switch (category.icon) {
-      case 'morning':
-        return Icons.wb_sunny_outlined;
-      case 'evening':
-        return Icons.nights_stay_outlined;
-      case 'sleep':
-        return Icons.bedtime_outlined;
-      case 'wake':
-        return Icons.alarm_outlined;
-      case 'prayer':
-        return Icons.mosque_outlined;
-      case 'quran':
-        return Icons.menu_book_outlined;
-      default:
-        return Icons.auto_stories_outlined;
+  (IconData, Color) _getIconAndColor() {
+    final id = category.id.toLowerCase();
+    if (id.contains('morning') || id.contains('صباح')) {
+      return (Icons.wb_sunny_outlined, const Color(0xFFF57F17));
     }
+    if (id.contains('evening') || id.contains('مساء')) {
+      return (Icons.nights_stay_outlined, const Color(0xFF283593));
+    }
+    if (id.contains('sleep') || id.contains('نوم')) {
+      return (Icons.bedtime_outlined, const Color(0xFF4527A0));
+    }
+    if (id.contains('waking') || id.contains('استيقاظ')) {
+      return (Icons.alarm_outlined, const Color(0xFFEF6C00));
+    }
+    if (id.contains('prayer') || id.contains('صلاة')) {
+      return (Icons.mosque_outlined, const Color(0xFF2E7D32));
+    }
+    if (id.contains('mosque') || id.contains('مسجد')) {
+      return (Icons.mosque, const Color(0xFF00695C));
+    }
+    if (id.contains('home') || id.contains('منزل')) {
+      return (Icons.home_outlined, const Color(0xFF5D4037));
+    }
+    if (id.contains('food') || id.contains('طعام')) {
+      return (Icons.restaurant_outlined, const Color(0xFFD84315));
+    }
+    if (id.contains('travel') || id.contains('سفر')) {
+      return (Icons.flight_outlined, const Color(0xFF0277BD));
+    }
+    if (id.contains('clothes') || id.contains('لبس')) {
+      return (Icons.checkroom_outlined, const Color(0xFF6A1B9A));
+    }
+    if (id.contains('bathroom') || id.contains('خلاء')) {
+      return (Icons.water_drop_outlined, const Color(0xFF00838F));
+    }
+    if (id.contains('adhan') || id.contains('أذان')) {
+      return (Icons.volume_up_outlined, const Color(0xFF1565C0));
+    }
+    if (id.contains('istikharah') || id.contains('استخارة')) {
+      return (Icons.star_outline, const Color(0xFFAD1457));
+    }
+    if (id.contains('anxiety') || id.contains('كرب') || id.contains('هم')) {
+      return (Icons.healing_outlined, const Color(0xFF00897B));
+    }
+    if (id.contains('ruqyah') || id.contains('رقية')) {
+      return (Icons.shield_outlined, const Color(0xFF4E342E));
+    }
+    if (id.contains('general') || id.contains('عامة')) {
+      return (Icons.auto_awesome_outlined, const Color(0xFF37474F));
+    }
+    return (Icons.auto_stories_outlined, AppColors.primary);
+  }
+
+  String _toArabicNumber(int number) {
+    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return number
+        .toString()
+        .split('')
+        .map((d) => arabicDigits[int.parse(d)])
+        .join();
   }
 
   @override
   Widget build(BuildContext context) {
+    final (icon, color) = _getIconAndColor();
+
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 1,
+      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
+      color: AppColors.card,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withValues(alpha: 0.12),
+              width: 1,
+            ),
+          ),
           child: Row(
             children: [
+              // Icon with gradient background
               Container(
-                width: 48,
-                height: 48,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.15),
+                      color.withValues(alpha: 0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(
-                  _getIcon(),
-                  color: AppColors.primary,
-                  size: 26,
-                ),
+                child: Icon(icon, color: color, size: 26),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -68,13 +125,13 @@ class AzkarCategoryCard extends StatelessWidget {
                       category.nameAr,
                       style: GoogleFonts.cairo(
                         fontSize: 17,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${category.azkarList.length} أذكار',
+                      '${_toArabicNumber(category.azkarList.length)} ذكر',
                       style: GoogleFonts.cairo(
                         fontSize: 13,
                         color: AppColors.textSecondary,
@@ -83,10 +140,10 @@ class AzkarCategoryCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.arrow_back_ios_new,
-                size: 16,
-                color: AppColors.textSecondary,
+                size: 14,
+                color: color.withValues(alpha: 0.5),
               ),
             ],
           ),

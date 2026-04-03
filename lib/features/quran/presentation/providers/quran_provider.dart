@@ -6,6 +6,7 @@ import '../../../../core/services/storage_service.dart';
 import '../../data/quran_local_source.dart';
 import '../../data/quran_repository_impl.dart';
 import '../../domain/models/bookmark.dart';
+import '../../domain/models/quran_page.dart';
 import '../../domain/models/surah.dart';
 import '../../domain/repositories/quran_repository.dart';
 
@@ -25,6 +26,43 @@ final surahProvider = FutureProvider.family<Surah?, int>((ref, number) {
   return ref.read(quranRepositoryProvider).getSurahByNumber(number);
 });
 
+// Page index for Mushaf view
+final pageIndexProvider = FutureProvider<Map<int, QuranPage>>((ref) {
+  return ref.read(quranLocalSourceProvider).buildPageIndex();
+});
+
+// Current page being viewed
+final currentPageProvider = StateProvider<int>((ref) => 1);
+
+// Last read page (persisted)
+class LastReadPageNotifier extends StateNotifier<int> {
+  final StorageService _storage;
+
+  LastReadPageNotifier(this._storage)
+      : super(_storage.get('settings', 'lastReadPage') as int? ?? 1);
+
+  void setPage(int page) {
+    state = page;
+    _storage.put('settings', 'lastReadPage', page);
+  }
+}
+
+final lastReadPageProvider =
+    StateNotifierProvider<LastReadPageNotifier, int>((ref) {
+  return LastReadPageNotifier(StorageService.instance);
+});
+
+// Get page number for a surah
+final surahPageProvider = FutureProvider.family<int, int>((ref, surahNumber) {
+  return ref.read(quranLocalSourceProvider).getPageForSurah(surahNumber);
+});
+
+// Search
+final quranSearchProvider =
+    FutureProvider.family<List<SearchResult>, String>((ref, query) {
+  return ref.read(quranLocalSourceProvider).searchAyahs(query);
+});
+
 // Bookmarks
 class BookmarkNotifier extends StateNotifier<List<Bookmark>> {
   final StorageService _storage;
@@ -41,9 +79,7 @@ class BookmarkNotifier extends StateNotifier<List<Bookmark>> {
         try {
           final map = json.decode(item) as Map<String, dynamic>;
           bookmarks.add(Bookmark.fromJson(map));
-        } catch (_) {
-          // skip invalid
-        }
+        } catch (_) {}
       } else if (item is Map) {
         bookmarks.add(Bookmark.fromJson(Map<String, dynamic>.from(item)));
       }

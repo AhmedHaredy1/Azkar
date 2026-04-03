@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import 'mushaf_screen.dart';
 import 'providers/quran_provider.dart';
 import 'widgets/surah_list_tile.dart';
 
@@ -13,6 +13,7 @@ class SurahListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final surahsAsync = ref.watch(surahListProvider);
+    final lastReadPage = ref.watch(lastReadPageProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -23,6 +24,19 @@ class SurahListScreen extends ConsumerWidget {
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnPrimary,
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const MushafScreen(initialPage: 0),
+                ),
+              );
+            },
+            tooltip: 'فتح المصحف',
+          ),
+        ],
       ),
       body: surahsAsync.when(
         data: (surahs) {
@@ -30,25 +44,104 @@ class SurahListScreen extends ConsumerWidget {
             return Center(
               child: Text(
                 'لا توجد بيانات',
-                style: GoogleFonts.cairo(fontSize: 16, color: AppColors.textSecondary),
+                style: GoogleFonts.cairo(
+                    fontSize: 16, color: AppColors.textSecondary),
               ),
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: surahs.length,
-            separatorBuilder: (_, __) => const Divider(
-              height: 1,
-              indent: 74,
-              endIndent: 16,
-            ),
-            itemBuilder: (context, index) {
-              final surah = surahs[index];
-              return SurahListTile(
-                surah: surah,
-                onTap: () => context.push('/quran/${surah.number}'),
-              );
-            },
+          return Column(
+            children: [
+              // Open Mushaf button
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.all(12),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            MushafScreen(initialPage: lastReadPage),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.menu_book, size: 22),
+                  label: Text(
+                    lastReadPage > 1
+                        ? 'متابعة القراءة - صفحة ${_toArabicNumber(lastReadPage)}'
+                        : 'فتح المصحف',
+                    style: GoogleFonts.cairo(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 2,
+                  ),
+                ),
+              ),
+              // Divider
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                        child: Divider(
+                            color: AppColors.divider.withValues(alpha: 0.5))),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'فهرس السور',
+                        style: GoogleFonts.cairo(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                        child: Divider(
+                            color: AppColors.divider.withValues(alpha: 0.5))),
+                  ],
+                ),
+              ),
+              // Surah list
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: surahs.length,
+                  separatorBuilder: (_, __) => const Divider(
+                    height: 1,
+                    indent: 74,
+                    endIndent: 16,
+                  ),
+                  itemBuilder: (context, index) {
+                    final surah = surahs[index];
+                    return SurahListTile(
+                      surah: surah,
+                      onTap: () async {
+                        final page = await ref
+                            .read(quranLocalSourceProvider)
+                            .getPageForSurah(surah.number);
+                        if (context.mounted) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  MushafScreen(initialPage: page),
+                            ),
+                          );
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
         loading: () => const Center(
@@ -62,7 +155,8 @@ class SurahListScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               Text(
                 'حدث خطأ في تحميل السور',
-                style: GoogleFonts.cairo(fontSize: 16, color: AppColors.textSecondary),
+                style: GoogleFonts.cairo(
+                    fontSize: 16, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
@@ -74,5 +168,16 @@ class SurahListScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  static String _toArabicNumber(int number) {
+    const arabicDigits = [
+      '٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'
+    ];
+    return number
+        .toString()
+        .split('')
+        .map((d) => arabicDigits[int.parse(d)])
+        .join();
   }
 }
