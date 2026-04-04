@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -16,33 +17,45 @@ class MushafScreen extends ConsumerStatefulWidget {
   ConsumerState<MushafScreen> createState() => _MushafScreenState();
 }
 
-class _MushafScreenState extends ConsumerState<MushafScreen> {
+class _MushafScreenState extends ConsumerState<MushafScreen>
+    with SingleTickerProviderStateMixin {
   late PageController _pageController;
   int _currentPage = 1;
-  bool _showOverlay = true;
+  bool _showControls = false;
+  late AnimationController _controlsAnimController;
+  late Animation<double> _controlsFade;
+  String _currentSurahName = '';
 
   String _toArabicNumber(int number) {
-    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return number
-        .toString()
-        .split('')
-        .map((d) => arabicDigits[int.parse(d)])
-        .join();
+    const d = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return number.toString().split('').map((c) => d[int.parse(c)]).join();
   }
 
   @override
   void initState() {
     super.initState();
-    // Use initialPage if provided, otherwise use last read page
-    final startPage =
-        widget.initialPage > 0 ? widget.initialPage : 1;
+    final startPage = widget.initialPage > 0 ? widget.initialPage : 1;
     _currentPage = startPage;
     _pageController = PageController(initialPage: startPage - 1);
+
+    _controlsAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _controlsFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controlsAnimController, curve: Curves.easeInOut),
+    );
+
+    // Immersive mode
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _controlsAnimController.dispose();
+    // Restore system UI
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -52,55 +65,77 @@ class _MushafScreenState extends ConsumerState<MushafScreen> {
     setState(() => _currentPage = page);
   }
 
+  void _toggleControls() {
+    setState(() => _showControls = !_showControls);
+    if (_showControls) {
+      _controlsAnimController.forward();
+      // Auto-hide after 4 seconds
+      Future.delayed(const Duration(seconds: 4), () {
+        if (mounted && _showControls) {
+          setState(() => _showControls = false);
+          _controlsAnimController.reverse();
+        }
+      });
+    } else {
+      _controlsAnimController.reverse();
+    }
+  }
+
   void _showSearch() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => QuranSearchDialog(
-        onGoToPage: _goToPage,
-      ),
+      builder: (context) => QuranSearchDialog(onGoToPage: _goToPage),
     );
+  }
+
+  void _updateSurahName(Map<int, dynamic> pages) {
+    final p = pages[_currentPage];
+    if (p != null && p.sections.isNotEmpty) {
+      _currentSurahName = p.sections.last.surahNameAr;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final pagesAsync = ref.watch(pageIndexProvider);
 
-    // Resolve last read page on first build if no initialPage specified
+    // Resolve last read page
     if (widget.initialPage <= 0) {
       final lastRead = ref.watch(lastReadPageProvider);
       if (_currentPage == 1 && lastRead > 1) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _goToPage(lastRead);
-        });
+        WidgetsBinding.instance.addPostFrameCallback((_) => _goToPage(lastRead));
       }
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFFF8EC),
       body: pagesAsync.when(
         data: (pages) {
           if (pages.isEmpty) {
             return Center(
-              child: Text(
-                'لا توجد بيانات',
-                style: GoogleFonts.cairo(fontSize: 16),
-              ),
+              child: Text('لا توجد بيانات', style: GoogleFonts.cairo(fontSize: 16)),
             );
           }
 
-          return GestureDetector(
-            onTap: () => setState(() => _showOverlay = !_showOverlay),
-            child: Stack(
-              children: [
-                // Page view - RIGHT to LEFT for Arabic
-                PageView.builder(
+          _updateSurahName(pages);
+
+          return Stack(
+            children: [
+              // ===== MUSHAF PAGES =====
+              GestureDetector(
+                onTap: _toggleControls,
+                child: PageView.builder(
                   controller: _pageController,
-                  reverse: true,
+                  reverse: true, // RTL: swipe right = next page
                   itemCount: 604,
                   onPageChanged: (index) {
                     final page = index + 1;
-                    setState(() => _currentPage = page);
+                    setState(() {
+                      _currentPage = page;
+                      _updateSurahName(pages);
+                    });
                     ref.read(lastReadPageProvider.notifier).setPage(page);
                   },
                   itemBuilder: (context, index) {
@@ -108,14 +143,11 @@ class _MushafScreenState extends ConsumerState<MushafScreen> {
                     final quranPage = pages[pageNum];
                     if (quranPage == null) {
                       return Container(
-                        color: const Color(0xFFFAF6EF),
+                        color: const Color(0xFFFFF8EC),
                         child: Center(
                           child: Text(
                             'صفحة ${_toArabicNumber(pageNum)}',
-                            style: GoogleFonts.cairo(
-                              fontSize: 16,
-                              color: AppColors.textSecondary,
-                            ),
+                            style: GoogleFonts.amiri(fontSize: 18),
                           ),
                         ),
                       );
@@ -123,56 +155,87 @@ class _MushafScreenState extends ConsumerState<MushafScreen> {
                     return MushafPageWidget(page: quranPage);
                   },
                 ),
+              ),
 
-                // Top overlay
-                if (_showOverlay)
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
+              // ===== CONTROLS OVERLAY =====
+              if (_showControls) ...[
+                // Top bar
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: FadeTransition(
+                    opacity: _controlsFade,
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            AppColors.primary.withValues(alpha: 0.95),
-                            AppColors.primary.withValues(alpha: 0.0),
-                          ],
-                        ),
+                        color: const Color(0xFF2C1810).withValues(alpha: 0.92),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                          ),
+                        ],
                       ),
                       child: SafeArea(
                         bottom: false,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                           child: Row(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.arrow_back,
-                                    color: Colors.white),
+                                icon: const Icon(Icons.close, color: Colors.white, size: 22),
                                 onPressed: () => Navigator.of(context).pop(),
                               ),
-                              const Spacer(),
-                              Text(
-                                'صفحة ${_toArabicNumber(_currentPage)}',
-                                style: GoogleFonts.cairo(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                              const SizedBox(width: 4),
+                              // Surah name
+                              Expanded(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _currentSurahName,
+                                      style: GoogleFonts.amiri(
+                                        color: const Color(0xFFD4A017),
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'صفحة ${_toArabicNumber(_currentPage)} | الجزء ${_toArabicNumber(pages[_currentPage]?.juz ?? 1)}',
+                                      style: GoogleFonts.cairo(
+                                        color: Colors.white70,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const Spacer(),
+                              // Search
                               IconButton(
-                                icon: const Icon(Icons.search,
-                                    color: Colors.white),
+                                icon: const Icon(Icons.search, color: Colors.white, size: 22),
                                 onPressed: _showSearch,
+                                tooltip: 'بحث',
                               ),
+                              // Bookmark
                               IconButton(
-                                icon: const Icon(Icons.list,
-                                    color: Colors.white),
-                                onPressed: () => Navigator.of(context).pop(),
-                                tooltip: 'فهرس السور',
+                                icon: const Icon(Icons.bookmark_border, color: Colors.white, size: 22),
+                                onPressed: () {
+                                  final p = pages[_currentPage];
+                                  if (p != null && p.sections.isNotEmpty) {
+                                    ref.read(bookmarkProvider.notifier).toggleBookmark(
+                                      p.sections.first.surahNumber,
+                                      p.sections.first.ayahs.first.ayahNumber,
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('تم حفظ العلامة', style: GoogleFonts.cairo()),
+                                        duration: const Duration(seconds: 1),
+                                        backgroundColor: const Color(0xFF2C1810),
+                                      ),
+                                    );
+                                  }
+                                },
+                                tooltip: 'علامة مرجعية',
                               ),
                             ],
                           ),
@@ -180,97 +243,139 @@ class _MushafScreenState extends ConsumerState<MushafScreen> {
                       ),
                     ),
                   ),
+                ),
 
-                // Bottom page slider
-                if (_showOverlay)
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
+                // Bottom navigation bar
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: FadeTransition(
+                    opacity: _controlsFade,
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            AppColors.primary.withValues(alpha: 0.9),
-                            AppColors.primary.withValues(alpha: 0.0),
-                          ],
-                        ),
+                        color: const Color(0xFF2C1810).withValues(alpha: 0.92),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
                       ),
                       child: SafeArea(
                         top: false,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Page slider
-                              Directionality(
-                                textDirection: TextDirection.ltr,
-                                child: SliderTheme(
-                                  data: SliderThemeData(
-                                    activeTrackColor: AppColors.secondary,
-                                    inactiveTrackColor:
-                                        Colors.white.withValues(alpha: 0.3),
-                                    thumbColor: AppColors.secondary,
-                                    overlayColor:
-                                        AppColors.secondary.withValues(alpha: 0.2),
-                                    trackHeight: 3,
-                                  ),
-                                  child: Slider(
-                                    value: _currentPage.toDouble(),
-                                    min: 1,
-                                    max: 604,
-                                    onChanged: (v) {
-                                      _goToPage(v.round());
-                                    },
-                                  ),
-                                ),
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Page slider
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              child: Row(
                                 children: [
                                   Text(
                                     '٦٠٤',
                                     style: GoogleFonts.cairo(
-                                      color: Colors.white70,
-                                      fontSize: 12,
+                                      color: Colors.white54,
+                                      fontSize: 11,
                                     ),
                                   ),
-                                  Text(
-                                    'صفحة ${_toArabicNumber(_currentPage)} من ٦٠٤',
-                                    style: GoogleFonts.cairo(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
+                                  Expanded(
+                                    child: Directionality(
+                                      textDirection: TextDirection.ltr,
+                                      child: SliderTheme(
+                                        data: SliderThemeData(
+                                          activeTrackColor: const Color(0xFFD4A017),
+                                          inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+                                          thumbColor: const Color(0xFFD4A017),
+                                          overlayColor: const Color(0xFFD4A017).withValues(alpha: 0.15),
+                                          trackHeight: 3,
+                                          thumbShape: const RoundSliderThumbShape(
+                                            enabledThumbRadius: 7,
+                                          ),
+                                        ),
+                                        child: Slider(
+                                          value: _currentPage.toDouble(),
+                                          min: 1,
+                                          max: 604,
+                                          onChanged: (v) => _goToPage(v.round()),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   Text(
                                     '١',
                                     style: GoogleFonts.cairo(
-                                      color: Colors.white70,
-                                      fontSize: 12,
+                                      color: Colors.white54,
+                                      fontSize: 11,
                                     ),
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            ),
+                            // Quick actions row
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 16,
+                                right: 16,
+                                bottom: 8,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildQuickAction(
+                                    Icons.first_page,
+                                    'البداية',
+                                    () => _goToPage(1),
+                                  ),
+                                  _buildQuickAction(
+                                    Icons.format_list_numbered,
+                                    'الفهرس',
+                                    () => Navigator.of(context).pop(),
+                                  ),
+                                  _buildQuickAction(
+                                    Icons.search,
+                                    'بحث',
+                                    _showSearch,
+                                  ),
+                                  _buildQuickAction(
+                                    Icons.last_page,
+                                    'النهاية',
+                                    () => _goToPage(604),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
+                ),
               ],
-            ),
+            ],
           );
         },
         loading: () => Container(
-          color: const Color(0xFFFAF6EF),
-          child: const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
+          color: const Color(0xFFFFF8EC),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(
+                  color: Color(0xFFB8860B),
+                  strokeWidth: 2,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'جارٍ تحميل المصحف...',
+                  style: GoogleFonts.cairo(
+                    color: AppColors.textSecondary,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         error: (error, _) => Center(
@@ -291,6 +396,26 @@ class _MushafScreenState extends ConsumerState<MushafScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAction(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white70, size: 22),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.cairo(
+              color: Colors.white70,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }
