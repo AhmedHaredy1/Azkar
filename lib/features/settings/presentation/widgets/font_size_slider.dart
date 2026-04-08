@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/constants/app_colors.dart';
-
 class FontSizeSlider extends StatelessWidget {
   final double value;
   final ValueChanged<double> onChanged;
@@ -15,6 +13,13 @@ class FontSizeSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2A2A45) : const Color(0xFFFAF8F3);
+    final borderColor = isDark ? const Color(0xFF3A3A55) : const Color(0xFFE8E4DB);
+    final textColor = isDark ? const Color(0xFFE8E6E3) : const Color(0xFF1A1A1A);
+    final secondaryText = isDark ? const Color(0xFFA0A0A0) : const Color(0xFF5A5A5A);
+    final primaryColor = isDark ? const Color(0xFF2E7D32) : const Color(0xFF1B5E20);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -23,9 +28,9 @@ class FontSizeSlider extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: cardColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.cardBorder),
+            border: Border.all(color: borderColor),
           ),
           child: Text(
             'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
@@ -34,7 +39,7 @@ class FontSizeSlider extends StatelessWidget {
             style: GoogleFonts.amiri(
               fontSize: value,
               height: 1.8,
-              color: AppColors.textPrimary,
+              color: textColor,
             ),
           ),
         ),
@@ -46,7 +51,7 @@ class FontSizeSlider extends StatelessWidget {
               'أ',
               style: GoogleFonts.cairo(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: secondaryText,
               ),
             ),
             Expanded(
@@ -55,8 +60,8 @@ class FontSizeSlider extends StatelessWidget {
                 min: 16,
                 max: 36,
                 divisions: 20,
-                activeColor: AppColors.primary,
-                inactiveColor: AppColors.primary.withValues(alpha: 0.2),
+                activeColor: primaryColor,
+                inactiveColor: primaryColor.withValues(alpha: 0.2),
                 label: value.toInt().toString(),
                 onChanged: onChanged,
               ),
@@ -65,7 +70,7 @@ class FontSizeSlider extends StatelessWidget {
               'أ',
               style: GoogleFonts.cairo(
                 fontSize: 24,
-                color: AppColors.textSecondary,
+                color: secondaryText,
               ),
             ),
           ],

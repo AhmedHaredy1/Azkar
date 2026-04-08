@@ -13,6 +13,8 @@ class AzkarCategoriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(azkarCategoriesProvider);
+    final favorites = ref.watch(azkarFavoritesProvider);
+    final hasFavorites = favorites.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -26,6 +28,14 @@ class AzkarCategoriesScreen extends ConsumerWidget {
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnPrimary,
         centerTitle: true,
+        actions: [
+          if (hasFavorites)
+            IconButton(
+              icon: const Icon(Icons.favorite, size: 24),
+              tooltip: 'المفضلة',
+              onPressed: () => context.push('/azkar/favorites'),
+            ),
+        ],
       ),
       body: categoriesAsync.when(
         data: (categories) {

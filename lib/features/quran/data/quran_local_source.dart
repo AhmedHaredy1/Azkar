@@ -40,6 +40,44 @@ class QuranLocalSource {
     }
   }
 
+  /// Strip the Bismillah prefix from ayah text if present.
+  /// Matches بسم + الله + الرحمن + الرحيم with any diacritics between letters.
+  static final _bismillahPattern = RegExp(
+    r'^\s*\uFEFF?\s*'           // optional BOM + whitespace
+    r'ب[\u0610-\u065F\u0670]*'  // ب
+    r'س[\u0610-\u065F\u0670]*'  // س
+    r'م[\u0610-\u065F\u0670]*'  // م
+    r'\s+'
+    r'[ٱا][\u0610-\u065F\u0670]*' // ا or ٱ
+    r'ل[\u0610-\u065F\u0670]*'
+    r'ل[\u0610-\u065F\u0670]*'
+    r'ه[\u0610-\u065F\u0670]*'
+    r'\s+'
+    r'[ٱا][\u0610-\u065F\u0670]*'
+    r'ل[\u0610-\u065F\u0670]*'
+    r'ر[\u0610-\u065F\u0670]*'
+    r'ح[\u0610-\u065F\u0670]*'
+    r'م[\u0610-\u065F\u0670\u0670]*' // مَٰ
+    r'ن[\u0610-\u065F\u0670]*'
+    r'\s+'
+    r'[ٱا][\u0610-\u065F\u0670]*'
+    r'ل[\u0610-\u065F\u0670]*'
+    r'ر[\u0610-\u065F\u0670]*'
+    r'ح[\u0610-\u065F\u0670]*'
+    r'ي[\u0610-\u065F\u0670]*'
+    r'م[\u0610-\u065F\u0670]*'
+    r'\s*',
+  );
+
+  static String _stripBismillah(String text) {
+    final match = _bismillahPattern.firstMatch(text);
+    if (match != null) {
+      final after = text.substring(match.end).trimLeft();
+      if (after.isNotEmpty) return after;
+    }
+    return text;
+  }
+
   Future<Map<int, QuranPage>> buildPageIndex() async {
     if (_cachedPages != null) return _cachedPages!;
 
@@ -51,11 +89,19 @@ class QuranLocalSource {
     for (final surah in surahs) {
       for (int i = 0; i < surah.ayahs.length; i++) {
         final ayah = surah.ayahs[i];
+        // Strip Bismillah from first ayah text (except surah 1 & 9)
+        // Surah 1: Bismillah IS the ayah itself
+        // Surah 9: No Bismillah
+        String ayahText = ayah.textAr;
+        if (ayah.number == 1 && surah.number != 1 && surah.number != 9) {
+          ayahText = _stripBismillah(ayahText);
+        }
+
         final entry = _AyahEntry(
           surahNumber: surah.number,
           surahNameAr: surah.nameAr,
           ayahNumber: ayah.number,
-          text: ayah.textAr,
+          text: ayahText,
           page: ayah.page,
           juz: ayah.juz,
           isFirstAyah: ayah.number == 1,
@@ -86,7 +132,7 @@ class QuranLocalSource {
               surahNumber: currentSurah!,
               surahNameAr: currentSurahName,
               showSurahHeader: currentShowHeader,
-              showBismillah: currentShowHeader && currentSurah != 9,
+              showBismillah: currentShowHeader && currentSurah != 9 && currentSurah != 1,
               ayahs: List.from(currentAyahs),
             ));
           }
@@ -108,7 +154,7 @@ class QuranLocalSource {
           surahNumber: currentSurah,
           surahNameAr: currentSurahName,
           showSurahHeader: currentShowHeader,
-          showBismillah: currentShowHeader && currentSurah != 9,
+          showBismillah: currentShowHeader && currentSurah != 9 && currentSurah != 1,
           ayahs: List.from(currentAyahs),
         ));
       }

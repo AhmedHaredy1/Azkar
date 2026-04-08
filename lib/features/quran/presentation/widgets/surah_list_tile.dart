@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../domain/models/surah.dart';
+import '../providers/quran_audio_provider.dart';
 
-class SurahListTile extends StatelessWidget {
+class SurahListTile extends ConsumerWidget {
   final Surah surah;
   final VoidCallback onTap;
 
@@ -20,10 +22,14 @@ class SurahListTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isMakki = surah.revelationType.toLowerCase() == 'meccan' ||
         surah.revelationType == 'مكية' ||
         surah.revelationType.toLowerCase() == 'makkiyyah';
+
+    final audioState = ref.watch(quranAudioProvider);
+    final isPlayingThis = audioState.currentSurah == surah.number &&
+        (audioState.isPlaying || audioState.isLoading);
 
     return InkWell(
       onTap: onTap,
@@ -103,6 +109,42 @@ class SurahListTile extends StatelessWidget {
               style: GoogleFonts.cairo(
                 fontSize: 13,
                 color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Play button
+            GestureDetector(
+              onTap: () {
+                if (isPlayingThis) {
+                  ref.read(quranAudioProvider.notifier).pause();
+                } else if (audioState.currentSurah == surah.number) {
+                  ref.read(quranAudioProvider.notifier).resume();
+                } else {
+                  ref.read(quranAudioProvider.notifier).playSurah(surah.number);
+                }
+              },
+              child: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: isPlayingThis
+                      ? AppColors.primary.withValues(alpha: 0.15)
+                      : AppColors.primary.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: audioState.isLoading && audioState.currentSurah == surah.number
+                    ? const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : Icon(
+                        isPlayingThis ? Icons.pause : Icons.play_arrow,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
               ),
             ),
           ],

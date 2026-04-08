@@ -1203,9 +1203,151 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 
 ---
 
-This plan is saved at `C:\Users\ahmed\Downloads\Azkar\PLAN.md`.
+---
 
-The plan covers all 11 requested sections with specific detail on every feature, screen, data model, folder path, package choice, and day-by-day build order. The 20-day roadmap is structured so that each day produces a testable, working increment -- Day 3 already delivers the core Azkar feature, and by Day 5 you have a functional MVP with Azkar, Sebha, and Duas.
+## TODO Tracker (Updated: 08.04.2026)
+
+### Feature 1: Splash Screen
+- [x] Display app logo and name
+- [x] Initialize Hive
+- [x] Navigate to Home
+
+### Feature 2: Onboarding
+- [ ] 3 swipeable pages explaining features
+- [ ] Request location permission
+- [ ] Request notification permission
+- [ ] "Get Started" button
+- [ ] First-launch flag
+
+### Feature 3: Home Dashboard
+- [x] Quick-access grid (Azkar, Quran, Sebha, Prayer Times, Qibla, Duas)
+- [x] Basic home layout
+- [x] Greeting based on time of day
+- [x] Next prayer countdown card (connected to real data)
+- [x] Daily Ayah card (random verse)
+- [x] Morning/Evening Azkar contextual shortcuts
+- [x] Hijri date display
+
+### Feature 4: Azkar
+- [x] Category list with icons and Arabic names
+- [x] Azkar detail screen with dhikr cards
+- [x] Data loading from azkar.json
+- [x] Counter tap to decrement + vibration + auto-advance
+- [x] Progress indicator ("3 of 12 completed")
+- [x] Completion screen
+- [x] Favorites
+
+### Feature 5: Duas
+- [x] Category list
+- [x] Dua detail screen with Arabic text
+- [x] Data loading from duas.json
+- [ ] Copy and share functionality
+- [ ] Favorites
+
+### Feature 6: Quran
+- [x] Surah list (114 surahs with Arabic/English names, Makki/Madani badges)
+- [x] Mushaf page view (604 pages, RTL PageView)
+- [x] Keyboard + on-screen arrow navigation
+- [x] Surah header + Bismillah (deduplicated)
+- [x] Ayah number markers in Arabic numerals
+- [x] Justified text alignment (Mushaf style)
+- [x] Tap-to-highlight ayah with auto-save/restore
+- [x] Clear highlight option
+- [x] Last read page persistence
+- [x] Search ayahs by Arabic text
+- [x] Bookmarks (backend)
+- [x] Audio recitation — 7 reciters, ayah-by-ayah streaming
+- [x] Sync highlight with audio (read while listen)
+- [x] Auto page-turn during audio playback
+- [x] Play from highlighted/clicked ayah
+- [x] Next/prev ayah controls
+- [x] Reciter picker (bottom sheet)
+- [x] Adaptive font sizing
+- [ ] Juz browser (navigate by Juz 1-30)
+- [ ] Bookmarks list screen (UI to view/manage saved bookmarks)
+
+### Feature 7: Sebha / Tasbeeh
+- [x] Large circular tap area
+- [x] Counter display
+- [x] Preset dhikr phrases
+- [x] Vibration feedback
+- [x] Persist count across sessions
+- [ ] Reset with confirmation dialog
+- [ ] Target count (33, 99, custom) with completion notification
+- [ ] Cumulative total count
+
+### Feature 8: Prayer Times
+- [x] 6 prayer times (Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha)
+- [x] Next prayer highlighted
+- [x] Location-based calculation (Adhan package)
+- [x] 9 calculation methods
+- [x] DST/timezone handled correctly (via OS)
+- [x] Settings integration (calculation method applied)
+- [ ] Countdown timer for next prayer
+- [ ] Manual location override (city search)
+- [ ] Monthly calendar view
+
+### Feature 9: Qibla
+- [x] Compass pointing toward Kaaba
+- [x] Degree display
+- [x] Location-based calculation
+- [ ] Calibration instruction
+- [ ] Missing compass sensor handling
+
+### Feature 10: Notifications
+- [ ] Prayer time Adhan notifications (per-prayer toggle)
+- [ ] Morning Azkar reminder
+- [ ] Evening Azkar reminder
+- [ ] Handle Android 13+ notification permission
+- [ ] Handle exact alarm permission (Android 12+)
+- [ ] Deep link from notification to correct screen
+
+### Feature 11: Settings
+- [x] Calculation method selector
+- [x] Font size slider
+- [x] Theme switching (Light/Dark/System)
+- [x] Notification toggles
+- [x] Location refresh button
+- [x] About / version info
+
+### Deployment
+- [ ] App icon (Islamic design, green & gold)
+- [ ] Native splash screen
+- [ ] Remove debug prints / TODO comments
+- [ ] Generate signed AAB
+- [ ] Play Store listing (Arabic description, screenshots)
+- [ ] Internal testing
+- [ ] Production release
+
+### Future Enhancements (Post-MVP)
+- [ ] Home screen Android widget
+- [ ] Quran translation
+- [ ] Cloud sync (Firebase)
+- [ ] Multi-language support
+- [ ] Hadith section
+- [ ] Islamic calendar
+- [ ] iOS release
+- [ ] Quran Tafsir
+
+---
+
+### Progress Summary
+
+| Category | Done | Total | % |
+|----------|------|-------|---|
+| Splash | 3 | 3 | 100% |
+| Onboarding | 0 | 5 | 0% |
+| Home | 7 | 7 | 100% |
+| Azkar | 7 | 7 | 100% |
+| Duas | 3 | 5 | 60% |
+| Quran | 18 | 20 | 90% |
+| Sebha | 5 | 8 | 63% |
+| Prayer Times | 6 | 9 | 67% |
+| Qibla | 3 | 5 | 60% |
+| Notifications | 0 | 6 | 0% |
+| Settings | 6 | 6 | 100% |
+| Deployment | 0 | 6 | 0% |
+| **TOTAL** | **58** | **87** | **67%** |
 
 Key files referenced:
 - **`C:\Users\ahmed\Downloads\Azkar\PLAN.md`** -- The full implementation plan (this document)

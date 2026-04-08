@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import 'mushaf_screen.dart';
+import 'providers/quran_audio_provider.dart';
 import 'providers/quran_provider.dart';
 import 'widgets/surah_list_tile.dart';
 
@@ -51,6 +52,8 @@ class SurahListScreen extends ConsumerWidget {
           }
           return Column(
             children: [
+              // Mini audio player (when playing)
+              _buildMiniPlayer(ref, surahs),
               // Open Mushaf button
               Container(
                 width: double.infinity,
@@ -166,6 +169,62 @@ class SurahListScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMiniPlayer(WidgetRef ref, List surahs) {
+    final audioState = ref.watch(quranAudioProvider);
+    if (audioState.currentSurah == null) return const SizedBox.shrink();
+
+    final surahIndex = audioState.currentSurah! - 1;
+    final surahName = surahIndex >= 0 && surahIndex < surahs.length
+        ? surahs[surahIndex].nameAr
+        : '';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      color: AppColors.primary.withValues(alpha: 0.08),
+      child: Row(
+        children: [
+          Icon(Icons.headset, color: AppColors.primary, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'يستمع: $surahName - ${audioState.reciter.nameAr}',
+              style: GoogleFonts.cairo(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              if (audioState.isPlaying) {
+                ref.read(quranAudioProvider.notifier).pause();
+              } else {
+                ref.read(quranAudioProvider.notifier).resume();
+              }
+            },
+            child: Icon(
+              audioState.isPlaying ? Icons.pause_circle : Icons.play_circle,
+              color: AppColors.primary,
+              size: 30,
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => ref.read(quranAudioProvider.notifier).stop(),
+            child: Icon(
+              Icons.stop_circle_outlined,
+              color: AppColors.textSecondary,
+              size: 26,
+            ),
+          ),
+        ],
       ),
     );
   }

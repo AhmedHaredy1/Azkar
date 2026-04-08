@@ -63,6 +63,65 @@ final quranSearchProvider =
   return ref.read(quranLocalSourceProvider).searchAyahs(query);
 });
 
+// Highlighted ayah (reading position marker)
+class HighlightedAyah {
+  final int surahNumber;
+  final int ayahNumber;
+  final int page;
+
+  const HighlightedAyah({
+    required this.surahNumber,
+    required this.ayahNumber,
+    required this.page,
+  });
+
+  String get key => '${surahNumber}_$ayahNumber';
+}
+
+class HighlightedAyahNotifier extends StateNotifier<HighlightedAyah?> {
+  final StorageService _storage;
+
+  HighlightedAyahNotifier(this._storage) : super(null) {
+    _load();
+  }
+
+  void _load() {
+    final surah = _storage.get<int>('settings', 'highlightSurah');
+    final ayah = _storage.get<int>('settings', 'highlightAyah');
+    final page = _storage.get<int>('settings', 'highlightPage');
+    if (surah != null && ayah != null && page != null) {
+      state = HighlightedAyah(
+        surahNumber: surah,
+        ayahNumber: ayah,
+        page: page,
+      );
+    }
+  }
+
+  void setHighlight(int surahNumber, int ayahNumber, int page) {
+    state = HighlightedAyah(
+      surahNumber: surahNumber,
+      ayahNumber: ayahNumber,
+      page: page,
+    );
+    _storage.put('settings', 'highlightSurah', surahNumber);
+    _storage.put('settings', 'highlightAyah', ayahNumber);
+    _storage.put('settings', 'highlightPage', page);
+  }
+
+  void clearHighlight() {
+    state = null;
+    _storage.delete('settings', 'highlightSurah');
+    _storage.delete('settings', 'highlightAyah');
+    _storage.delete('settings', 'highlightPage');
+  }
+}
+
+final highlightedAyahProvider =
+    StateNotifierProvider<HighlightedAyahNotifier, HighlightedAyah?>((ref) {
+  return HighlightedAyahNotifier(StorageService.instance);
+});
+
 // Bookmarks
 class BookmarkNotifier extends StateNotifier<List<Bookmark>> {
   final StorageService _storage;

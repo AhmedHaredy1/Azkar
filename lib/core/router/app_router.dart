@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../constants/app_strings.dart';
 import '../../features/azkar/presentation/azkar_categories_screen.dart';
+import '../../features/azkar/presentation/azkar_completion_screen.dart';
 import '../../features/azkar/presentation/azkar_detail_screen.dart';
+import '../../features/azkar/presentation/azkar_favorites_screen.dart';
 import '../../features/duas/presentation/duas_categories_screen.dart';
 import '../../features/duas/presentation/dua_detail_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
@@ -42,12 +44,28 @@ GoRouter createRouter() {
             builder: (context, state) => const AzkarCategoriesScreen(),
             routes: [
               GoRoute(
+                path: 'favorites',
+                name: 'azkar-favorites',
+                builder: (context, state) => const AzkarFavoritesScreen(),
+              ),
+              GoRoute(
                 path: ':categoryId',
                 name: 'azkar-category',
                 builder: (context, state) {
                   final categoryId = state.pathParameters['categoryId'] ?? '';
                   return AzkarDetailScreen(categoryId: categoryId);
                 },
+                routes: [
+                  GoRoute(
+                    path: 'complete',
+                    name: 'azkar-complete',
+                    builder: (context, state) {
+                      final categoryName =
+                          state.uri.queryParameters['name'] ?? 'الأذكار';
+                      return AzkarCompletionScreen(categoryName: categoryName);
+                    },
+                  ),
+                ],
               ),
             ],
           ),

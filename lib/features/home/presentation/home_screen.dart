@@ -1,29 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import 'providers/home_provider.dart';
+import 'widgets/azkar_shortcut_card.dart';
+import 'widgets/daily_ayah_card.dart';
+import 'widgets/prayer_countdown_card.dart';
 import 'widgets/quick_access_grid.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour >= 5 && hour < 12) return 'صباح الخير';
-    if (hour >= 12 && hour < 17) return 'مساء الخير';
-    if (hour >= 17 && hour < 21) return 'مساء النور';
-    return 'طابت ليلتك';
-  }
-
-  String _getGreetingSubtitle() {
-    final hour = DateTime.now().hour;
-    if (hour >= 5 && hour < 12) return 'لا تنسَ أذكار الصباح';
-    if (hour >= 12 && hour < 21) return 'لا تنسَ أذكار المساء';
-    return 'لا تنسَ أذكار النوم';
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final greeting = ref.watch(greetingProvider);
+    final hijriDate = ref.watch(hijriDateProvider);
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -32,7 +25,8 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-              // Greeting Card
+
+              // ── Greeting Card with Hijri Date ──
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -76,7 +70,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      _getGreeting(),
+                      greeting.greeting,
                       style: GoogleFonts.cairo(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -85,17 +79,75 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _getGreetingSubtitle(),
+                      greeting.subtitle,
                       style: GoogleFonts.cairo(
                         fontSize: 15,
                         color: Colors.white70,
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    // Hijri & Gregorian dates
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.calendar_today,
+                                size: 14,
+                                color: AppColors.secondary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                hijriDate.hijriFormatted,
+                                style: GoogleFonts.cairo(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.secondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 20),
+                            child: Text(
+                              hijriDate.gregorianFormatted,
+                              style: GoogleFonts.cairo(
+                                fontSize: 12,
+                                color: Colors.white60,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 28),
-              // Section title
+
+              const SizedBox(height: 20),
+
+              // ── Next Prayer Countdown ──
+              const PrayerCountdownCard(),
+
+              const SizedBox(height: 20),
+
+              // ── Morning/Evening Azkar Shortcut ──
+              const AzkarShortcutCard(),
+
+              const SizedBox(height: 24),
+
+              // ── Sections Title ──
               Padding(
                 padding: const EdgeInsets.only(right: 4),
                 child: Text(
@@ -108,8 +160,15 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              // Quick Access Grid
+
+              // ── Quick Access Grid ──
               const QuickAccessGrid(),
+
+              const SizedBox(height: 24),
+
+              // ── Daily Ayah Card ──
+              const DailyAyahCard(),
+
               const SizedBox(height: 20),
             ],
           ),

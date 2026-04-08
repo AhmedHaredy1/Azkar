@@ -1,11 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/prayer_times_repository_impl.dart';
 import '../../domain/models/prayer_time.dart';
 
 final prayerTimesRepositoryProvider = Provider<PrayerTimesRepositoryImpl>((ref) {
-  return PrayerTimesRepositoryImpl();
+  final repo = PrayerTimesRepositoryImpl();
+  // Apply calculation method from settings
+  final settings = ref.watch(settingsProvider);
+  repo.setCalculationMethod(settings.calculationMethod);
+  return repo;
 });
 
 final locationProvider = FutureProvider<Position>((ref) async {
@@ -33,12 +38,12 @@ final locationProvider = FutureProvider<Position>((ref) async {
 
 final prayerTimesProvider = FutureProvider<List<PrayerTime>>((ref) async {
   final position = await ref.watch(locationProvider.future);
-  final repo = ref.read(prayerTimesRepositoryProvider);
+  final repo = ref.watch(prayerTimesRepositoryProvider);
   return repo.getTodayPrayerTimes(position.latitude, position.longitude);
 });
 
 final nextPrayerProvider = FutureProvider<PrayerTime?>((ref) async {
   final position = await ref.watch(locationProvider.future);
-  final repo = ref.read(prayerTimesRepositoryProvider);
+  final repo = ref.watch(prayerTimesRepositoryProvider);
   return repo.getNextPrayer(position.latitude, position.longitude);
 });

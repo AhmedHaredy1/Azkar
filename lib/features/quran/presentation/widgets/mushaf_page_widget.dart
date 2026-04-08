@@ -1,16 +1,20 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../domain/models/quran_page.dart';
+import '../providers/quran_audio_provider.dart';
+import '../providers/quran_provider.dart';
 
-class MushafPageWidget extends StatelessWidget {
+class MushafPageWidget extends ConsumerWidget {
   final QuranPage page;
-  final double fontSize;
+  final VoidCallback? onToggleControls;
 
   const MushafPageWidget({
     super.key,
     required this.page,
-    this.fontSize = 22,
+    this.onToggleControls,
   });
 
   static const _mushafBg = Color(0xFFFFF8EC);
@@ -18,6 +22,7 @@ class MushafPageWidget extends StatelessWidget {
   static const _headerBg = Color(0xFFF5E6C8);
   static const _textColor = Color(0xFF1C1C1C);
   static const _ayahMarkerColor = Color(0xFF8B6914);
+  static const _highlightColor = Color(0xFF90CAF9);
 
   String _toArabicNumber(int number) {
     const d = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
@@ -25,267 +30,248 @@ class MushafPageWidget extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: _mushafBg,
-      child: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final highlighted = ref.watch(highlightedAyahProvider);
+
+    return GestureDetector(
+      onTap: onToggleControls,
+      behavior: HitTestBehavior.translucent,
+      child: Container(
+        color: _mushafBg,
+        child: SafeArea(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _mushafBg,
+              border: Border.all(
+                color: _frameColor.withValues(alpha: 0.5),
+                width: 1.5,
+              ),
+            ),
+            child: Container(
+              margin: const EdgeInsets.all(3),
               decoration: BoxDecoration(
-                color: _mushafBg,
-                border: Border.all(color: _frameColor.withValues(alpha: 0.6), width: 2),
-                borderRadius: BorderRadius.circular(2),
+                border: Border.all(
+                  color: _frameColor.withValues(alpha: 0.3),
+                  width: 0.5,
+                ),
               ),
               child: Column(
                 children: [
-                  // Inner frame with double border effect
-                  Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: _frameColor.withValues(alpha: 0.35),
-                          width: 1,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          // Top header: Juz + Surah name + Page
-                          _buildTopHeader(),
-                          // Decorative line
-                          _buildDecorativeLine(),
-                          // Main Quran text area
-                          Expanded(
-                            child: _buildTextArea(),
-                          ),
-                          // Bottom decorative line
-                          _buildDecorativeLine(),
-                          // Bottom: page number
-                          _buildBottomBar(),
-                        ],
-                      ),
-                    ),
+                  _buildTopHeader(),
+                  Container(
+                    height: 1,
+                    color: _frameColor.withValues(alpha: 0.4),
                   ),
+                  Expanded(
+                    child: _buildTextArea(ref, highlighted),
+                  ),
+                  Container(
+                    height: 1,
+                    color: _frameColor.withValues(alpha: 0.4),
+                  ),
+                  _buildBottomBar(),
                 ],
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildTopHeader() {
-    String surahName = '';
-    if (page.sections.isNotEmpty) {
-      surahName = page.sections.last.surahNameAr;
-    }
+    final surahName =
+        page.sections.isNotEmpty ? page.sections.last.surahNameAr : '';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      color: _headerBg.withValues(alpha: 0.5),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      color: _headerBg.withValues(alpha: 0.4),
       child: Row(
         children: [
-          // Juz
           Text(
             'الجزء ${_toArabicNumber(page.juz)}',
-            style: GoogleFonts.amiri(
-              fontSize: 11,
-              color: _frameColor,
-              fontWeight: FontWeight.bold,
-            ),
+            style: GoogleFonts.amiri(fontSize: 10, color: _frameColor),
           ),
           const Spacer(),
-          // Surah name
           Text(
-            'سُورَةُ $surahName',
+            'سورة $surahName',
             style: GoogleFonts.amiri(
-              fontSize: 13,
+              fontSize: 12,
               color: _frameColor,
               fontWeight: FontWeight.bold,
             ),
           ),
           const Spacer(),
-          // Page number
           Text(
             _toArabicNumber(page.pageNumber),
-            style: GoogleFonts.amiri(
-              fontSize: 11,
-              color: _frameColor,
-              fontWeight: FontWeight.bold,
-            ),
+            style: GoogleFonts.amiri(fontSize: 10, color: _frameColor),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDecorativeLine() {
-    return Container(
-      height: 3,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            _frameColor.withValues(alpha: 0.0),
-            _frameColor.withValues(alpha: 0.6),
-            _frameColor,
-            _frameColor.withValues(alpha: 0.6),
-            _frameColor.withValues(alpha: 0.0),
-          ],
-          stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
+  Widget _buildTextArea(WidgetRef ref, HighlightedAyah? highlighted) {
+    final totalTextLength = page.sections.fold<int>(
+      0,
+      (s, sec) => s + sec.ayahs.fold<int>(0, (a, ay) => a + ay.text.length),
+    );
+
+    // Adaptive font size
+    double fontSize;
+    if (totalTextLength > 1200) {
+      fontSize = 19;
+    } else if (totalTextLength > 800) {
+      fontSize = 21;
+    } else if (totalTextLength > 400) {
+      fontSize = 23;
+    } else {
+      fontSize = 25;
+    }
+
+    final sectionWidgets = <Widget>[];
+
+    for (final section in page.sections) {
+      if (section.showSurahHeader) {
+        sectionWidgets.add(_buildSurahHeader(section));
+      }
+      if (section.showBismillah) {
+        sectionWidgets.add(_buildBismillah(fontSize));
+      }
+
+      // Build one continuous RichText for all ayahs in this section
+      // This gives proper flowing justified Arabic text
+      final spans = <InlineSpan>[];
+
+      for (final ayah in section.ayahs) {
+        final isHighlighted = highlighted != null &&
+            highlighted.surahNumber == section.surahNumber &&
+            highlighted.ayahNumber == ayah.ayahNumber;
+
+        // Ayah text span
+        spans.add(TextSpan(
+          text: ayah.text,
+          style: GoogleFonts.amiri(
+            fontSize: fontSize,
+            height: 1.9,
+            color: _textColor,
+            backgroundColor: isHighlighted
+                ? _highlightColor.withValues(alpha: 0.4)
+                : null,
+          ),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              // Highlight the ayah
+              ref.read(highlightedAyahProvider.notifier).setHighlight(
+                    section.surahNumber,
+                    ayah.ayahNumber,
+                    page.pageNumber,
+                  );
+              // If audio is playing, seek to this ayah
+              final audio = ref.read(quranAudioProvider);
+              if (audio.isPlaying || audio.currentSurah != null) {
+                ref.read(quranAudioProvider.notifier).playFromAyah(
+                      section.surahNumber,
+                      ayah.ayahNumber,
+                    );
+              }
+            },
+        ));
+
+        // Ayah number marker
+        spans.add(TextSpan(
+          text: ' \u06DD${_toArabicNumber(ayah.ayahNumber)} ',
+          style: GoogleFonts.amiri(
+            fontSize: fontSize - 3,
+            color: _ayahMarkerColor,
+            height: 1.9,
+            backgroundColor: isHighlighted
+                ? _highlightColor.withValues(alpha: 0.4)
+                : null,
+          ),
+        ));
+      }
+
+      sectionWidgets.add(
+        SizedBox(
+          width: double.infinity,
+          child: RichText(
+            textAlign: TextAlign.justify,
+            textDirection: TextDirection.rtl,
+            text: TextSpan(children: spans),
+          ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
-  Widget _buildTextArea() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       child: Column(
-        children: [
-          for (int i = 0; i < page.sections.length; i++) ...[
-            if (page.sections[i].showSurahHeader)
-              _buildSurahTitle(page.sections[i]),
-            if (page.sections[i].showBismillah) _buildBismillah(),
-            _buildSectionText(page.sections[i]),
-            if (i < page.sections.length - 1) const SizedBox(height: 4),
-          ],
-        ],
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: sectionWidgets,
       ),
     );
   }
 
-  Widget _buildSurahTitle(PageSurahSection section) {
+  Widget _buildSurahHeader(PageSurahSection section) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8, top: 4),
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            _frameColor.withValues(alpha: 0.08),
-            _frameColor.withValues(alpha: 0.2),
-            _frameColor.withValues(alpha: 0.08),
+            _frameColor.withValues(alpha: 0.05),
+            _frameColor.withValues(alpha: 0.15),
+            _frameColor.withValues(alpha: 0.05),
           ],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _frameColor.withValues(alpha: 0.5),
-          width: 1.5,
+          color: _frameColor.withValues(alpha: 0.4),
+          width: 1,
         ),
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Left & Right ornaments
-          Positioned(
-            left: 12,
-            child: Text(
-              '❁',
-              style: TextStyle(
-                fontSize: 14,
-                color: _frameColor.withValues(alpha: 0.6),
-              ),
-            ),
+      child: Center(
+        child: Text(
+          'سُورَةُ ${section.surahNameAr}',
+          textDirection: TextDirection.rtl,
+          style: GoogleFonts.amiri(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF3E2723),
           ),
-          Positioned(
-            right: 12,
-            child: Text(
-              '❁',
-              style: TextStyle(
-                fontSize: 14,
-                color: _frameColor.withValues(alpha: 0.6),
-              ),
-            ),
-          ),
-          // Surah name
-          Text(
-            'سُورَةُ ${section.surahNameAr}',
-            textDirection: TextDirection.rtl,
-            style: GoogleFonts.amiri(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF3E2723),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildBismillah() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+  Widget _buildBismillah(double fontSize) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 4),
       child: Text(
         'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
         textAlign: TextAlign.center,
         textDirection: TextDirection.rtl,
         style: GoogleFonts.amiri(
-          fontSize: fontSize - 1,
+          fontSize: fontSize - 2,
           color: _textColor,
-          height: 1.6,
+          height: 1.8,
         ),
       ),
     );
   }
 
-  Widget _buildSectionText(PageSurahSection section) {
-    final spans = <InlineSpan>[];
-
-    for (final ayah in section.ayahs) {
-      // Ayah text
-      spans.add(TextSpan(
-        text: ayah.text,
-        style: GoogleFonts.amiri(
-          fontSize: fontSize,
-          height: 1.95,
-          color: _textColor,
-          wordSpacing: 2,
-        ),
-      ));
-      // Ayah end marker: ﴿١﴾
-      spans.add(TextSpan(
-        text: ' \u06DD${_toArabicNumber(ayah.ayahNumber)} ',
-        style: GoogleFonts.amiri(
-          fontSize: fontSize - 2,
-          color: _ayahMarkerColor,
-          height: 1.95,
-        ),
-      ));
-    }
-
-    return RichText(
-      textAlign: TextAlign.justify,
-      textDirection: TextDirection.rtl,
-      softWrap: true,
-      text: TextSpan(children: spans),
-    );
-  }
-
   Widget _buildBottomBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      color: _headerBg.withValues(alpha: 0.5),
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      color: _headerBg.withValues(alpha: 0.4),
       child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: _frameColor.withValues(alpha: 0.3)),
-              bottom: BorderSide(color: _frameColor.withValues(alpha: 0.3)),
-            ),
-          ),
-          child: Text(
-            _toArabicNumber(page.pageNumber),
-            style: GoogleFonts.amiri(
-              fontSize: 13,
-              color: _frameColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+        child: Text(
+          _toArabicNumber(page.pageNumber),
+          style: GoogleFonts.amiri(fontSize: 11, color: _frameColor),
         ),
       ),
     );
