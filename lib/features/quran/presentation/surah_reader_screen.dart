@@ -28,7 +28,7 @@ class SurahReaderScreen extends ConsumerWidget {
             ),
           ),
           loading: () => const Text(''),
-          error: (_, __) => const Text('خطأ'),
+          error: (_, _) => const Text('خطأ'),
         ),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnPrimary,

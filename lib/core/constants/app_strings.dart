@@ -43,6 +43,19 @@ class AppStrings {
   static const String addedToFavorites = 'تمت الإضافة إلى المفضلة';
   static const String removedFromFavorites = 'تمت الإزالة من المفضلة';
 
+  // Onboarding
+  static const String onboardingTitle1 = 'أذكارك اليومية في مكان واحد';
+  static const String onboardingDesc1 =
+      'أذكار الصباح والمساء والنوم وأذكار متنوعة من حصن المسلم مع عداد تلقائي';
+  static const String onboardingTitle2 = 'مواقيت الصلاة واتجاه القبلة';
+  static const String onboardingDesc2 =
+      'مواقيت صلاة دقيقة حسب موقعك واتجاه القبلة بالبوصلة';
+  static const String onboardingTitle3 = 'المصحف الشريف في جيبك';
+  static const String onboardingDesc3 =
+      'اقرأ القرآن الكريم كاملاً بخط واضح مع إمكانية الاستماع والبحث';
+  static const String getStarted = 'ابدأ';
+  static const String skip = 'تخطي';
+
   // Settings
   static const String fontSize = 'حجم الخط';
   static const String notifications = 'الإشعارات';

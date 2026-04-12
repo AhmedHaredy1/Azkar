@@ -23,7 +23,7 @@ class DuaDetailScreen extends ConsumerWidget {
             style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           loading: () => const Text(''),
-          error: (_, __) => const Text('خطأ'),
+          error: (_, _) => const Text('خطأ'),
         ),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnPrimary,

@@ -181,6 +181,31 @@ class QuranLocalSource {
     return 1;
   }
 
+  /// Build a list of 30 Juz entries with starting surah/ayah for each
+  Future<List<JuzInfo>> getJuzList() async {
+    final surahs = await loadSurahs();
+    final Map<int, JuzInfo> juzMap = {};
+
+    for (final surah in surahs) {
+      for (final ayah in surah.ayahs) {
+        final juz = ayah.juz;
+        if (!juzMap.containsKey(juz)) {
+          juzMap[juz] = JuzInfo(
+            juzNumber: juz,
+            startSurah: surah.number,
+            startSurahNameAr: surah.nameAr,
+            startAyah: ayah.number,
+            startPage: ayah.page,
+          );
+        }
+      }
+    }
+
+    final list = juzMap.values.toList()
+      ..sort((a, b) => a.juzNumber.compareTo(b.juzNumber));
+    return list;
+  }
+
   Future<List<SearchResult>> searchAyahs(String query) async {
     if (query.trim().isEmpty) return [];
     final surahs = await loadSurahs();
@@ -203,6 +228,23 @@ class QuranLocalSource {
     }
     return results;
   }
+}
+
+/// Juz info model
+class JuzInfo {
+  final int juzNumber;
+  final int startSurah;
+  final String startSurahNameAr;
+  final int startAyah;
+  final int startPage;
+
+  const JuzInfo({
+    required this.juzNumber,
+    required this.startSurah,
+    required this.startSurahNameAr,
+    required this.startAyah,
+    required this.startPage,
+  });
 }
 
 class _AyahEntry {

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../domain/models/dua_category.dart';
+import '../providers/duas_provider.dart';
 
-class DuaTextCard extends StatelessWidget {
+class DuaTextCard extends ConsumerWidget {
   final Dua dua;
   final int index;
 
@@ -16,7 +19,11 @@ class DuaTextCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final favorites = ref.watch(duaFavoritesProvider);
+    final duaKey = '${dua.categoryId}:${dua.id}';
+    final isFavorite = favorites.contains(duaKey);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(20),
@@ -61,22 +68,59 @@ class DuaTextCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 12),
-          // Share button
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              onPressed: () {
-                final shareText =
-                    '${dua.textAr}\n\n${dua.source.isNotEmpty ? "المصدر: ${dua.source}" : ""}\n\nمن تطبيق حصن المسلم';
-                Share.share(shareText);
-              },
-              icon: const Icon(
-                Icons.share_outlined,
-                size: 20,
-                color: AppColors.textSecondary,
+          // Action buttons row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Favorite button
+              IconButton(
+                onPressed: () {
+                  ref.read(duaFavoritesProvider.notifier).toggleFavorite(duaKey);
+                },
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  size: 22,
+                  color: isFavorite ? Colors.red.shade400 : AppColors.textSecondary,
+                ),
+                tooltip: 'المفضلة',
               ),
-              tooltip: 'مشاركة',
-            ),
+              const SizedBox(width: 8),
+              // Copy button
+              IconButton(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: dua.textAr));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('تم النسخ', style: GoogleFonts.cairo()),
+                      duration: const Duration(seconds: 1),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: AppColors.primary,
+                    ),
+                  );
+                },
+                icon: const Icon(
+                  Icons.copy_outlined,
+                  size: 20,
+                  color: AppColors.textSecondary,
+                ),
+                tooltip: 'نسخ',
+              ),
+              const SizedBox(width: 8),
+              // Share button
+              IconButton(
+                onPressed: () {
+                  final shareText =
+                      '${dua.textAr}\n\n${dua.source.isNotEmpty ? "المصدر: ${dua.source}" : ""}\n\nمن تطبيق حصن المسلم';
+                  Share.share(shareText);
+                },
+                icon: const Icon(
+                  Icons.share_outlined,
+                  size: 20,
+                  color: AppColors.textSecondary,
+                ),
+                tooltip: 'مشاركة',
+              ),
+            ],
           ),
         ],
       ),

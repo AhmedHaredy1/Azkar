@@ -7,6 +7,7 @@ import '../../features/azkar/presentation/azkar_completion_screen.dart';
 import '../../features/azkar/presentation/azkar_detail_screen.dart';
 import '../../features/azkar/presentation/azkar_favorites_screen.dart';
 import '../../features/duas/presentation/duas_categories_screen.dart';
+import '../../features/duas/presentation/duas_favorites_screen.dart';
 import '../../features/duas/presentation/dua_detail_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/prayer_times/presentation/prayer_times_screen.dart';
@@ -15,6 +16,7 @@ import '../../features/quran/presentation/surah_list_screen.dart';
 import '../../features/quran/presentation/surah_reader_screen.dart';
 import '../../features/sebha/presentation/sebha_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 
 /// Creates the app router configuration with all routes.
@@ -27,6 +29,13 @@ GoRouter createRouter() {
         path: '/splash',
         name: 'splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+
+      // Onboarding screen (first launch only, no bottom nav)
+      GoRoute(
+        path: '/onboarding',
+        name: 'onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
 
       // Main shell with bottom navigation
@@ -74,6 +83,11 @@ GoRouter createRouter() {
             name: 'duas',
             builder: (context, state) => const DuasCategoriesScreen(),
             routes: [
+              GoRoute(
+                path: 'favorites',
+                name: 'duas-favorites',
+                builder: (context, state) => const DuasFavoritesScreen(),
+              ),
               GoRoute(
                 path: ':categoryId',
                 name: 'duas-category',
@@ -140,9 +154,15 @@ class MainShellScreen extends StatelessWidget {
         location.startsWith('/duas') ||
         location.startsWith('/sebha') ||
         location.startsWith('/prayer-times') ||
-        location.startsWith('/qibla')) return 1;
-    if (location.startsWith('/quran')) return 2;
-    if (location.startsWith('/settings')) return 3;
+        location.startsWith('/qibla')) {
+      return 1;
+    }
+    if (location.startsWith('/quran')) {
+      return 2;
+    }
+    if (location.startsWith('/settings')) {
+      return 3;
+    }
     return 0;
   }
 

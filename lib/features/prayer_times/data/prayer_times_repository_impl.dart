@@ -36,22 +36,32 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
 
   @override
   List<PrayerTime> getTodayPrayerTimes(double lat, double lng) {
+    return getPrayerTimesForDate(lat, lng, DateTime.now());
+  }
+
+  @override
+  List<PrayerTime> getPrayerTimesForDate(
+      double lat, double lng, DateTime date) {
     final coordinates = adhan.Coordinates(lat, lng);
-    final now = DateTime.now();
-    final dateComponents = adhan.DateComponents(now.year, now.month, now.day);
+    final dateComponents =
+        adhan.DateComponents(date.year, date.month, date.day);
     final params = _getCalculationParams();
-    final prayerTimes = adhan.PrayerTimes(coordinates, dateComponents, params);
+    final prayerTimes =
+        adhan.PrayerTimes(coordinates, dateComponents, params);
 
     final times = <PrayerTime>[
       PrayerTime(name: 'Fajr', nameAr: 'الفجر', time: prayerTimes.fajr),
-      PrayerTime(name: 'Sunrise', nameAr: 'الشروق', time: prayerTimes.sunrise),
+      PrayerTime(
+          name: 'Sunrise', nameAr: 'الشروق', time: prayerTimes.sunrise),
       PrayerTime(name: 'Dhuhr', nameAr: 'الظهر', time: prayerTimes.dhuhr),
       PrayerTime(name: 'Asr', nameAr: 'العصر', time: prayerTimes.asr),
-      PrayerTime(name: 'Maghrib', nameAr: 'المغرب', time: prayerTimes.maghrib),
+      PrayerTime(
+          name: 'Maghrib', nameAr: 'المغرب', time: prayerTimes.maghrib),
       PrayerTime(name: 'Isha', nameAr: 'العشاء', time: prayerTimes.isha),
     ];
 
-    // Determine next prayer
+    // Determine next prayer (relative to now)
+    final now = DateTime.now();
     final nextPrayerTime = _findNextPrayer(times, now);
     if (nextPrayerTime != null) {
       return times.map((pt) {

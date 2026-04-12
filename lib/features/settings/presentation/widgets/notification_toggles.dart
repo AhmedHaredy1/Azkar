@@ -167,7 +167,7 @@ class _NotificationTile extends StatelessWidget {
         ),
         value: value,
         onChanged: onChanged,
-        activeColor: activeColor,
+        activeTrackColor: activeColor,
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
       ),

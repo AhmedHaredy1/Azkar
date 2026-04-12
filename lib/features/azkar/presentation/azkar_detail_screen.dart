@@ -244,7 +244,7 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
           ],
         ),
         loading: () => const Text(''),
-        error: (_, __) => const Text('خطأ'),
+        error: (_, _) => const Text('خطأ'),
       ),
       backgroundColor: AppColors.primary,
       foregroundColor: AppColors.textOnPrimary,
@@ -268,7 +268,7 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
           );
         },
         loading: () => null,
-        error: (_, __) => null,
+        error: (_, _) => null,
       ),
     );
   }

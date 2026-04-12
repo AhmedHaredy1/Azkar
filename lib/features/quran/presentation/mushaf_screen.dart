@@ -70,7 +70,8 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
     setState(() => _currentPage = page);
   }
 
-  // RTL: "next" page = higher page number = swipe right = Left arrow key
+  // In RTL context (no reverse), PageView index increases left-to-right,
+  // so nextPage() = swipe left = higher page number = correct Mushaf direction.
   void _nextPage() {
     if (_currentPage < 604) {
       _pageController.nextPage(
@@ -91,13 +92,11 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
 
   void _handleKeyPress(KeyEvent event) {
     if (event is! KeyDownEvent) return;
-    // PageView is reversed (RTL), so:
-    // Right arrow = previous page (lower number) = swipe left in RTL
-    // Left arrow = next page (higher number) = swipe right in RTL
-    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-      _previousPage();
-    } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+    // RTL: Left arrow = next page (higher number), Right arrow = previous page
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
       _nextPage();
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      _previousPage();
     }
   }
 
@@ -182,7 +181,6 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
                 // ===== MUSHAF PAGE VIEW =====
                 PageView.builder(
                   controller: _pageController,
-                  reverse: true, // RTL
                   itemCount: 604,
                   onPageChanged: (index) {
                     final page = index + 1;
@@ -214,7 +212,7 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
                 ),
 
                 // ===== NAVIGATION ARROWS (always visible, subtle) =====
-                // Right arrow (previous page in RTL = lower page number)
+                // Right arrow (previous page = lower page number)
                 Positioned(
                   right: 0,
                   top: 0,
@@ -233,7 +231,7 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
                     ),
                   ),
                 ),
-                // Left arrow (next page in RTL = higher page number)
+                // Left arrow (next page = higher page number)
                 Positioned(
                   left: 0,
                   top: 0,

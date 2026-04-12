@@ -7,6 +7,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../prayer_times/presentation/providers/prayer_times_provider.dart';
 
+/// Checks if the device has a compass sensor
+final compassAvailableProvider = FutureProvider<bool>((ref) async {
+  // FlutterCompass.events will be null if no sensor is available
+  final events = FlutterCompass.events;
+  if (events == null) return false;
+
+  // Try listening for a short time — if no event comes, sensor may be absent
+  try {
+    final event = await events.first.timeout(
+      const Duration(seconds: 3),
+      onTimeout: () => throw TimeoutException('No compass data'),
+    );
+    return event.heading != null;
+  } catch (_) {
+    return false;
+  }
+});
+
+/// Compass accuracy provider (null = unknown, low accuracy = needs calibration)
+final compassAccuracyProvider = StreamProvider<double?>((ref) {
+  return FlutterCompass.events?.map((event) => event.accuracy) ??
+      const Stream.empty();
+});
+
 final compassHeadingProvider = StreamProvider<double>((ref) {
   return FlutterCompass.events?.map((event) => event.heading ?? 0.0) ??
       const Stream.empty();

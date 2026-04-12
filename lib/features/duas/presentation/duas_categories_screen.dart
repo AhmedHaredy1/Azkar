@@ -23,6 +23,13 @@ class DuasCategoriesScreen extends ConsumerWidget {
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnPrimary,
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite_border),
+            onPressed: () => context.push('/duas/favorites'),
+            tooltip: 'المفضلة',
+          ),
+        ],
       ),
       body: categoriesAsync.when(
         data: (categories) {

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/services/storage_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -34,9 +35,22 @@ class _SplashScreenState extends State<SplashScreen>
 
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        context.go('/home');
+        _navigateToNextScreen();
       }
     });
+  }
+
+  /// Check isFirstLaunch flag and navigate accordingly.
+  void _navigateToNextScreen() {
+    final storage = StorageService.instance;
+    final isFirstLaunch =
+        storage.getSetting<bool>('isFirstLaunch', defaultValue: true) ?? true;
+
+    if (isFirstLaunch) {
+      context.go('/onboarding');
+    } else {
+      context.go('/home');
+    }
   }
 
   @override

@@ -10,6 +10,8 @@ import '../../domain/models/quran_page.dart';
 import '../../domain/models/surah.dart';
 import '../../domain/repositories/quran_repository.dart';
 
+export '../../data/quran_local_source.dart' show JuzInfo;
+
 final quranLocalSourceProvider = Provider<QuranLocalSource>((ref) {
   return QuranLocalSource();
 });
@@ -20,6 +22,11 @@ final quranRepositoryProvider = Provider<QuranRepository>((ref) {
 
 final surahListProvider = FutureProvider<List<Surah>>((ref) {
   return ref.read(quranRepositoryProvider).getSurahs();
+});
+
+// Juz list provider
+final juzListProvider = FutureProvider<List<JuzInfo>>((ref) {
+  return ref.read(quranLocalSourceProvider).getJuzList();
 });
 
 final surahProvider = FutureProvider.family<Surah?, int>((ref, number) {

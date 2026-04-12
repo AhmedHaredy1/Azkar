@@ -6,20 +6,21 @@ import 'package:just_audio/just_audio.dart';
 import '../../../../core/services/storage_service.dart';
 import 'quran_provider.dart';
 
-/// Reciters with per-ayah audio from everyayah.com
+/// Reciters with per-ayah audio.
+/// Uses cdn.islamic.network for per-ayah audio (128kbps when available, 64kbps fallback).
 class Reciter {
   final String id;
   final String nameAr;
   final String nameEn;
-  final String ayahFolder; // everyayah.com folder for per-ayah files
-  final String surahBaseUrl; // mp3quran.net for full surah fallback
+  final String cdnReciterId; // cdn.islamic.network reciter identifier
+  final int bitrate; // available bitrate on CDN (128 or 64)
 
   const Reciter({
     required this.id,
     required this.nameAr,
     required this.nameEn,
-    required this.ayahFolder,
-    required this.surahBaseUrl,
+    required this.cdnReciterId,
+    this.bitrate = 128,
   });
 }
 
@@ -28,50 +29,46 @@ const availableReciters = [
     id: 'alafasy',
     nameAr: 'مشاري العفاسي',
     nameEn: 'Mishary Alafasy',
-    ayahFolder: 'Alafasy_128kbps',
-    surahBaseUrl: 'https://server8.mp3quran.net/afs',
+    cdnReciterId: 'ar.alafasy',
   ),
   Reciter(
     id: 'abdulbasit',
     nameAr: 'عبد الباسط عبد الصمد',
     nameEn: 'Abdul Basit',
-    ayahFolder: 'Abdul_Basit_Murattal_192kbps',
-    surahBaseUrl: 'https://server7.mp3quran.net/basit',
+    cdnReciterId: 'ar.abdulbasitmurattal',
+    bitrate: 64,
   ),
   Reciter(
     id: 'husary',
     nameAr: 'محمود خليل الحصري',
     nameEn: 'Al-Husary',
-    ayahFolder: 'Husary_128kbps',
-    surahBaseUrl: 'https://server13.mp3quran.net/husr',
+    cdnReciterId: 'ar.husary',
   ),
   Reciter(
     id: 'minshawi',
     nameAr: 'محمد صديق المنشاوي',
     nameEn: 'Al-Minshawi',
-    ayahFolder: 'Minshawy_Murattal_128kbps',
-    surahBaseUrl: 'https://server10.mp3quran.net/minsh',
+    cdnReciterId: 'ar.minshawi',
   ),
   Reciter(
     id: 'sudais',
     nameAr: 'عبد الرحمن السديس',
     nameEn: 'As-Sudais',
-    ayahFolder: 'Abdurrahmaan_As-Sudais_192kbps',
-    surahBaseUrl: 'https://server11.mp3quran.net/sds',
+    cdnReciterId: 'ar.abdurrahmaansudais',
+    bitrate: 64,
   ),
   Reciter(
     id: 'shuraim',
     nameAr: 'سعود الشريم',
     nameEn: 'Ash-Shuraim',
-    ayahFolder: 'Saood_ash-Shuraym_128kbps',
-    surahBaseUrl: 'https://server7.mp3quran.net/shur',
+    cdnReciterId: 'ar.saoodshuraym',
+    bitrate: 64,
   ),
   Reciter(
     id: 'maher',
     nameAr: 'ماهر المعيقلي',
     nameEn: 'Maher Al-Muaiqly',
-    ayahFolder: 'MauroAyah',
-    surahBaseUrl: 'https://server12.mp3quran.net/maher',
+    cdnReciterId: 'ar.mahermuaiqly',
   ),
 ];
 
@@ -79,13 +76,37 @@ const availableReciters = [
 class PlayingAyahInfo {
   final int surahNumber;
   final int ayahNumber;
+  final int globalAyahNumber; // 1-6236, used for audio CDN URL
   final int page;
 
   const PlayingAyahInfo({
     required this.surahNumber,
     required this.ayahNumber,
+    required this.globalAyahNumber,
     required this.page,
   });
+}
+
+/// Cumulative ayah counts per surah (surah 1 starts at offset 0).
+/// globalAyahNumber = _surahAyahOffset[surahNumber - 1] + ayahNumber
+const List<int> _surahAyahOffsets = [
+  0, 7, 293, 493, 669, 789, 954, 1160, 1235, 1364, 1473, // 1-10
+  1596, 1707, 1750, 1802, 1901, 2029, 2140, 2250, 2348, 2483, // 11-20
+  2595, 2673, 2791, 2855, 2932, 3003, 3067, 3159, 3228, 3261, // 21-30
+  3295, 3325, 3398, 3452, 3497, 3580, 3662, 3750, 3823, 3898, // 31-40
+  3952, 4005, 4094, 4149, 4186, 4221, 4259, 4285, 4303, 4348, // 41-50
+  4413, 4462, 4523, 4578, 4655, 4751, 4846, 4868, 4892, 4905, // 51-60
+  4919, 4930, 4941, 4959, 4971, 4983, 5013, 5065, 5117, 5161, // 61-70
+  5189, 5217, 5237, 5293, 5333, 5364, 5414, 5454, 5500, 5542, // 71-80
+  5571, 5590, 5626, 5651, 5673, 5690, 5709, 5735, 5765, 5785, // 81-90
+  5800, 5821, 5832, 5840, 5848, 5867, 5872, 5880, 5888, 5896, // 91-100
+  5907, 5915, 5918, 5927, 5932, 5937, 5944, 5947, 5953, 5956, // 101-110
+  5959, 5963, 5968, 5973, // 111-114
+];
+
+int _getGlobalAyahNumber(int surahNumber, int ayahNumber) {
+  if (surahNumber < 1 || surahNumber > 114) return ayahNumber;
+  return _surahAyahOffsets[surahNumber - 1] + ayahNumber;
 }
 
 /// State for the Quran audio player
@@ -222,15 +243,15 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
     });
   }
 
-  /// Build per-ayah URL from everyayah.com
-  String _getAyahUrl(int surahNumber, int ayahNumber) {
-    final surah = surahNumber.toString().padLeft(3, '0');
-    final ayah = ayahNumber.toString().padLeft(3, '0');
-    return 'https://everyayah.com/data/${state.reciter.ayahFolder}/$surah$ayah.mp3';
+  /// Build per-ayah URL from cdn.islamic.network.
+  String _getAyahUrl(int globalAyahNumber) {
+    final reciter = state.reciter;
+    return 'https://cdn.islamic.network/quran/audio/${reciter.bitrate}/${reciter.cdnReciterId}/$globalAyahNumber.mp3';
   }
 
-  /// Play a surah ayah-by-ayah with sync highlighting
-  Future<void> playSurah(int surahNumber) async {
+  /// Play a surah ayah-by-ayah with sync highlighting.
+  /// [startFromAyah] optionally starts from a specific ayah number instead of the first.
+  Future<void> playSurah(int surahNumber, {int? startFromAyah}) async {
     try {
       state = state.copyWith(
         isLoading: true,
@@ -255,6 +276,7 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
               ayahInfoList.add(PlayingAyahInfo(
                 surahNumber: surahNumber,
                 ayahNumber: ayah.ayahNumber,
+                globalAyahNumber: _getGlobalAyahNumber(surahNumber, ayah.ayahNumber),
                 page: p,
               ));
             }
@@ -272,15 +294,25 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
 
       _ayahPlaylist = ayahInfoList;
 
+      // Find the starting index if a specific ayah was requested
+      int initialIndex = 0;
+      if (startFromAyah != null) {
+        final idx = ayahInfoList.indexWhere(
+            (a) => a.ayahNumber == startFromAyah);
+        if (idx >= 0) {
+          initialIndex = idx;
+        }
+      }
+
       // Build a playlist of audio sources
       final sources = ayahInfoList.map((info) {
         return AudioSource.uri(
-          Uri.parse(_getAyahUrl(info.surahNumber, info.ayahNumber)),
+          Uri.parse(_getAyahUrl(info.globalAyahNumber)),
         );
       }).toList();
 
       final playlist = ConcatenatingAudioSource(children: sources);
-      await _player.setAudioSource(playlist);
+      await _player.setAudioSource(playlist, initialIndex: initialIndex);
 
       state = state.copyWith(
         totalAyahs: ayahInfoList.length,
@@ -311,17 +343,8 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
         return;
       }
     }
-    // Otherwise, load the surah and seek
-    await playSurah(surahNumber);
-    // Wait a moment for playlist to load, then seek
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (_ayahPlaylist.isNotEmpty) {
-      final index = _ayahPlaylist.indexWhere(
-          (a) => a.surahNumber == surahNumber && a.ayahNumber == ayahNumber);
-      if (index > 0) {
-        await _player.seek(Duration.zero, index: index);
-      }
-    }
+    // Load the surah starting directly from the requested ayah
+    await playSurah(surahNumber, startFromAyah: ayahNumber);
   }
 
   /// Skip to next ayah
@@ -364,23 +387,22 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
   }
 
   Future<void> setReciter(String reciterId) async {
+    final hadAudio = state.currentSurah != null;
     final wasPlaying = state.isPlaying;
     final currentSurah = state.currentSurah;
-    final currentIndex = state.currentAyahIndex;
+    // Get the current ayah number (not index) for accurate resume
+    final currentAyahNumber = state.playingAyah?.ayahNumber;
 
     await _player.stop();
     _ayahPlaylist = [];
     state = state.copyWith(reciterId: reciterId, clearAyah: true);
     await _storage.putSetting('reciterId', reciterId);
 
-    // Restart with new reciter from same position
-    if (wasPlaying && currentSurah != null) {
-      await playSurah(currentSurah);
-      if (currentIndex != null && currentIndex > 0) {
-        await Future.delayed(const Duration(milliseconds: 500));
-        if (_ayahPlaylist.isNotEmpty && currentIndex < _ayahPlaylist.length) {
-          await _player.seek(Duration.zero, index: currentIndex);
-        }
+    // Resume from the same ayah with the new reciter (whether playing or paused)
+    if (hadAudio && currentSurah != null) {
+      await playSurah(currentSurah, startFromAyah: currentAyahNumber);
+      if (!wasPlaying) {
+        await _player.pause();
       }
     }
   }

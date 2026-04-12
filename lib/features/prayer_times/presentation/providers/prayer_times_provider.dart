@@ -14,6 +14,23 @@ final prayerTimesRepositoryProvider = Provider<PrayerTimesRepositoryImpl>((ref) 
 });
 
 final locationProvider = FutureProvider<Position>((ref) async {
+  // Check for manual location override from settings
+  final settings = ref.watch(settingsProvider);
+  if (settings.latitude != null && settings.longitude != null) {
+    return Position(
+      latitude: settings.latitude!,
+      longitude: settings.longitude!,
+      timestamp: DateTime.now(),
+      accuracy: 0,
+      altitude: 0,
+      altitudeAccuracy: 0,
+      heading: 0,
+      headingAccuracy: 0,
+      speed: 0,
+      speedAccuracy: 0,
+    );
+  }
+
   bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
   if (!serviceEnabled) {
     throw Exception('خدمة الموقع غير مفعّلة');

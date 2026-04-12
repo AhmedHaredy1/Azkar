@@ -129,7 +129,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
                   loading: () => const Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
                   ),
-                  error: (_, __) => const Center(child: Text('خطأ')),
+                  error: (_, _) => const Center(child: Text('خطأ')),
                 ),
                 // Text search tab
                 _buildSearchTab(),
@@ -307,12 +307,14 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
                     style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
                   ),
                   onTap: () async {
+                    final nav = Navigator.of(context);
+                    final goToPage = widget.onGoToPage;
                     final page = await ref
                         .read(quranLocalSourceProvider)
                         .getPageForSurah(s.number);
                     if (mounted) {
-                      Navigator.of(context).pop();
-                      widget.onGoToPage(page);
+                      nav.pop();
+                      goToPage(page);
                     }
                   },
                 );

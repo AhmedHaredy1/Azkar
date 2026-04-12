@@ -1138,7 +1138,7 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 
 | Enhancement | Description | Complexity |
 |-------------|-------------|------------|
-| Quran Audio | Stream recitation from everyayah.com or mp3quran.net. Per-Surah playback. | High |
+| Quran Audio | Stream recitation from cdn.islamic.network (128kbps). Per-Surah ayah-by-ayah playback with sync highlight. | High |
 | Home Screen Widget | Android widget showing next prayer time or daily Ayah | Medium |
 | Monthly Prayer Calendar | Calendar view of prayer times for the entire month | Low |
 | Azkar Search | Search across all Azkar categories by text | Low |
@@ -1205,7 +1205,7 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 
 ---
 
-## TODO Tracker (Updated: 08.04.2026)
+## TODO Tracker (Updated: 12.04.2026)
 
 ### Feature 1: Splash Screen
 - [x] Display app logo and name
@@ -1213,11 +1213,11 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 - [x] Navigate to Home
 
 ### Feature 2: Onboarding
-- [ ] 3 swipeable pages explaining features
-- [ ] Request location permission
-- [ ] Request notification permission
-- [ ] "Get Started" button
-- [ ] First-launch flag
+- [x] 3 swipeable pages explaining features
+- [x] Request location permission
+- [x] Request notification permission
+- [x] "Get Started" button
+- [x] First-launch flag
 
 ### Feature 3: Home Dashboard
 - [x] Quick-access grid (Azkar, Quran, Sebha, Prayer Times, Qibla, Duas)
@@ -1241,8 +1241,8 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 - [x] Category list
 - [x] Dua detail screen with Arabic text
 - [x] Data loading from duas.json
-- [ ] Copy and share functionality
-- [ ] Favorites
+- [x] Copy and share functionality
+- [x] Favorites
 
 ### Feature 6: Quran
 - [x] Surah list (114 surahs with Arabic/English names, Makki/Madani badges)
@@ -1263,8 +1263,8 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 - [x] Next/prev ayah controls
 - [x] Reciter picker (bottom sheet)
 - [x] Adaptive font sizing
-- [ ] Juz browser (navigate by Juz 1-30)
-- [ ] Bookmarks list screen (UI to view/manage saved bookmarks)
+- [x] Juz browser (navigate by Juz 1-30)
+- [x] Bookmarks list screen (UI to view/manage saved bookmarks)
 
 ### Feature 7: Sebha / Tasbeeh
 - [x] Large circular tap area
@@ -1272,9 +1272,9 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 - [x] Preset dhikr phrases
 - [x] Vibration feedback
 - [x] Persist count across sessions
-- [ ] Reset with confirmation dialog
-- [ ] Target count (33, 99, custom) with completion notification
-- [ ] Cumulative total count
+- [x] Reset with confirmation dialog
+- [x] Target count (33, 99, custom) with completion notification
+- [x] Cumulative total count
 
 ### Feature 8: Prayer Times
 - [x] 6 prayer times (Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha)
@@ -1283,24 +1283,24 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 - [x] 9 calculation methods
 - [x] DST/timezone handled correctly (via OS)
 - [x] Settings integration (calculation method applied)
-- [ ] Countdown timer for next prayer
-- [ ] Manual location override (city search)
-- [ ] Monthly calendar view
+- [x] Countdown timer for next prayer
+- [x] Manual location override (city search)
+- [x] Monthly calendar view
 
 ### Feature 9: Qibla
 - [x] Compass pointing toward Kaaba
 - [x] Degree display
 - [x] Location-based calculation
-- [ ] Calibration instruction
-- [ ] Missing compass sensor handling
+- [x] Calibration instruction
+- [x] Missing compass sensor handling
 
 ### Feature 10: Notifications
-- [ ] Prayer time Adhan notifications (per-prayer toggle)
-- [ ] Morning Azkar reminder
-- [ ] Evening Azkar reminder
-- [ ] Handle Android 13+ notification permission
-- [ ] Handle exact alarm permission (Android 12+)
-- [ ] Deep link from notification to correct screen
+- [x] Prayer time Adhan notifications (per-prayer toggle)
+- [x] Morning Azkar reminder
+- [x] Evening Azkar reminder
+- [x] Handle Android 13+ notification permission
+- [x] Handle exact alarm permission (Android 12+)
+- [x] Deep link from notification to correct screen
 
 ### Feature 11: Settings
 - [x] Calculation method selector
@@ -1311,9 +1311,10 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 - [x] About / version info
 
 ### Deployment
-- [ ] App icon (Islamic design, green & gold)
-- [ ] Native splash screen
-- [ ] Remove debug prints / TODO comments
+- [x] App icon (Islamic design, green & gold)
+- [x] Native splash screen
+- [x] Remove debug prints / TODO comments
+- [x] Fix all analyzer issues (0 warnings)
 - [ ] Generate signed AAB
 - [ ] Play Store listing (Arabic description, screenshots)
 - [ ] Internal testing
@@ -1336,24 +1337,20 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 | Category | Done | Total | % |
 |----------|------|-------|---|
 | Splash | 3 | 3 | 100% |
-| Onboarding | 0 | 5 | 0% |
+| Onboarding | 5 | 5 | 100% |
 | Home | 7 | 7 | 100% |
 | Azkar | 7 | 7 | 100% |
-| Duas | 3 | 5 | 60% |
-| Quran | 18 | 20 | 90% |
-| Sebha | 5 | 8 | 63% |
-| Prayer Times | 6 | 9 | 67% |
-| Qibla | 3 | 5 | 60% |
-| Notifications | 0 | 6 | 0% |
+| Duas | 5 | 5 | 100% |
+| Quran | 20 | 20 | 100% |
+| Sebha | 8 | 8 | 100% |
+| Prayer Times | 9 | 9 | 100% |
+| Qibla | 5 | 5 | 100% |
+| Notifications | 6 | 6 | 100% |
 | Settings | 6 | 6 | 100% |
-| Deployment | 0 | 6 | 0% |
-| **TOTAL** | **58** | **87** | **67%** |
+| Deployment | 4 | 8 | 50% |
+| **TOTAL** | **85** | **89** | **96%** |
 
 Key files referenced:
 - **`C:\Users\ahmed\Downloads\Azkar\PLAN.md`** -- The full implementation plan (this document)
 - **`C:\Users\ahmed\Downloads\Azkar\SESSION_HISTORY.md`** -- Session tracking file (already exists)
 - **`C:\Users\ahmed\Downloads\Azkar\SESSION_COMPACT.md`** -- Session summary file (already exists)
-agentId: ad6ec11783ce7f9fe (use SendMessage with to: 'ad6ec11783ce7f9fe' to continue this agent)
-<usage>total_tokens: 28758
-tool_uses: 3
-duration_ms: 320897</usage>

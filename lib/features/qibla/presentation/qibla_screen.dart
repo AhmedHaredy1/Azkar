@@ -12,6 +12,14 @@ class QiblaScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final qiblaAngle = ref.watch(qiblaCompassAngleProvider);
+    final compassAccuracy = ref.watch(compassAccuracyProvider);
+
+    // Check if calibration needed (accuracy < 15 degrees = low)
+    final bool needsCalibration = compassAccuracy.when(
+      data: (accuracy) => accuracy != null && accuracy < 15,
+      loading: () => false,
+      error: (_, _) => false,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -27,47 +35,85 @@ class QiblaScreen extends ConsumerWidget {
         child: Center(
           child: qiblaAngle.when(
             data: (angle) {
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Kaaba icon
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    // Calibration warning
+                    if (needsCalibration)
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: AppColors.secondary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.warning_amber_rounded,
+                              color: AppColors.secondary,
+                              size: 28,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'قم بتحريك الهاتف على شكل رقم ٨ لمعايرة البوصلة',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 14,
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    // Kaaba icon
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.mosque,
+                        size: 36,
+                        color: AppColors.secondary,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.mosque,
-                      size: 36,
-                      color: AppColors.secondary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'وجّه هاتفك نحو القبلة',
-                    style: GoogleFonts.cairo(
-                      fontSize: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  QiblaCompass(angle: angle),
-                  const SizedBox(height: 40),
-                  // Info text
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Text(
-                      'ضع هاتفك على سطح مستوٍ للحصول على أدق قراءة',
-                      textAlign: TextAlign.center,
+                    const SizedBox(height: 12),
+                    Text(
+                      'وجّه هاتفك نحو القبلة',
                       style: GoogleFonts.cairo(
-                        fontSize: 13,
+                        fontSize: 16,
                         color: AppColors.textSecondary,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 32),
+                    QiblaCompass(angle: angle),
+                    const SizedBox(height: 40),
+                    // Info text
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Text(
+                        'ضع هاتفك على سطح مستوٍ للحصول على أدق قراءة',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.cairo(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
               );
             },
             loading: () => Column(
@@ -84,42 +130,60 @@ class QiblaScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.explore_off, size: 64, color: AppColors.textSecondary),
-                  const SizedBox(height: 16),
-                  Text(
-                    'تعذّر تحديد اتجاه القبلة',
-                    style: GoogleFonts.cairo(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'تأكد من تفعيل خدمة الموقع والبوصلة',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.cairo(
-                      fontSize: 14,
+            error: (error, _) {
+              // Check if this is likely a missing compass sensor
+              final errorMsg = error.toString().toLowerCase();
+              final isCompassMissing = errorMsg.contains('timeout') ||
+                  errorMsg.contains('sensor') ||
+                  errorMsg.contains('compass') ||
+                  errorMsg.contains('empty');
+
+              return Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isCompassMissing ? Icons.sensors_off : Icons.explore_off,
+                      size: 64,
                       color: AppColors.textSecondary,
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      ref.invalidate(qiblaDirectionProvider);
-                      ref.invalidate(compassHeadingProvider);
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('إعادة المحاولة'),
-                  ),
-                ],
-              ),
-            ),
+                    const SizedBox(height: 16),
+                    Text(
+                      isCompassMissing
+                          ? 'جهازك لا يدعم البوصلة'
+                          : 'تعذّر تحديد اتجاه القبلة',
+                      style: GoogleFonts.cairo(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isCompassMissing
+                          ? 'هذا الجهاز لا يحتوي على مستشعر بوصلة (مقياس مغناطيسي)'
+                          : 'تأكد من تفعيل خدمة الموقع والبوصلة',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    if (!isCompassMissing)
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          ref.invalidate(qiblaDirectionProvider);
+                          ref.invalidate(compassHeadingProvider);
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('إعادة المحاولة'),
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
