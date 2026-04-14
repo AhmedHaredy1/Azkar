@@ -38,8 +38,16 @@ dependencies:
   # Notifications
   flutter_local_notifications: ^18.0.1
 
+  # HTTP
+  http: ^1.2.2
+
   # Audio
   just_audio: ^0.9.42
+  audio_session: ^0.1.25
+
+  # Video
+  video_player: ^2.9.3
+  chewie: ^1.8.5
 
   # Timezone (required for flutter_local_notifications zonedSchedule)
   timezone: ^0.10.0
@@ -49,6 +57,7 @@ dependencies:
   vibration: ^2.0.0
   intl: ^0.20.2
   hijri: ^3.0.0
+  audio_service: ^0.18.18
 
 dev_dependencies:
   flutter_test:

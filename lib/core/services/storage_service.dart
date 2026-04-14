@@ -38,6 +38,10 @@ class StorageService {
     await _settings.put(key, value);
   }
 
+  Future<void> deleteSetting(String key) async {
+    await _settings.delete(key);
+  }
+
   // --- Bookmarks ---
 
   Box<dynamic> get bookmarksBox => _bookmarks;

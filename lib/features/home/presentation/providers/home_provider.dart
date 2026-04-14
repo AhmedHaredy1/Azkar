@@ -7,6 +7,7 @@ import 'package:hijri/hijri_calendar.dart';
 import '../../../prayer_times/presentation/providers/prayer_times_provider.dart';
 import '../../../prayer_times/domain/models/prayer_time.dart';
 import '../../../quran/presentation/providers/quran_provider.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 
 // ──────────────────────────────────────────────
 // Greeting Provider
@@ -184,17 +185,56 @@ class PrayerCountdownNotifier extends StateNotifier<PrayerCountdownState> {
   PrayerCountdownNotifier(this._ref)
     : super(const PrayerCountdownState(hasData: false)) {
     _init();
+
+    // Listen to nextPrayerProvider changes (triggered by location/settings changes)
+    // so the countdown automatically refreshes when the user changes location.
+    _ref.listen<AsyncValue<PrayerTime?>>(nextPrayerProvider, (prev, next) {
+      next.whenData((nextPrayer) {
+        if (nextPrayer != null) {
+          _updateState(nextPrayer);
+          _startTimer(nextPrayer);
+        } else {
+          _loadTomorrowFajr();
+        }
+      });
+    });
   }
 
   Future<void> _init() async {
     try {
+      // Invalidate to get fresh data based on current time
+      _ref.invalidate(nextPrayerProvider);
       final nextPrayer = await _ref.read(nextPrayerProvider.future);
       if (nextPrayer != null) {
         _updateState(nextPrayer);
         _startTimer(nextPrayer);
       } else {
-        // All prayers passed for today — show tomorrow's Fajr
-        // For now just show no data
+        // All prayers passed — show tomorrow's Fajr
+        await _loadTomorrowFajr();
+      }
+    } catch (_) {
+      state = const PrayerCountdownState(hasData: false);
+    }
+  }
+
+  Future<void> _loadTomorrowFajr() async {
+    try {
+      final position = await _ref.read(locationProvider.future);
+      final repo = _ref.read(prayerTimesRepositoryProvider);
+      final settings = _ref.read(settingsProvider);
+      final tomorrow = DateTime.now().add(const Duration(days: 1));
+      final tomorrowTimes = repo.getPrayerTimesForDate(
+        position.latitude,
+        position.longitude,
+        tomorrow,
+        utcOffset: settings.utcOffset,
+      );
+      // First prayer (Fajr)
+      if (tomorrowTimes.isNotEmpty) {
+        final fajr = tomorrowTimes.first;
+        _updateState(fajr);
+        _startTimer(fajr);
+      } else {
         state = const PrayerCountdownState(hasData: false);
       }
     } catch (_) {
@@ -217,11 +257,13 @@ class PrayerCountdownNotifier extends StateNotifier<PrayerCountdownState> {
   void _startTimer(PrayerTime prayer) {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
       final now = DateTime.now();
       final remaining = prayer.time.difference(now);
       if (remaining.isNegative) {
         _timer?.cancel();
         // Refresh to get the next prayer
+        _ref.invalidate(prayerTimesProvider);
         _init();
         return;
       }

@@ -91,6 +91,27 @@ Ahmed Haredy is an experienced SAP ABAP developer building his first Flutter app
 - Sub-feature 11g: Reset Sebha counter
 - Sub-feature 11h: Language toggle (Arabic only for MVP, multi-language in future)
 
+**Feature 12: Quran Listen (استمع للقرآن)**
+- Sub-feature 12a: Surah selector (1-114 with Arabic names)
+- Sub-feature 12b: Moshaf type filter (مرتل, مجود, معلم, ورش, etc.)
+- Sub-feature 12c: Reciter list — filtered by surah availability per moshaf
+- Sub-feature 12d: Full-surah streaming via mp3quran.net API
+- Sub-feature 12e: Mini audio player bar (play/pause, progress, reciter name)
+- Sub-feature 12f: API response caching (24h refresh)
+
+**Feature 13: Live Islamic Radio (البث المباشر)**
+- Sub-feature 13a: Saudi Quran Radio (إذاعة القرآن الكريم)
+- Sub-feature 13b: Saudi Sunnah Radio (إذاعة السنة النبوية)
+- Sub-feature 13c: Egypt Quran Radio (إذاعة القرآن الكريم من مصر)
+- Sub-feature 13d: LIVE indicator with play/stop controls
+
+**Feature 14: Hajj & Umrah Guide (دليل الحج والعمرة)**
+- Sub-feature 14a: Umrah step-by-step guide (إحرام → طواف → سعي → تحلل)
+- Sub-feature 14b: Hajj step-by-step guide (Day 8-13 Dhul Hijjah)
+- Sub-feature 14c: Duas for each ritual/location
+- Sub-feature 14d: Prohibitions of Ihram (محظورات الإحرام)
+- Sub-feature 14e: Offline — bundled JSON data
+
 ### 1.2 User Flows
 
 **Flow A: App Open (cold start)**
@@ -1320,6 +1341,48 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 - [ ] Internal testing
 - [ ] Production release
 
+### Feature 12: Quran Listen
+- [x] mp3quran.net API integration & caching
+- [x] Surah selector with Arabic names
+- [x] Moshaf type filter chips
+- [x] Reciter list filtered by surah+moshaf availability
+- [x] Full-surah audio streaming
+- [x] Mini audio player bar
+- [x] Auto-continue to next surah when current finishes
+- [x] Audio session config (music content type, high-quality pipeline)
+
+### Feature 13: Live Islamic Radio
+- [x] Saudi Quran Radio stream
+- [x] Saudi Sunnah Radio stream
+- [x] Egypt Quran Radio stream (fixed: zeno.fm HTTPS)
+- [x] LIVE indicator + play/stop controls
+- [x] Saudi Quran TV video stream (chewie + video_player)
+- [x] Audio/Video mode toggle for video-capable stations
+
+### Feature 14: Hajj & Umrah Guide
+- [x] Hajj & Umrah JSON data (expanded)
+- [x] Umrah step-by-step guide (detailed with sunnah acts, conditions)
+- [x] Hajj step-by-step guide (day-by-day with fiqh notes)
+- [x] All 3 Hajj types: Tamattu', Qiran, Ifrad (new tab)
+- [x] Duas for each ritual (9 occasions with notes)
+- [x] Ihram prohibitions (categorized: shared/men/women with penalties)
+
+### Feature 15: Audio Quality & Auto-Continue
+- [x] Audio session configuration (AudioSession, Android music attributes)
+- [x] Per-ayah player: auto-continue to next surah on completion
+- [x] Full-surah player: auto-continue to next surah (same reciter/moshaf)
+- [x] ConcatenatingAudioSource useLazyPreparation: false (preload next ayah)
+
+### Deployment
+- [x] App icon (Islamic design, green & gold)
+- [x] Native splash screen
+- [x] Remove debug prints / TODO comments
+- [x] Fix all analyzer issues (0 warnings)
+- [ ] Generate signed AAB
+- [ ] Play Store listing (Arabic description, screenshots)
+- [ ] Internal testing
+- [ ] Production release
+
 ### Future Enhancements (Post-MVP)
 - [ ] Home screen Android widget
 - [ ] Quran translation
@@ -1332,7 +1395,7 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 
 ---
 
-### Progress Summary
+### Progress Summary (Updated: 13.04.2026)
 
 | Category | Done | Total | % |
 |----------|------|-------|---|
@@ -1347,8 +1410,12 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 | Qibla | 5 | 5 | 100% |
 | Notifications | 6 | 6 | 100% |
 | Settings | 6 | 6 | 100% |
+| Quran Listen | 8 | 8 | 100% |
+| Live Radio | 6 | 6 | 100% |
+| Hajj & Umrah | 6 | 6 | 100% |
+| Audio Quality | 4 | 4 | 100% |
 | Deployment | 4 | 8 | 50% |
-| **TOTAL** | **85** | **89** | **96%** |
+| **TOTAL** | **113** | **117** | **97%** |
 
 Key files referenced:
 - **`C:\Users\ahmed\Downloads\Azkar\PLAN.md`** -- The full implementation plan (this document)

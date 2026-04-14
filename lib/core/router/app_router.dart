@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../constants/app_strings.dart';
+import '../widgets/global_mini_player.dart';
 import '../../features/azkar/presentation/azkar_categories_screen.dart';
 import '../../features/azkar/presentation/azkar_completion_screen.dart';
 import '../../features/azkar/presentation/azkar_detail_screen.dart';
@@ -18,6 +20,9 @@ import '../../features/sebha/presentation/sebha_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
+import '../../features/quran_listen/presentation/quran_listen_screen.dart';
+import '../../features/live_radio/presentation/live_radio_screen.dart';
+import '../../features/hajj_umrah/presentation/hajj_umrah_screen.dart';
 
 /// Creates the app router configuration with all routes.
 GoRouter createRouter() {
@@ -130,6 +135,21 @@ GoRouter createRouter() {
             builder: (context, state) => const QiblaScreen(),
           ),
           GoRoute(
+            path: '/quran-listen',
+            name: 'quran-listen',
+            builder: (context, state) => const QuranListenScreen(),
+          ),
+          GoRoute(
+            path: '/live-radio',
+            name: 'live-radio',
+            builder: (context, state) => const LiveRadioScreen(),
+          ),
+          GoRoute(
+            path: '/hajj-umrah',
+            name: 'hajj-umrah',
+            builder: (context, state) => const HajjUmrahScreen(),
+          ),
+          GoRoute(
             path: '/settings',
             name: 'settings',
             builder: (context, state) => const SettingsScreen(),
@@ -142,7 +162,7 @@ GoRouter createRouter() {
 
 /// Main shell screen with bottom navigation bar.
 /// Wraps the 4 main tabs: Home, Azkar, Quran, Settings.
-class MainShellScreen extends StatelessWidget {
+class MainShellScreen extends ConsumerWidget {
   final Widget child;
 
   const MainShellScreen({super.key, required this.child});
@@ -154,7 +174,10 @@ class MainShellScreen extends StatelessWidget {
         location.startsWith('/duas') ||
         location.startsWith('/sebha') ||
         location.startsWith('/prayer-times') ||
-        location.startsWith('/qibla')) {
+        location.startsWith('/qibla') ||
+        location.startsWith('/quran-listen') ||
+        location.startsWith('/live-radio') ||
+        location.startsWith('/hajj-umrah')) {
       return 1;
     }
     if (location.startsWith('/quran')) {
@@ -180,13 +203,18 @@ class MainShellScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = _calculateSelectedIndex(context);
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        body: child,
+        body: Column(
+          children: [
+            Expanded(child: child),
+            const GlobalMiniPlayer(),
+          ],
+        ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: selectedIndex,
           onTap: (index) => _onItemTapped(context, index),

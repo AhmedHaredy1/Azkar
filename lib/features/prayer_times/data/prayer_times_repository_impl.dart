@@ -35,19 +35,27 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   }
 
   @override
-  List<PrayerTime> getTodayPrayerTimes(double lat, double lng) {
-    return getPrayerTimesForDate(lat, lng, DateTime.now());
+  List<PrayerTime> getTodayPrayerTimes(double lat, double lng, {Duration? utcOffset}) {
+    return getPrayerTimesForDate(lat, lng, DateTime.now(), utcOffset: utcOffset);
   }
 
   @override
   List<PrayerTime> getPrayerTimesForDate(
-      double lat, double lng, DateTime date) {
+      double lat, double lng, DateTime date, {Duration? utcOffset}) {
     final coordinates = adhan.Coordinates(lat, lng);
     final dateComponents =
         adhan.DateComponents(date.year, date.month, date.day);
     final params = _getCalculationParams();
-    final prayerTimes =
-        adhan.PrayerTimes(coordinates, dateComponents, params);
+
+    // Use explicit UTC offset when available so prayer times are correct
+    // regardless of the device's timezone setting.
+    final adhan.PrayerTimes prayerTimes;
+    if (utcOffset != null) {
+      prayerTimes = adhan.PrayerTimes.utcOffset(
+          coordinates, dateComponents, params, utcOffset);
+    } else {
+      prayerTimes = adhan.PrayerTimes(coordinates, dateComponents, params);
+    }
 
     final times = <PrayerTime>[
       PrayerTime(name: 'Fajr', nameAr: 'الفجر', time: prayerTimes.fajr),
@@ -60,8 +68,12 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
       PrayerTime(name: 'Isha', nameAr: 'العشاء', time: prayerTimes.isha),
     ];
 
-    // Determine next prayer (relative to now)
-    final now = DateTime.now();
+    // Determine next prayer relative to the location's current time.
+    // When using explicit UTC offset, prayer times are UTC-based with offset
+    // applied, so we compare against UTC now + offset for consistency.
+    final now = utcOffset != null
+        ? DateTime.now().toUtc().add(utcOffset)
+        : DateTime.now();
     final nextPrayerTime = _findNextPrayer(times, now);
     if (nextPrayerTime != null) {
       return times.map((pt) {
@@ -85,9 +97,11 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   }
 
   @override
-  PrayerTime? getNextPrayer(double lat, double lng) {
-    final times = getTodayPrayerTimes(lat, lng);
-    final now = DateTime.now();
+  PrayerTime? getNextPrayer(double lat, double lng, {Duration? utcOffset}) {
+    final times = getTodayPrayerTimes(lat, lng, utcOffset: utcOffset);
+    final now = utcOffset != null
+        ? DateTime.now().toUtc().add(utcOffset)
+        : DateTime.now();
     for (final pt in times) {
       if (pt.time.isAfter(now)) return pt;
     }

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:vibration/vibration.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../core/utils/arabic_number_utils.dart';
 import 'providers/sebha_provider.dart';
 import 'widgets/sebha_circle.dart';
@@ -22,16 +23,115 @@ class _SebhaScreenState extends ConsumerState<SebhaScreen> {
     'الله أكبر',
     'لا إله إلا الله',
     'سبحان الله وبحمده',
+    'سبحان الله وبحمده سبحان الله العظيم',
+    'سبحان الله والحمد لله ولا إله إلا الله والله أكبر',
     'لا حول ولا قوة إلا بالله',
+    'أستغفر الله',
+    'أستغفر الله العظيم وأتوب إليه',
+    'اللهم صلِّ وسلم على نبينا محمد',
+    'لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير',
+    'سبحان الله وبحمده عدد خلقه ورضا نفسه وزنة عرشه ومداد كلماته',
+    'حسبي الله لا إله إلا هو عليه توكلت وهو رب العرش العظيم',
+    'اللهم إني أسألك العفو والعافية',
+    'يا حي يا قيوم برحمتك أستغيث',
+    'لا إله إلا أنت سبحانك إني كنت من الظالمين',
+    'رب اغفر لي وتب عليّ إنك أنت التواب الرحيم',
+    'اللهم أجرني من النار',
+    'ربنا آتنا في الدنيا حسنة وفي الآخرة حسنة وقنا عذاب النار',
+    'حسبنا الله ونعم الوكيل',
+    'اللهم اغفر للمسلمين والمسلمات',
+    'رب اشرح لي صدري ويسر لي أمري',
+    'اللهم إنك عفو تحب العفو فاعف عني',
+    'لا إله إلا الله العظيم الحليم، لا إله إلا الله رب العرش العظيم',
   ];
 
   bool _celebrationShown = false;
+
+  void _showDhikrPicker(BuildContext context, WidgetRef ref, String current) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: AppRadius.sheetTop,
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.85,
+          expand: false,
+          builder: (_, scrollController) {
+            return Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.divider,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'اختر الذكر',
+                  style: GoogleFonts.cairo(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollController,
+                    itemCount: _dhikrOptions.length,
+                    itemBuilder: (context, index) {
+                      final dhikr = _dhikrOptions[index];
+                      final isSelected = dhikr == current;
+                      return ListTile(
+                        leading: Icon(
+                          isSelected
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_unchecked,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                        ),
+                        title: Text(
+                          dhikr,
+                          textDirection: TextDirection.rtl,
+                          style: GoogleFonts.amiri(
+                            fontSize: 17,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.normal,
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                        onTap: () {
+                          ref.read(sebhaProvider.notifier).selectDhikr(dhikr);
+                          _celebrationShown = false;
+                          Navigator.of(ctx).pop();
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   void _showResetConfirmation(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.card),
         title: Text(
           'إعادة تعيين العداد',
           style: GoogleFonts.cairo(
@@ -66,8 +166,8 @@ class _SebhaScreenState extends ConsumerState<SebhaScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+              shape: const RoundedRectangleBorder(
+                borderRadius: AppRadius.button,
               ),
             ),
             child: Text(
@@ -84,7 +184,9 @@ class _SebhaScreenState extends ConsumerState<SebhaScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(AppRadius.xl)),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -152,8 +254,8 @@ class _SebhaScreenState extends ConsumerState<SebhaScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+              shape: const RoundedRectangleBorder(
+                borderRadius: AppRadius.button,
               ),
             ),
             child: Text(
@@ -200,46 +302,39 @@ class _SebhaScreenState extends ConsumerState<SebhaScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 24),
-            // Dhikr selector
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.cardBorder),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _dhikrOptions.contains(sebhaState.selectedDhikr)
-                      ? sebhaState.selectedDhikr
-                      : _dhikrOptions.first,
-                  isExpanded: true,
-                  icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
-                  style: GoogleFonts.amiri(
-                    fontSize: 20,
-                    color: AppColors.textPrimary,
-                  ),
-                  items: _dhikrOptions.map((dhikr) {
-                    return DropdownMenuItem(
-                      value: dhikr,
+            const SizedBox(height: AppSpacing.xl),
+            // Dhikr selector (tap to open picker)
+            GestureDetector(
+              onTap: () => _showDhikrPicker(context, ref, sebhaState.selectedDhikr),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.card,
+                  borderRadius: AppRadius.card,
+                  border: Border.all(color: AppColors.cardBorder),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
                       child: Text(
-                        dhikr,
+                        _dhikrOptions.contains(sebhaState.selectedDhikr)
+                            ? sebhaState.selectedDhikr
+                            : _dhikrOptions.first,
                         textDirection: TextDirection.rtl,
                         style: GoogleFonts.amiri(
-                          fontSize: 20,
+                          fontSize: 18,
                           color: AppColors.textPrimary,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      ref.read(sebhaProvider.notifier).selectDhikr(value);
-                      _celebrationShown = false;
-                    }
-                  },
+                    ),
+                    const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
+                  ],
                 ),
               ),
             ),
@@ -255,7 +350,7 @@ class _SebhaScreenState extends ConsumerState<SebhaScreen> {
                 }
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
             // Selected dhikr text
             Text(
               sebhaState.selectedDhikr,
@@ -269,10 +364,13 @@ class _SebhaScreenState extends ConsumerState<SebhaScreen> {
             // Total count
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 40),
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+              padding: const EdgeInsets.symmetric(
+                vertical: AppSpacing.lg,
+                horizontal: AppSpacing.xl,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: AppRadius.card,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -294,7 +392,7 @@ class _SebhaScreenState extends ConsumerState<SebhaScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             // Target selector row
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -308,10 +406,13 @@ class _SebhaScreenState extends ConsumerState<SebhaScreen> {
                       _celebrationShown = false;
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
                       decoration: BoxDecoration(
                         color: isSelected ? AppColors.primary : AppColors.card,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: AppRadius.button,
                         border: Border.all(
                           color: isSelected ? AppColors.primary : AppColors.cardBorder,
                         ),
@@ -329,7 +430,7 @@ class _SebhaScreenState extends ConsumerState<SebhaScreen> {
                 }).toList(),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xxl),
           ],
         ),
       ),

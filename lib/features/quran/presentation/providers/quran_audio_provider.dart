@@ -1,9 +1,13 @@
 import 'dart:async';
 
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../../core/services/global_audio_handler.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../live_radio/presentation/providers/live_radio_provider.dart';
+import '../../../quran_listen/presentation/providers/quran_listen_provider.dart';
 import 'quran_provider.dart';
 
 /// Reciters with per-ayah audio.
@@ -78,30 +82,33 @@ class PlayingAyahInfo {
   final int ayahNumber;
   final int globalAyahNumber; // 1-6236, used for audio CDN URL
   final int page;
+  final bool isBismillah; // audio-only Bismillah that precedes a surah
 
   const PlayingAyahInfo({
     required this.surahNumber,
     required this.ayahNumber,
     required this.globalAyahNumber,
     required this.page,
+    this.isBismillah = false,
   });
 }
 
-/// Cumulative ayah counts per surah (surah 1 starts at offset 0).
-/// globalAyahNumber = _surahAyahOffset[surahNumber - 1] + ayahNumber
+/// Starting global-ayah offset for each surah (surah 1 starts at offset 0).
+/// globalAyahNumber = _surahAyahOffsets[surahNumber - 1] + ayahNumber.
+/// Derived from the Hafs mushaf ayah counts; total ayahs = 6236.
 const List<int> _surahAyahOffsets = [
-  0, 7, 293, 493, 669, 789, 954, 1160, 1235, 1364, 1473, // 1-10
-  1596, 1707, 1750, 1802, 1901, 2029, 2140, 2250, 2348, 2483, // 11-20
-  2595, 2673, 2791, 2855, 2932, 3003, 3067, 3159, 3228, 3261, // 21-30
-  3295, 3325, 3398, 3452, 3497, 3580, 3662, 3750, 3823, 3898, // 31-40
-  3952, 4005, 4094, 4149, 4186, 4221, 4259, 4285, 4303, 4348, // 41-50
-  4413, 4462, 4523, 4578, 4655, 4751, 4846, 4868, 4892, 4905, // 51-60
-  4919, 4930, 4941, 4959, 4971, 4983, 5013, 5065, 5117, 5161, // 61-70
-  5189, 5217, 5237, 5293, 5333, 5364, 5414, 5454, 5500, 5542, // 71-80
-  5571, 5590, 5626, 5651, 5673, 5690, 5709, 5735, 5765, 5785, // 81-90
-  5800, 5821, 5832, 5840, 5848, 5867, 5872, 5880, 5888, 5896, // 91-100
-  5907, 5915, 5918, 5927, 5932, 5937, 5944, 5947, 5953, 5956, // 101-110
-  5959, 5963, 5968, 5973, // 111-114
+  0, 7, 293, 493, 669, 789, 954, 1160, 1235, 1364, // surahs 1-10
+  1473, 1596, 1707, 1750, 1802, 1901, 2029, 2140, 2250, 2348, // 11-20
+  2483, 2595, 2673, 2791, 2855, 2932, 3159, 3252, 3340, 3409, // 21-30
+  3469, 3503, 3533, 3606, 3660, 3705, 3788, 3970, 4058, 4133, // 31-40
+  4218, 4272, 4325, 4414, 4473, 4510, 4545, 4583, 4612, 4630, // 41-50
+  4675, 4735, 4784, 4846, 4901, 4979, 5075, 5104, 5126, 5150, // 51-60
+  5163, 5177, 5188, 5199, 5217, 5229, 5241, 5271, 5323, 5375, // 61-70
+  5419, 5447, 5475, 5495, 5551, 5591, 5622, 5672, 5712, 5758, // 71-80
+  5800, 5829, 5848, 5884, 5909, 5931, 5948, 5967, 5993, 6023, // 81-90
+  6043, 6058, 6079, 6090, 6098, 6106, 6125, 6130, 6138, 6146, // 91-100
+  6157, 6168, 6176, 6179, 6188, 6193, 6197, 6204, 6207, 6213, // 101-110
+  6216, 6221, 6225, 6230, // 111-114
 ];
 
 int _getGlobalAyahNumber(int surahNumber, int ayahNumber) {
@@ -182,7 +189,11 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
   StreamSubscription<Duration?>? _durSub;
 
   QuranAudioNotifier(this._storage, this._ref)
-      : _player = AudioPlayer(),
+      : _player = AudioPlayer(
+          audioPipeline: AudioPipeline(
+            androidAudioEffects: [],
+          ),
+        ),
         super(const QuranAudioState()) {
     _init();
   }
@@ -193,6 +204,9 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
             'alafasy';
     state = state.copyWith(reciterId: savedReciter);
 
+    // Configure audio session for high-quality music playback
+    _configureAudioSession();
+
     _stateSub = _player.playerStateStream.listen((playerState) {
       if (!mounted) return;
       state = state.copyWith(
@@ -202,13 +216,18 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
       );
 
       if (playerState.processingState == ProcessingState.completed) {
+        final currentSurah = state.currentSurah;
         state = state.copyWith(
           isPlaying: false,
           position: Duration.zero,
           clearAyah: true,
         );
-        // Clear the highlight when done
         _ref.read(highlightedAyahProvider.notifier).clearHighlight();
+
+        // Auto-continue to next surah
+        if (currentSurah != null && currentSurah < 114) {
+          playSurah(currentSurah + 1);
+        }
       }
     });
 
@@ -233,14 +252,33 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
           currentAyahIndex: index,
           playingAyah: ayahInfo,
         );
-        // Sync highlight with the playing ayah
-        _ref.read(highlightedAyahProvider.notifier).setHighlight(
-              ayahInfo.surahNumber,
-              ayahInfo.ayahNumber,
-              ayahInfo.page,
-            );
+        // During the Bismillah track, clear the ayah highlight — the Bismillah
+        // header itself is the visual cue, not ayah 1.
+        if (ayahInfo.isBismillah) {
+          _ref.read(highlightedAyahProvider.notifier).clearHighlight();
+        } else {
+          _ref.read(highlightedAyahProvider.notifier).setHighlight(
+                ayahInfo.surahNumber,
+                ayahInfo.ayahNumber,
+                ayahInfo.page,
+              );
+        }
       }
     });
+  }
+
+  Future<void> _configureAudioSession() async {
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playback,
+      avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.duckOthers,
+      avAudioSessionMode: AVAudioSessionMode.spokenAudio,
+      androidAudioAttributes: AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.music,
+        usage: AndroidAudioUsage.media,
+      ),
+      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+    ));
   }
 
   /// Build per-ayah URL from cdn.islamic.network.
@@ -249,10 +287,41 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
     return 'https://cdn.islamic.network/quran/audio/${reciter.bitrate}/${reciter.cdnReciterId}/$globalAyahNumber.mp3';
   }
 
+  /// Stop other audio sources for mutual exclusivity.
+  void _stopOtherPlayers() {
+    try {
+      _ref.read(listenPlayerProvider.notifier).stop();
+    } catch (_) {}
+    try {
+      _ref.read(liveRadioProvider.notifier).stop();
+    } catch (_) {}
+  }
+
+  /// Attach to the global audio handler for lock screen / notification controls.
+  void _attachToHandler({required String title, String? subtitle}) {
+    try {
+      final handler = _ref.read(globalAudioHandlerProvider);
+      handler.attachPlayer(_player, ActiveAudioSource.quranAyah,
+          title: title, subtitle: subtitle);
+    } catch (_) {}
+  }
+
+  /// Detach from the global audio handler.
+  void _detachFromHandler() {
+    try {
+      final handler = _ref.read(globalAudioHandlerProvider);
+      if (handler.activeSource == ActiveAudioSource.quranAyah) {
+        handler.detachPlayer();
+      }
+    } catch (_) {}
+  }
+
   /// Play a surah ayah-by-ayah with sync highlighting.
   /// [startFromAyah] optionally starts from a specific ayah number instead of the first.
   Future<void> playSurah(int surahNumber, {int? startFromAyah}) async {
     try {
+      _stopOtherPlayers();
+
       state = state.copyWith(
         isLoading: true,
         currentSurah: surahNumber,
@@ -292,13 +361,32 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
         return;
       }
 
+      // Prepend Bismillah before the surah when starting from the beginning.
+      // Al-Fatihah's own ayah 1 IS Bismillah, and At-Tawbah has no Bismillah.
+      final startsAtBeginning = startFromAyah == null || startFromAyah == 1;
+      final needsBismillah =
+          startsAtBeginning && surahNumber != 1 && surahNumber != 9;
+      if (needsBismillah) {
+        ayahInfoList.insert(
+          0,
+          PlayingAyahInfo(
+            surahNumber: surahNumber,
+            ayahNumber: 1,
+            // cdn.islamic.network global ayah 1 = Al-Fatihah ayah 1 = Bismillah
+            globalAyahNumber: 1,
+            page: ayahInfoList.first.page,
+            isBismillah: true,
+          ),
+        );
+      }
+
       _ayahPlaylist = ayahInfoList;
 
       // Find the starting index if a specific ayah was requested
       int initialIndex = 0;
-      if (startFromAyah != null) {
+      if (startFromAyah != null && startFromAyah != 1) {
         final idx = ayahInfoList.indexWhere(
-            (a) => a.ayahNumber == startFromAyah);
+            (a) => !a.isBismillah && a.ayahNumber == startFromAyah);
         if (idx >= 0) {
           initialIndex = idx;
         }
@@ -311,12 +399,36 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
         );
       }).toList();
 
-      final playlist = ConcatenatingAudioSource(children: sources);
+      final playlist = ConcatenatingAudioSource(
+        useLazyPreparation: false,
+        children: sources,
+      );
       await _player.setAudioSource(playlist, initialIndex: initialIndex);
 
       state = state.copyWith(
-        totalAyahs: ayahInfoList.length,
+        // Exclude the prepended Bismillah from the displayed ayah count.
+        totalAyahs: ayahInfoList.where((a) => !a.isBismillah).length,
         isLoading: false,
+      );
+
+      // Get surah name for notification
+      String surahName = 'سورة $surahNumber';
+      try {
+        final pageIndex = await _ref.read(pageIndexProvider.future);
+        for (final page in pageIndex.values) {
+          for (final section in page.sections) {
+            if (section.surahNumber == surahNumber) {
+              surahName = 'سورة ${section.surahNameAr}';
+              break;
+            }
+          }
+          if (surahName != 'سورة $surahNumber') break;
+        }
+      } catch (_) {}
+
+      _attachToHandler(
+        title: surahName,
+        subtitle: state.reciter.nameAr,
       );
 
       await _player.play();
@@ -371,6 +483,7 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
 
   Future<void> stop() async {
     await _player.stop();
+    _detachFromHandler();
     _ayahPlaylist = [];
     state = state.copyWith(
       isPlaying: false,

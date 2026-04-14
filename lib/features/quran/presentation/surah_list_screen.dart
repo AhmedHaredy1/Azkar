@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../core/utils/arabic_number_utils.dart';
 import 'bookmarks_list_screen.dart';
 import 'mushaf_screen.dart';
@@ -41,7 +42,7 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'القرآن الكريم',
+          'المصحف الشريف',
           style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         backgroundColor: AppColors.primary,
@@ -104,7 +105,7 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen>
               // Open Mushaf button
               Container(
                 width: double.infinity,
-                margin: const EdgeInsets.all(12),
+                margin: const EdgeInsets.all(AppSpacing.md),
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.of(context).push(
@@ -127,9 +128,9 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: AppRadius.card,
                     ),
                     elevation: 2,
                   ),
@@ -156,13 +157,13 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 'حدث خطأ في تحميل السور',
                 style: GoogleFonts.cairo(
                     fontSize: 16, color: AppColors.textSecondary),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               ElevatedButton(
                 onPressed: () => ref.invalidate(surahListProvider),
                 child: const Text('إعادة المحاولة'),
@@ -179,14 +180,14 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen>
       children: [
         // Divider
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Row(
             children: [
               Expanded(
                   child: Divider(
                       color: AppColors.divider.withValues(alpha: 0.5))),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Text(
                   'فهرس السور',
                   style: GoogleFonts.cairo(
@@ -205,7 +206,7 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen>
         // Surah list
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             itemCount: surahs.length,
             separatorBuilder: (_, _) => const Divider(
               height: 1,
@@ -258,7 +259,9 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen>
                 height: 48,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(AppRadius.md),
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -327,12 +330,15 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen>
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       color: AppColors.primary.withValues(alpha: 0.08),
       child: Row(
         children: [
           Icon(Icons.headset, color: AppColors.primary, size: 20),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               'يستمع: $surahName - ${audioState.reciter.nameAr}',
@@ -358,7 +364,7 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen>
               size: 30,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           GestureDetector(
             onTap: () => ref.read(quranAudioProvider.notifier).stop(),
             child: Icon(

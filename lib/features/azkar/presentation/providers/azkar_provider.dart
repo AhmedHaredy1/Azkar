@@ -108,6 +108,31 @@ class AzkarProgressNotifier extends StateNotifier<AzkarProgressState> {
   void reset(List<Dhikr> azkarList) {
     initialize(azkarList);
   }
+
+  /// Jump to next dhikr without completing the current one.
+  bool goToNext(List<Dhikr> azkarList) {
+    if (azkarList.isEmpty) return false;
+    final nextIndex = state.currentIndex + 1;
+    if (nextIndex >= azkarList.length) return false;
+    state = state.copyWith(
+      currentIndex: nextIndex,
+      remainingCount: azkarList[nextIndex].repetitions,
+    );
+    return true;
+  }
+
+  /// Jump to previous dhikr, resetting its counter.
+  bool goToPrevious(List<Dhikr> azkarList) {
+    if (azkarList.isEmpty) return false;
+    final prevIndex = state.currentIndex - 1;
+    if (prevIndex < 0) return false;
+    state = state.copyWith(
+      currentIndex: prevIndex,
+      remainingCount: azkarList[prevIndex].repetitions,
+      isCompleted: false,
+    );
+    return true;
+  }
 }
 
 final azkarProgressProvider =

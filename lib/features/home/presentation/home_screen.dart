@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import 'providers/home_provider.dart';
 import 'widgets/azkar_shortcut_card.dart';
 import 'widgets/daily_ayah_card.dart';
@@ -20,159 +21,152 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8),
+              _GreetingCard(greeting: greeting, hijriDate: hijriDate),
 
-              // ── Greeting Card with Hijri Date ──
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                    colors: [
-                      AppColors.primary,
-                      AppColors.primaryLight,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.mosque_outlined,
-                          color: AppColors.secondary,
-                          size: 28,
-                        ),
-                        const Spacer(),
-                        Text(
-                          'حصن المسلم',
-                          style: GoogleFonts.amiri(
-                            fontSize: 16,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      greeting.greeting,
-                      style: GoogleFonts.cairo(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      greeting.subtitle,
-                      style: GoogleFonts.cairo(
-                        fontSize: 15,
-                        color: Colors.white70,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Hijri & Gregorian dates
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.calendar_today,
-                                size: 14,
-                                color: AppColors.secondary,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                hijriDate.hijriFormatted,
-                                style: GoogleFonts.cairo(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.secondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 20),
-                            child: Text(
-                              hijriDate.gregorianFormatted,
-                              style: GoogleFonts.cairo(
-                                fontSize: 12,
-                                color: Colors.white60,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // ── Next Prayer Countdown ──
+              const SizedBox(height: AppSpacing.lg),
               const PrayerCountdownCard(),
 
-              const SizedBox(height: 20),
-
-              // ── Morning/Evening Azkar Shortcut ──
+              const SizedBox(height: AppSpacing.lg),
               const AzkarShortcutCard(),
 
-              const SizedBox(height: 24),
-
-              // ── Sections Title ──
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Text(
-                  'الأقسام',
-                  style: GoogleFonts.cairo(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // ── Quick Access Grid ──
+              const SizedBox(height: AppSpacing.xl),
+              _SectionHeader(title: 'الأقسام'),
+              const SizedBox(height: AppSpacing.md),
               const QuickAccessGrid(),
 
-              const SizedBox(height: 24),
-
-              // ── Daily Ayah Card ──
+              const SizedBox(height: AppSpacing.xl),
               const DailyAyahCard(),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: AppSpacing.xs),
+      child: Text(
+        title,
+        style: GoogleFonts.cairo(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
+        ),
+      ),
+    );
+  }
+}
+
+class _GreetingCard extends StatelessWidget {
+  final GreetingState greeting;
+  final HijriDateState hijriDate;
+  const _GreetingCard({required this.greeting, required this.hijriDate});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [AppColors.primary, AppColors.primaryLight],
+        ),
+        borderRadius: const BorderRadius.all(Radius.circular(AppRadius.xl)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.mosque_rounded,
+                  color: AppColors.secondary, size: 28),
+              const Spacer(),
+              Text(
+                'حصن المسلم',
+                style: GoogleFonts.amiri(
+                  fontSize: 16,
+                  color: Colors.white.withValues(alpha: 0.75),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            greeting.greeting,
+            style: GoogleFonts.cairo(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            greeting.subtitle,
+            style: GoogleFonts.cairo(
+              fontSize: 14,
+              color: Colors.white.withValues(alpha: 0.75),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.12),
+              borderRadius:
+                  const BorderRadius.all(Radius.circular(AppRadius.md)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today_rounded,
+                    size: 14, color: AppColors.secondary),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  hijriDate.hijriFormatted,
+                  style: GoogleFonts.cairo(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.secondary,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    hijriDate.gregorianFormatted,
+                    textAlign: TextAlign.end,
+                    style: GoogleFonts.cairo(
+                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.65),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

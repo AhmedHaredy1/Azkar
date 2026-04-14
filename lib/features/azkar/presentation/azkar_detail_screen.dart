@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:vibration/vibration.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../core/utils/arabic_number_utils.dart';
 import '../domain/models/azkar_category.dart';
 import 'azkar_completion_screen.dart';
@@ -76,6 +77,39 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
         }
         _navigateToCompletion();
       }
+    }
+  }
+
+  void _onVerticalSwipe(DragEndDetails details, List<Dhikr> azkarList) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity.abs() < 200) return;
+
+    final notifier = ref.read(azkarProgressProvider.notifier);
+    // Swipe up (velocity < 0) → next dhikr
+    // Swipe down (velocity > 0) → previous dhikr
+    final moved = velocity < 0
+        ? notifier.goToNext(azkarList)
+        : notifier.goToPrevious(azkarList);
+
+    if (moved) {
+      Vibration.hasVibrator().then((has) {
+        if (has == true) Vibration.vibrate(duration: 20);
+      });
+    } else {
+      // At boundary — show a short hint
+      final atEnd = velocity < 0;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            atEnd ? 'هذا آخر ذكر' : 'هذا أول ذكر',
+            style: GoogleFonts.cairo(),
+          ),
+          duration: const Duration(milliseconds: 900),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.primary,
+        ),
+      );
     }
   }
 
@@ -154,6 +188,7 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
 
           return GestureDetector(
             onTap: () => _onTap(azkarList),
+            onVerticalDragEnd: (details) => _onVerticalSwipe(details, azkarList),
             behavior: HitTestBehavior.opaque,
             child: Container(
               width: double.infinity,
@@ -162,17 +197,17 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
               child: SafeArea(
                 child: Column(
                   children: [
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
 
                     // Progress row
                     _buildProgressRow(progress, azkarList.length),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
 
                     // Linear progress bar
                     _buildProgressBar(progress, azkarList.length),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
 
                     // Dhikr card with favorite button
                     Expanded(
@@ -185,7 +220,7 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
                             opacity: animation,
                             child: SlideTransition(
                               position: Tween<Offset>(
-                                begin: const Offset(0.15, 0),
+                                begin: const Offset(0, 0.15),
                                 end: Offset.zero,
                               ).animate(animation),
                               child: child,
@@ -291,12 +326,12 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
           // Remaining count badge
           Container(
             padding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 6,
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.xs,
             ),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: AppRadius.chip,
             ),
             child: Text(
               'المتبقي: ${ArabicNumberUtils.toEasternArabic(progress.remainingCount)}',
@@ -317,9 +352,9 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
         ? (progress.currentIndex) / totalCount
         : 0.0;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: const BorderRadius.all(Radius.circular(AppSpacing.xs)),
         child: LinearProgressIndicator(
           value: progressValue,
           backgroundColor: AppColors.primary.withValues(alpha: 0.1),
@@ -447,7 +482,7 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             'حدث خطأ',
             style:

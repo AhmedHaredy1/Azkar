@@ -7,7 +7,7 @@ class AppStrings {
   // Tab Names
   static const String homeTab = 'الرئيسية';
   static const String azkarTab = 'الأذكار';
-  static const String quranTab = 'القرآن';
+  static const String quranTab = 'المصحف';
   static const String settingsTab = 'الإعدادات';
 
   // Features

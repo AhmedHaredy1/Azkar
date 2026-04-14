@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../constants/app_colors.dart';
+import 'tokens.dart';
 
 class AppTheme {
   AppTheme._();
@@ -85,30 +86,71 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppColors.card,
-        elevation: 1,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(
-            color: AppColors.cardBorder,
-            width: 0.5,
-          ),
+        elevation: AppElevation.sm,
+        margin: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg, vertical: AppSpacing.xs + 2),
+        shape: const RoundedRectangleBorder(
+          borderRadius: AppRadius.card,
+          side: BorderSide(color: AppColors.cardBorder, width: 0.5),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.textOnPrimary,
-          elevation: 2,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          elevation: AppElevation.md,
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.button),
           textStyle: GoogleFonts.cairo(
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
         ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.button),
+          textStyle: GoogleFonts.cairo(
+              fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.button),
+          textStyle: GoogleFonts.cairo(
+              fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.button),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.chip),
+        side: BorderSide.none,
+        labelStyle: GoogleFonts.cairo(
+            fontSize: 13, fontWeight: FontWeight.w600),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.primary,
+        contentTextStyle: GoogleFonts.cairo(color: AppColors.textOnPrimary),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.button),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.bottomSheet),
+        clipBehavior: Clip.antiAlias,
+      ),
+      listTileTheme: const ListTileThemeData(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.navBarBackground,
@@ -120,9 +162,7 @@ class AppTheme {
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
-        unselectedLabelStyle: GoogleFonts.cairo(
-          fontSize: 12,
-        ),
+        unselectedLabelStyle: GoogleFonts.cairo(fontSize: 12),
       ),
       dividerTheme: const DividerThemeData(
         color: AppColors.divider,
@@ -214,30 +254,69 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppColors.darkCard,
-        elevation: 1,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(
-            color: AppColors.darkCardBorder,
-            width: 0.5,
-          ),
+        elevation: AppElevation.sm,
+        margin: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg, vertical: AppSpacing.xs + 2),
+        shape: const RoundedRectangleBorder(
+          borderRadius: AppRadius.card,
+          side: BorderSide(color: AppColors.darkCardBorder, width: 0.5),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryLight,
           foregroundColor: AppColors.textOnPrimary,
-          elevation: 2,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          elevation: AppElevation.md,
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.button),
           textStyle: GoogleFonts.cairo(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+              fontSize: 16, fontWeight: FontWeight.w600),
         ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.button),
+          textStyle: GoogleFonts.cairo(
+              fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.button),
+          textStyle: GoogleFonts.cairo(
+              fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.button),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.chip),
+        side: BorderSide.none,
+        labelStyle: GoogleFonts.cairo(
+            fontSize: 13, fontWeight: FontWeight.w600),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.primaryLight,
+        contentTextStyle: GoogleFonts.cairo(color: AppColors.textOnPrimary),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.button),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.bottomSheet),
+        clipBehavior: Clip.antiAlias,
+      ),
+      listTileTheme: const ListTileThemeData(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.darkNavBarBackground,

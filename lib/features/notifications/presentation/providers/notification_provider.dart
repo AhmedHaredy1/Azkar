@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/services/adhan_audio_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../prayer_times/data/prayer_times_repository_impl.dart';
@@ -66,6 +67,21 @@ class NotificationManager {
     return _service.isPermissionGranted();
   }
 
+  /// Play the Adhan audio if enabled in settings.
+  /// Called when a prayer notification fires while the app is open.
+  Future<void> playAdhanIfEnabled(AppSettingsState settings, {bool isFajr = false}) async {
+    if (!settings.playAdhan) return;
+    await AdhanAudioService.instance.playAdhan(
+      settings.adhanReciterId,
+      isFajr: isFajr,
+    );
+  }
+
+  /// Stop any currently playing Adhan.
+  Future<void> stopAdhan() async {
+    await AdhanAudioService.instance.stop();
+  }
+
   /// Reschedule ALL notifications based on current settings and prayer times.
   /// This should be called:
   /// - When the app opens (to recalculate prayer times)
@@ -109,6 +125,7 @@ class NotificationManager {
         settings.latitude!,
         settings.longitude!,
         date,
+        utcOffset: settings.utcOffset,
       );
 
       for (final prayer in times) {

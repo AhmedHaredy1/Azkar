@@ -50,7 +50,9 @@ class QuranAudioBar extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'الآية ${_toArabicNumber((audioState.currentAyahIndex ?? 0) + 1)} من ${_toArabicNumber(audioState.totalAyahs)}',
+                      audioState.playingAyah?.isBismillah == true
+                          ? 'البسملة'
+                          : 'الآية ${_toArabicNumber(audioState.playingAyah?.ayahNumber ?? (audioState.currentAyahIndex ?? 0) + 1)} من ${_toArabicNumber(audioState.totalAyahs)}',
                       style: GoogleFonts.cairo(
                         color: const Color(0xFFD4A017),
                         fontSize: 12,

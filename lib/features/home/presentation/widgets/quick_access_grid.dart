@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class _QuickAccessItem {
   final String label;
@@ -39,7 +39,7 @@ class QuickAccessGrid extends StatelessWidget {
       bgColor: const Color(0xFF6A1B9A).withValues(alpha: 0.08),
     ),
     _QuickAccessItem(
-      label: 'القرآن الكريم',
+      label: 'المصحف الشريف',
       icon: Icons.menu_book,
       route: '/quran',
       color: const Color(0xFF00695C),
@@ -66,6 +66,27 @@ class QuickAccessGrid extends StatelessWidget {
       color: const Color(0xFFC62828),
       bgColor: const Color(0xFFC62828).withValues(alpha: 0.08),
     ),
+    _QuickAccessItem(
+      label: 'استمع للقرآن',
+      icon: Icons.headphones,
+      route: '/quran-listen',
+      color: const Color(0xFF00838F),
+      bgColor: const Color(0xFF00838F).withValues(alpha: 0.08),
+    ),
+    _QuickAccessItem(
+      label: 'البث المباشر',
+      icon: Icons.radio,
+      route: '/live-radio',
+      color: const Color(0xFF4E342E),
+      bgColor: const Color(0xFF4E342E).withValues(alpha: 0.08),
+    ),
+    _QuickAccessItem(
+      label: 'دليل الحج والعمرة',
+      icon: Icons.mosque,
+      route: '/hajj-umrah',
+      color: const Color(0xFF827717),
+      bgColor: const Color(0xFF827717).withValues(alpha: 0.08),
+    ),
   ];
 
   @override
@@ -74,8 +95,8 @@ class QuickAccessGrid extends StatelessWidget {
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
+      mainAxisSpacing: AppSpacing.md,
+      crossAxisSpacing: AppSpacing.md,
       childAspectRatio: 1.6,
       children: _items.map((item) => _QuickAccessCard(item: item)).toList(),
     );
@@ -116,6 +137,7 @@ class _QuickAccessCardState extends State<_QuickAccessCard>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
       onTapUp: (_) {
@@ -127,8 +149,8 @@ class _QuickAccessCardState extends State<_QuickAccessCard>
         scale: _scaleAnimation,
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(16),
+            color: colorScheme.surface,
+            borderRadius: AppRadius.card,
             border: Border.all(
               color: widget.item.color.withValues(alpha: 0.15),
               width: 1,
@@ -143,13 +165,15 @@ class _QuickAccessCardState extends State<_QuickAccessCard>
           ),
           child: Row(
             children: [
-              const SizedBox(width: 14),
+              const SizedBox(width: AppSpacing.md),
               Container(
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
                   color: widget.item.bgColor,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(AppRadius.md),
+                  ),
                 ),
                 child: Icon(
                   widget.item.icon,
@@ -157,23 +181,23 @@ class _QuickAccessCardState extends State<_QuickAccessCard>
                   color: widget.item.color,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
                   widget.item.label,
                   style: GoogleFonts.cairo(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: colorScheme.onSurface,
                   ),
                 ),
               ),
               Icon(
                 Icons.arrow_forward_ios,
                 size: 14,
-                color: AppColors.textSecondary.withValues(alpha: 0.5),
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
             ],
           ),
         ),
