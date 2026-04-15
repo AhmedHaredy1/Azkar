@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 
 class AzkarCompletionScreen extends StatefulWidget {
   final String categoryName;
@@ -75,7 +76,7 @@ class _AzkarCompletionScreenState extends State<AzkarCompletionScreen>
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -115,7 +116,7 @@ class _AzkarCompletionScreenState extends State<AzkarCompletionScreen>
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: AppSpacing.xxl),
 
                 // Main congratulation text
                 FadeTransition(
@@ -130,7 +131,7 @@ class _AzkarCompletionScreenState extends State<AzkarCompletionScreen>
                           color: AppColors.primary,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
                         'أتممت ${widget.categoryName}',
                         textAlign: TextAlign.center,
@@ -140,7 +141,7 @@ class _AzkarCompletionScreenState extends State<AzkarCompletionScreen>
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       Text(
                         'تقبّل الله منك',
                         style: GoogleFonts.amiri(
@@ -152,7 +153,7 @@ class _AzkarCompletionScreenState extends State<AzkarCompletionScreen>
                     ],
                   ),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: AppSpacing.xxl),
 
                 // Action buttons
                 FadeTransition(
@@ -176,14 +177,14 @@ class _AzkarCompletionScreenState extends State<AzkarCompletionScreen>
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: AppRadius.card,
                             ),
                             elevation: 2,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: AppSpacing.md),
                       // Back to home button
                       SizedBox(
                         width: double.infinity,
@@ -204,8 +205,8 @@ class _AzkarCompletionScreenState extends State<AzkarCompletionScreen>
                               color: AppColors.primary,
                               width: 1.5,
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: AppRadius.card,
                             ),
                           ),
                         ),

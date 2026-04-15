@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import 'providers/azkar_provider.dart';
 import 'widgets/azkar_category_card.dart';
 
@@ -51,7 +52,7 @@ class AzkarCategoriesScreen extends ConsumerWidget {
             );
           }
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final category = categories[index];
@@ -70,7 +71,7 @@ class AzkarCategoriesScreen extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 'حدث خطأ في تحميل الأذكار',
                 style: GoogleFonts.cairo(
@@ -78,7 +79,7 @@ class AzkarCategoriesScreen extends ConsumerWidget {
                   color: AppColors.textSecondary,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               ElevatedButton(
                 onPressed: () => ref.invalidate(azkarCategoriesProvider),
                 child: const Text('إعادة المحاولة'),

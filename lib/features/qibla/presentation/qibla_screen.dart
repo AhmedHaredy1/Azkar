@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import 'providers/qibla_provider.dart';
 import 'widgets/qibla_compass.dart';
 
@@ -39,15 +40,18 @@ class QiblaScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     // Calibration warning
                     if (needsCalibration)
                       Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xl,
+                          vertical: AppSpacing.sm,
+                        ),
+                        padding: const EdgeInsets.all(AppSpacing.lg),
                         decoration: BoxDecoration(
                           color: AppColors.secondary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
                           border: Border.all(
                             color: AppColors.secondary.withValues(alpha: 0.3),
                           ),
@@ -59,7 +63,7 @@ class QiblaScreen extends ConsumerWidget {
                               color: AppColors.secondary,
                               size: 28,
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Text(
                                 'قم بتحريك الهاتف على شكل رقم ٨ لمعايرة البوصلة',
@@ -73,14 +77,14 @@ class QiblaScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     // Kaaba icon
                     Container(
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
                         color: AppColors.secondary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
                       ),
                       child: const Icon(
                         Icons.mosque,
@@ -88,7 +92,7 @@ class QiblaScreen extends ConsumerWidget {
                         color: AppColors.secondary,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     Text(
                       'وجّه هاتفك نحو القبلة',
                       style: GoogleFonts.cairo(
@@ -96,12 +100,12 @@ class QiblaScreen extends ConsumerWidget {
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: AppSpacing.xxl),
                     QiblaCompass(angle: angle),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: AppSpacing.xxl),
                     // Info text
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
                       child: Text(
                         'ضع هاتفك على سطح مستوٍ للحصول على أدق قراءة',
                         textAlign: TextAlign.center,
@@ -111,7 +115,7 @@ class QiblaScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                   ],
                 ),
               );
@@ -120,7 +124,7 @@ class QiblaScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const CircularProgressIndicator(color: AppColors.primary),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Text(
                   'جاري تحديد الاتجاه...',
                   style: GoogleFonts.cairo(
@@ -139,7 +143,7 @@ class QiblaScreen extends ConsumerWidget {
                   errorMsg.contains('empty');
 
               return Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -148,7 +152,7 @@ class QiblaScreen extends ConsumerWidget {
                       size: 64,
                       color: AppColors.textSecondary,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.lg),
                     Text(
                       isCompassMissing
                           ? 'جهازك لا يدعم البوصلة'
@@ -159,7 +163,7 @@ class QiblaScreen extends ConsumerWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       isCompassMissing
                           ? 'هذا الجهاز لا يحتوي على مستشعر بوصلة (مقياس مغناطيسي)'
@@ -170,7 +174,7 @@ class QiblaScreen extends ConsumerWidget {
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.xl),
                     if (!isCompassMissing)
                       ElevatedButton.icon(
                         onPressed: () {

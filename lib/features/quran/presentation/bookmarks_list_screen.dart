@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../core/utils/arabic_number_utils.dart';
 import 'mushaf_screen.dart';
 import 'providers/quran_provider.dart';
@@ -36,7 +37,7 @@ class BookmarksListScreen extends ConsumerWidget {
                     size: 64,
                     color: AppColors.textSecondary.withValues(alpha: 0.4),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
                     'لا توجد علامات مرجعية',
                     style: GoogleFonts.cairo(
@@ -44,7 +45,7 @@ class BookmarksListScreen extends ConsumerWidget {
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     'اضغط مطولاً على آية في المصحف لإضافة علامة',
                     style: GoogleFonts.cairo(
@@ -62,7 +63,7 @@ class BookmarksListScreen extends ConsumerWidget {
                   ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   itemCount: sortedBookmarks.length,
                   separatorBuilder: (_, _) => const Divider(
                     height: 1,
@@ -98,7 +99,7 @@ class BookmarksListScreen extends ConsumerWidget {
                       direction: DismissDirection.endToStart,
                       background: Container(
                         alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                         color: AppColors.error,
                         child: const Icon(
                           Icons.delete_outline,
@@ -117,7 +118,7 @@ class BookmarksListScreen extends ConsumerWidget {
                           height: 48,
                           decoration: BoxDecoration(
                             color: AppColors.secondary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                           ),
                           alignment: Alignment.center,
                           child: const Icon(

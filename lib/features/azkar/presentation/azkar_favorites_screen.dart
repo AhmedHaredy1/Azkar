@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../core/utils/arabic_number_utils.dart';
 import '../domain/models/azkar_category.dart';
 import 'providers/azkar_provider.dart';
@@ -39,7 +40,7 @@ class AzkarFavoritesScreen extends ConsumerWidget {
                     size: 64,
                     color: AppColors.textSecondary.withValues(alpha: 0.4),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
                     'لا توجد أذكار مفضلة',
                     style: GoogleFonts.cairo(
@@ -47,7 +48,7 @@ class AzkarFavoritesScreen extends ConsumerWidget {
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     'اضغط على ❤ عند قراءة الأذكار لإضافتها هنا',
                     style: GoogleFonts.cairo(
@@ -61,7 +62,7 @@ class AzkarFavoritesScreen extends ConsumerWidget {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             itemCount: items.length,
             itemBuilder: (context, index) {
               final (category, dhikr) = items[index];
@@ -114,12 +115,15 @@ class _FavoriteDhikrCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.card),
       elevation: 0,
       color: AppColors.card,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -128,12 +132,12 @@ class _FavoriteDhikrCard extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
                   child: Text(
                     categoryName,
@@ -157,7 +161,7 @@ class _FavoriteDhikrCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             // Dhikr text
             Text(
               dhikr.textAr,
@@ -169,7 +173,7 @@ class _FavoriteDhikrCard extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             // Source + repetitions + actions
             Row(
               children: [
@@ -185,12 +189,12 @@ class _FavoriteDhikrCard extends StatelessWidget {
                 // Repetitions badge
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
+                    horizontal: AppSpacing.sm,
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.secondary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: Text(
                     '${ArabicNumberUtils.toEasternArabic(dhikr.repetitions)} مرة',
@@ -201,7 +205,7 @@ class _FavoriteDhikrCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 // Copy
                 GestureDetector(
                   onTap: () {
@@ -221,7 +225,7 @@ class _FavoriteDhikrCard extends StatelessWidget {
                     color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 // Share
                 GestureDetector(
                   onTap: () {
