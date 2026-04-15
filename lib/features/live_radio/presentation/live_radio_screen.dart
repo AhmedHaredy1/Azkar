@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../core/utils/arabic_text_utils.dart';
 import 'providers/live_radio_provider.dart';
 
@@ -47,7 +48,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
           if (radioState.isVideoMode && radioState.playingStationId != null)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: _VideoPlayerWidget(
                   station: radioStations.firstWhere(
                     (s) => s.id == radioState.playingStationId,
@@ -72,7 +73,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
 
           // ── Featured Station Cards ──
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
@@ -126,7 +127,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
           // ── Search Bar ──
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: _SearchBar(
                 isDark: isDark,
                 onChanged: (q) => setState(() => _searchQuery = q),
@@ -146,7 +147,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
                   children: [
                     // Favorites toggle
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
@@ -163,7 +164,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
                             color: _showFavoritesOnly
                                 ? Colors.amber.withValues(alpha: isDark ? 0.2 : 0.1)
                                 : (isDark ? AppColors.darkCard : AppColors.card),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             border: Border.all(
                               color: _showFavoritesOnly
                                   ? Colors.amber.withValues(alpha: 0.5)
@@ -185,7 +186,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
                                         : AppColors.textSecondary),
                                 size: 20,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(
                                 '$kFavorites (${favorites.length})',
                                 style: GoogleFonts.cairo(
@@ -214,9 +215,9 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
                         height: 40,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                           itemCount: nationalities.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 8),
+                          separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
                           itemBuilder: (context, index) {
                             final nat = nationalities[index];
                             final isSelected = _selectedNationality == nat;
@@ -232,7 +233,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
                                       : (isDark
                                           ? AppColors.darkCard
                                           : AppColors.card),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(AppRadius.xl),
                                   border: Border.all(
                                     color: isSelected
                                         ? AppColors.primary
@@ -303,7 +304,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
               if (filtered.isEmpty) {
                 return SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.all(32),
+                    padding: const EdgeInsets.all(AppSpacing.xxl),
                     child: Center(
                       child: Column(
                         children: [
@@ -316,7 +317,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
                                 ? AppColors.darkTextSecondary
                                 : AppColors.textSecondary,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           Text(
                             _showFavoritesOnly
                                 ? 'لا توجد إذاعات مفضلة'
@@ -336,7 +337,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
               }
 
               return SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -377,7 +378,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
             },
             loading: () => const SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.all(32),
+                padding: EdgeInsets.all(AppSpacing.xxl),
                 child: Center(
                   child: CircularProgressIndicator(color: AppColors.primary),
                 ),
@@ -385,12 +386,12 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
             ),
             error: (err, _) => SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(AppSpacing.xxl),
                 child: Center(
                   child: Column(
                     children: [
                       Icon(Icons.wifi_off, size: 40, color: Colors.grey[400]),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
                         'فشل تحميل الإذاعات\nتأكد من اتصال الإنترنت',
                         textAlign: TextAlign.center,
@@ -401,7 +402,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
                               : AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.md),
                       TextButton.icon(
                         onPressed: () =>
                             ref.invalidate(mp3QuranRadiosProvider),
@@ -422,7 +423,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
           if (radioState.error != null)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Text(
                   radioState.error!,
                   style: GoogleFonts.cairo(
@@ -434,7 +435,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
               ),
             ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
         ],
       ),
     );
@@ -464,7 +465,7 @@ class _SectionHeader extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 22, color: AppColors.primary),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.sm),
         Text(
           title,
           style: GoogleFonts.cairo(
@@ -498,7 +499,7 @@ class _SearchBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: borderColor),
       ),
       child: TextField(
@@ -514,7 +515,7 @@ class _SearchBar extends StatelessWidget {
           prefixIcon: Icon(Icons.search, color: hintColor, size: 20),
           border: InputBorder.none,
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
         ),
       ),
     );
@@ -561,14 +562,14 @@ class _ReciterRadioTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: isPlaying
                   ? AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.08)
                   : cardColor,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(
                 color: isPlaying
                     ? AppColors.primary.withValues(alpha: 0.5)
@@ -594,7 +595,7 @@ class _ReciterRadioTile extends StatelessWidget {
                     size: 22,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
 
                 // Name + nationality
                 Expanded(
@@ -755,14 +756,14 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         height: 200,
         decoration: BoxDecoration(
           color: Colors.black87,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, color: Colors.white54, size: 40),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 'فشل تحميل البث المرئي',
                 style: GoogleFonts.cairo(color: Colors.white54, fontSize: 14),
@@ -778,7 +779,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         height: 200,
         decoration: BoxDecoration(
           color: Colors.black87,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: const Center(
           child: CircularProgressIndicator(color: AppColors.secondary),
@@ -789,18 +790,18 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
     return Column(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           child: AspectRatio(
             aspectRatio: 16 / 9,
             child: Chewie(controller: _chewieController!),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: AppSpacing.xs),
               decoration: BoxDecoration(
                 color: Colors.red,
                 borderRadius: BorderRadius.circular(6),
@@ -814,7 +815,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             Text(
               widget.station.nameAr,
               style: GoogleFonts.cairo(
@@ -863,7 +864,7 @@ class _RadioStationCard extends StatelessWidget {
         isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: isPlaying
             ? LinearGradient(
@@ -874,7 +875,7 @@ class _RadioStationCard extends StatelessWidget {
               )
             : null,
         color: isPlaying ? null : cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
           color: isPlaying
               ? AppColors.primary.withValues(alpha: 0.4)
@@ -926,7 +927,7 @@ class _RadioStationCard extends StatelessWidget {
                           ),
                         ),
                         if (isPlaying) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
@@ -976,7 +977,7 @@ class _RadioStationCard extends StatelessWidget {
 
           // Audio / Video toggle buttons
           if (station.hasVideo) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Row(
               children: [
                 Expanded(

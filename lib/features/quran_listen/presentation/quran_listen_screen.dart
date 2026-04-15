@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../domain/models/mp3quran_reciter.dart';
 import 'providers/quran_listen_provider.dart';
 
@@ -32,7 +33,7 @@ class QuranListenScreen extends ConsumerWidget {
           // Surah selector
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topRight,
@@ -61,10 +62,10 @@ class QuranListenScreen extends ConsumerWidget {
               if (types.length <= 1) return const SizedBox();
               return Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                   child: Row(
                     children: [
                       _MoshafChip(
@@ -148,7 +149,7 @@ class QuranListenScreen extends ConsumerWidget {
                   children: [
                     const Icon(Icons.wifi_off,
                         size: 48, color: AppColors.textSecondary),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     Text(
                       'فشل تحميل القراء',
                       style: GoogleFonts.cairo(
@@ -156,7 +157,7 @@ class QuranListenScreen extends ConsumerWidget {
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     ElevatedButton.icon(
                       onPressed: () =>
                           ref.invalidate(mp3QuranRecitersProvider),
@@ -197,7 +198,7 @@ class _SurahDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(14),
@@ -296,7 +297,7 @@ class _ReciterTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
         color: isPlaying
             ? AppColors.primary.withValues(alpha: 0.08)
@@ -310,13 +311,13 @@ class _ReciterTile extends StatelessWidget {
         ),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
         leading: Container(
           width: 44,
           height: 44,
           decoration: BoxDecoration(
             color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: Icon(
             isPlaying ? Icons.volume_up : Icons.person_outline,

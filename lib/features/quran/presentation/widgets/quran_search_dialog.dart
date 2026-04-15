@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../domain/models/quran_page.dart';
 import '../../domain/models/surah.dart';
 import '../providers/quran_provider.dart';
@@ -76,7 +77,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
       height: MediaQuery.of(context).size.height * 0.7,
       decoration: const BoxDecoration(
         color: Color(0xFFFAF6EF),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       child: Column(
         children: [
@@ -90,7 +91,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             'البحث في القرآن',
             style: GoogleFonts.cairo(
@@ -99,7 +100,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           // Tabs
           TabBar(
             controller: _tabController,
@@ -143,7 +144,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
 
   Widget _buildPageTab() {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -154,7 +155,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           TextField(
             controller: _pageController,
             keyboardType: TextInputType.number,
@@ -167,17 +168,17 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
                 color: AppColors.textSecondary.withValues(alpha: 0.4),
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 borderSide: BorderSide(color: AppColors.cardBorder),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 borderSide: const BorderSide(color: AppColors.primary, width: 2),
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -193,7 +194,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
               ),
               child: Text(
@@ -212,16 +213,16 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
 
   Widget _buildSurahTab(List<Surah> surahs) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           // Surah dropdown
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             decoration: BoxDecoration(
               border: Border.all(color: AppColors.cardBorder),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<int>(
@@ -245,7 +246,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -265,7 +266,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
               ),
               child: Text(
@@ -278,7 +279,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
             ),
           ),
           // Quick surah list
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Expanded(
             child: ListView.builder(
               itemCount: surahs.length,
@@ -328,10 +329,10 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
 
   Widget _buildSearchTab() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           TextField(
             controller: _searchController,
             textDirection: TextDirection.rtl,
@@ -341,10 +342,10 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
               hintStyle: GoogleFonts.cairo(color: AppColors.textSecondary),
               prefixIcon: const Icon(Icons.search, color: AppColors.primary),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 borderSide: const BorderSide(color: AppColors.primary, width: 2),
               ),
             ),
@@ -353,15 +354,15 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
               if (v.length >= 3) _performSearch(v);
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           if (_isSearching)
             const Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               child: CircularProgressIndicator(color: AppColors.primary),
             )
           else if (_searchResults.isEmpty && _searchController.text.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Text(
                 'لا توجد نتائج',
                 style: GoogleFonts.cairo(

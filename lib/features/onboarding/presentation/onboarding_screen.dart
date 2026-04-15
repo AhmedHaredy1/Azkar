@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/theme/tokens.dart';
 import 'providers/onboarding_provider.dart';
 import 'widgets/dot_indicator.dart';
 import 'widgets/onboarding_page.dart';
@@ -80,7 +81,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             children: [
               // Top bar with skip button
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -98,7 +99,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         ),
                       )
                     else
-                      const SizedBox(height: 48),
+                      const SizedBox(height: AppSpacing.xxl),
                   ],
                 ),
               ),
@@ -135,7 +136,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
               // Bottom section: dot indicator + button
               Padding(
-                padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+                padding: const EdgeInsets.fromLTRB(AppSpacing.xxl, 0, AppSpacing.xxl, AppSpacing.xxl),
                 child: Column(
                   children: [
                     // Dot indicator
@@ -144,7 +145,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       currentIndex: state.currentPage,
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: AppSpacing.xxl),
 
                     // Action button
                     SizedBox(
@@ -161,7 +162,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           foregroundColor: Colors.white,
                           elevation: 2,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                           ),
                         ),
                         child: Text(

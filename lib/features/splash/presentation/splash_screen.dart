@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../core/services/storage_service.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -89,7 +90,7 @@ class _SplashScreenState extends State<SplashScreen>
                   size: 80,
                   color: AppColors.secondary,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 // Decorative line
                 Container(
                   width: 60,
@@ -99,7 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
                     borderRadius: BorderRadius.circular(1),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 // App name
                 Text(
                   'حصن المسلم',
@@ -110,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
                     height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Text(
                   'أذكار وأدعية من الكتاب والسنة',
                   style: GoogleFonts.cairo(
@@ -118,7 +119,7 @@ class _SplashScreenState extends State<SplashScreen>
                     color: Colors.white70,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 // Decorative line
                 Container(
                   width: 60,
@@ -128,15 +129,15 @@ class _SplashScreenState extends State<SplashScreen>
                     borderRadius: BorderRadius.circular(1),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 // Star decorations
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.star, size: 12, color: AppColors.secondary.withValues(alpha: 0.6)),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     const Icon(Icons.star, size: 16, color: AppColors.secondary),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Icon(Icons.star, size: 12, color: AppColors.secondary.withValues(alpha: 0.6)),
                   ],
                 ),

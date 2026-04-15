@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../core/theme/tokens.dart';
 import 'providers/quran_provider.dart';
 import 'widgets/ayah_text_widget.dart';
 import 'widgets/bismillah_header.dart';
@@ -72,16 +73,16 @@ class SurahReaderScreen extends ConsumerWidget {
           final showBismillah = surah.number != 9;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
             child: Column(
               children: [
                 // Surah header
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg, horizontal: AppSpacing.xl),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
                     border: Border.all(
                       color: AppColors.primary.withValues(alpha: 0.15),
                     ),
@@ -109,12 +110,12 @@ class SurahReaderScreen extends ConsumerWidget {
                 ),
                 // Bismillah
                 if (showBismillah) const BismillahHeader(),
-                if (!showBismillah) const SizedBox(height: 20),
+                if (!showBismillah) const SizedBox(height: AppSpacing.xl),
                 // Ayahs
                 ...surah.ayahs.map(
                   (ayah) => AyahTextWidget(ayah: ayah),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: AppSpacing.xxl),
               ],
             ),
           );
@@ -127,7 +128,7 @@ class SurahReaderScreen extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 'حدث خطأ في تحميل السورة',
                 style: GoogleFonts.cairo(fontSize: 16, color: AppColors.textSecondary),

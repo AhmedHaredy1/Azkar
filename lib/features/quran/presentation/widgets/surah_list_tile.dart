@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../domain/models/surah.dart';
 import '../providers/quran_audio_provider.dart';
 
@@ -34,7 +35,7 @@ class SurahListTile extends ConsumerWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 10),
         child: Row(
           children: [
             // Surah number in decorated container
@@ -43,7 +44,7 @@ class SurahListTile extends ConsumerWidget {
               height: 44,
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Center(
                 child: Text(
@@ -80,7 +81,7 @@ class SurahListTile extends ConsumerWidget {
                           color: AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                         decoration: BoxDecoration(
@@ -111,7 +112,7 @@ class SurahListTile extends ConsumerWidget {
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             // Play button
             GestureDetector(
               onTap: () {
@@ -130,7 +131,7 @@ class SurahListTile extends ConsumerWidget {
                   color: isPlayingThis
                       ? AppColors.primary.withValues(alpha: 0.15)
                       : AppColors.primary.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: audioState.isLoading && audioState.currentSurah == surah.number
                     ? const Padding(

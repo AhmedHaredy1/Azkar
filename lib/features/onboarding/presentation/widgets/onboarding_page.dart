@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 /// A single onboarding page with an icon, title, and description.
 class OnboardingPage extends StatelessWidget {
@@ -25,7 +26,7 @@ class OnboardingPage extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -66,7 +67,7 @@ class OnboardingPage extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 48),
+          const SizedBox(height: AppSpacing.xxl),
 
           // Decorative separator
           Row(
@@ -84,13 +85,13 @@ class OnboardingPage extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Icon(
                 Icons.star,
                 size: 10,
                 color: isDark ? AppColors.secondaryLight : AppColors.secondary,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Container(
                 width: 30,
                 height: 1.5,
@@ -106,7 +107,7 @@ class OnboardingPage extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.xxl),
 
           // Title
           Text(
@@ -120,7 +121,7 @@ class OnboardingPage extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
 
           // Description
           Text(

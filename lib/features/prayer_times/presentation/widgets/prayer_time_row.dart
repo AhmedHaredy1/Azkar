@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../domain/models/prayer_time.dart';
 
 class PrayerTimeRow extends StatelessWidget {
@@ -34,8 +35,8 @@ class PrayerTimeRow extends StatelessWidget {
     final timeFormatted = DateFormat('hh:mm a', 'ar').format(prayerTime.time);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 14),
       decoration: BoxDecoration(
         color: prayerTime.isNext
             ? AppColors.primary.withValues(alpha: 0.08)
@@ -57,7 +58,7 @@ class PrayerTimeRow extends StatelessWidget {
               color: prayerTime.isNext
                   ? AppColors.primary.withValues(alpha: 0.15)
                   : AppColors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Icon(
               _getIcon(),
@@ -78,12 +79,12 @@ class PrayerTimeRow extends StatelessWidget {
                   ),
                 ),
                 if (prayerTime.isNext) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                     child: Text(
                       'التالي',

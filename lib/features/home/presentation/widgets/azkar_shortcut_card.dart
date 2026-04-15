@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../providers/home_provider.dart';
 
 class AzkarShortcutCard extends ConsumerWidget {
@@ -38,7 +39,7 @@ class AzkarShortcutCard extends ConsumerWidget {
       onTap: () => context.push('/azkar/$categoryId'),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.lg),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.centerRight,
@@ -48,7 +49,7 @@ class AzkarShortcutCard extends ConsumerWidget {
               accentColor.withValues(alpha: 0.04),
             ],
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(
             color: accentColor.withValues(alpha: 0.2),
             width: 1,

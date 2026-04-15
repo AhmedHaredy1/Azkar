@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class DhikrCard extends StatelessWidget {
   final String text;
@@ -19,10 +20,10 @@ class DhikrCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       decoration: BoxDecoration(
         color: const Color(0xFFFAF6EF),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
         border: Border.all(
           color: AppColors.secondary.withValues(alpha: 0.3),
           width: 1.5,
@@ -50,13 +51,13 @@ class DhikrCard extends StatelessWidget {
                 ],
               ),
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
+                top: Radius.circular(AppRadius.xl),
               ),
             ),
           ),
           // Islamic corner ornaments
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -79,7 +80,7 @@ class DhikrCard extends StatelessWidget {
           ),
           // Dhikr text
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
             child: Text(
               text,
               textAlign: TextAlign.center,
@@ -91,15 +92,15 @@ class DhikrCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           // Source badge
           if (source.isNotEmpty) ...[
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24),
+              margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
                 border: Border.all(
                   color: AppColors.primary.withValues(alpha: 0.15),
                 ),
@@ -115,9 +116,9 @@ class DhikrCard extends StatelessWidget {
             ),
           ],
           if (note.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
               child: Text(
                 note,
                 textAlign: TextAlign.center,
@@ -129,7 +130,7 @@ class DhikrCard extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           // Decorative bottom border
           Container(
             width: double.infinity,
@@ -143,7 +144,7 @@ class DhikrCard extends StatelessWidget {
                 ],
               ),
               borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(20),
+                bottom: Radius.circular(AppRadius.xl),
               ),
             ),
           ),

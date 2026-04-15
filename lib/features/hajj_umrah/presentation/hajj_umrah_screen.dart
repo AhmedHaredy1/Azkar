@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 
 // ──────────────────────────────────────────────
 // Data Provider
@@ -113,7 +114,7 @@ class _RitualStepsTab extends StatelessWidget {
     final steps = data['steps'] as List<dynamic>;
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       itemCount: steps.length,
       itemBuilder: (context, index) {
         final step = steps[index] as Map<String, dynamic>;
@@ -164,10 +165,10 @@ class _StepCardState extends State<_StepCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.cardBorder, width: 0.5),
       ),
       child: Column(
@@ -175,9 +176,9 @@ class _StepCardState extends State<_StepCard> {
           // Header
           InkWell(
             onTap: () => setState(() => _expanded = !_expanded),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
                 children: [
                   // Step number badge
@@ -186,7 +187,7 @@ class _StepCardState extends State<_StepCard> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                     child: Center(
                       child: Text(
@@ -199,7 +200,7 @@ class _StepCardState extends State<_StepCard> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,7 +240,7 @@ class _StepCardState extends State<_StepCard> {
           if (_expanded) ...[
             const Divider(height: 1, color: AppColors.cardBorder),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -252,13 +253,13 @@ class _StepCardState extends State<_StepCard> {
                     ),
                   ),
                   if (widget.duas.isNotEmpty) ...[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.lg),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
                         border: Border.all(
                           color: AppColors.primary.withValues(alpha: 0.15),
                         ),
@@ -284,9 +285,9 @@ class _StepCardState extends State<_StepCard> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           ...widget.duas.map((dua) => Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                                 child: Text(
                                   '• $dua',
                                   style: GoogleFonts.amiri(
@@ -324,11 +325,11 @@ class _HajjTypesTab extends StatelessWidget {
     final types = data['types'] as List<dynamic>;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         // Header
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -336,13 +337,13 @@ class _HajjTypesTab extends StatelessWidget {
                 AppColors.primary.withValues(alpha: 0.03),
               ],
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
           ),
           child: Column(
             children: [
               const Icon(Icons.mosque, color: AppColors.primary, size: 36),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 data['title'] as String? ?? '',
                 style: GoogleFonts.cairo(
@@ -351,7 +352,7 @@ class _HajjTypesTab extends StatelessWidget {
                   color: AppColors.primary,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 'اختر النوع المناسب لك بناءً على ظروفك',
                 style: GoogleFonts.cairo(
@@ -362,7 +363,7 @@ class _HajjTypesTab extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         ...types.map((type) {
           final map = type as Map<String, dynamic>;
           return _HajjTypeCard(data: map);
@@ -399,16 +400,16 @@ class _HajjTypeCardState extends State<_HajjTypeCard> {
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.cardBorder, width: 0.5),
       ),
       child: Column(
         children: [
           InkWell(
             onTap: () => setState(() => _expanded = !_expanded),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
                 children: [
                   Text(icon, style: const TextStyle(fontSize: 32)),
@@ -427,7 +428,7 @@ class _HajjTypeCardState extends State<_HajjTypeCard> {
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.sm),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 2),
@@ -446,7 +447,7 @@ class _HajjTypeCardState extends State<_HajjTypeCard> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.xs),
                         Text(
                           summary,
                           style: GoogleFonts.cairo(
@@ -470,7 +471,7 @@ class _HajjTypeCardState extends State<_HajjTypeCard> {
           if (_expanded) ...[
             const Divider(height: 1, color: AppColors.cardBorder),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -482,7 +483,7 @@ class _HajjTypeCardState extends State<_HajjTypeCard> {
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
                     'الخطوات:',
                     style: GoogleFonts.cairo(
@@ -491,7 +492,7 @@ class _HajjTypeCardState extends State<_HajjTypeCard> {
                       color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   ...steps.asMap().entries.map((e) => Padding(
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Row(
@@ -516,7 +517,7 @@ class _HajjTypeCardState extends State<_HajjTypeCard> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: Text(
                                 e.value,
@@ -531,13 +532,13 @@ class _HajjTypeCardState extends State<_HajjTypeCard> {
                         ),
                       )),
                   if (ruling.isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
                         border: Border.all(
                           color: AppColors.primary.withValues(alpha: 0.15),
                         ),
@@ -617,20 +618,20 @@ class _CategorizedProhibitions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         // Header
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.red.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             border: Border.all(color: Colors.red.withValues(alpha: 0.15)),
           ),
           child: Column(
             children: [
               const Icon(Icons.warning_amber, color: Colors.red, size: 36),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 data['title'] as String? ?? '',
                 style: GoogleFonts.cairo(
@@ -640,7 +641,7 @@ class _CategorizedProhibitions extends StatelessWidget {
                 ),
               ),
               if (data['description'] != null) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   data['description'] as String,
                   style: GoogleFonts.cairo(
@@ -653,7 +654,7 @@ class _CategorizedProhibitions extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         // Categories
         ...categories.map((cat) {
@@ -665,7 +666,7 @@ class _CategorizedProhibitions extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 child: Text(
                   catTitle,
                   style: GoogleFonts.cairo(
@@ -679,7 +680,7 @@ class _CategorizedProhibitions extends StatelessWidget {
                 final map = item as Map<String, dynamic>;
                 return _ProhibitionItem(data: map);
               }),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
             ],
           );
         }),
@@ -707,10 +708,10 @@ class _ProhibitionItemState extends State<_ProhibitionItem> {
     final detail = widget.data['detail'] as String?;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.cardBorder, width: 0.5),
       ),
       child: Column(
@@ -719,10 +720,10 @@ class _ProhibitionItemState extends State<_ProhibitionItem> {
             onTap: detail != null
                 ? () => setState(() => _showDetail = !_showDetail)
                 : null,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.md),
             child: Padding(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 14),
               child: Row(
                 children: [
                   Text(icon, style: const TextStyle(fontSize: 24)),
@@ -753,19 +754,19 @@ class _ProhibitionItemState extends State<_ProhibitionItem> {
             Container(
               width: double.infinity,
               padding:
-                  const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.md),
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.orange.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(Icons.info_outline,
                         size: 16, color: Colors.orange.shade700),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         detail,
@@ -795,17 +796,17 @@ class _LegacyProhibitions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         ...items.map((item) {
           final map = item as Map<String, dynamic>;
           return Container(
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
             padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 14),
             decoration: BoxDecoration(
               color: AppColors.card,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(color: AppColors.cardBorder, width: 0.5),
             ),
             child: Row(
@@ -846,7 +847,7 @@ class _DuasTab extends StatelessWidget {
     final items = data['items'] as List<dynamic>;
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index] as Map<String, dynamic>;
@@ -855,8 +856,8 @@ class _DuasTab extends StatelessWidget {
         final note = item['note'] as String?;
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: AppColors.card,
             borderRadius: BorderRadius.circular(14),
@@ -867,10 +868,10 @@ class _DuasTab extends StatelessWidget {
             children: [
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: Text(
                   occasion,
@@ -881,7 +882,7 @@ class _DuasTab extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 dua,
                 style: GoogleFonts.amiri(

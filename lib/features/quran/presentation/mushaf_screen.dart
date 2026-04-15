@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import 'providers/quran_audio_provider.dart';
 import 'providers/quran_provider.dart';
 import 'widgets/mushaf_page_widget.dart';
@@ -477,7 +478,7 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
                         decoration: BoxDecoration(
                           color: const Color(0xFF2C1810).withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
                         ),
                         child: Text(
                           '${_toArabicNumber(_currentPage)} / ٦٠٤',
@@ -502,7 +503,7 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
                     color: Color(0xFFB8860B),
                     strokeWidth: 2,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
                     'جارٍ تحميل المصحف...',
                     style: GoogleFonts.cairo(
@@ -519,12 +520,12 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Text(
                   'حدث خطأ في تحميل المصحف',
                   style: GoogleFonts.cairo(fontSize: 16),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 ElevatedButton(
                   onPressed: () => ref.invalidate(pageIndexProvider),
                   child: const Text('إعادة المحاولة'),

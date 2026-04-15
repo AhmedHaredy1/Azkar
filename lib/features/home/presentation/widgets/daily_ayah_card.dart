@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../providers/home_provider.dart';
 
 class DailyAyahCard extends ConsumerWidget {
@@ -18,10 +19,10 @@ class DailyAyahCard extends ConsumerWidget {
 
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           decoration: BoxDecoration(
             color: AppColors.card,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.xl),
             border: Border.all(
               color: AppColors.secondary.withValues(alpha: 0.3),
               width: 1.5,
@@ -46,7 +47,7 @@ class DailyAyahCard extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.secondary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -78,7 +79,7 @@ class DailyAyahCard extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               // Decorative top divider
               Container(
                 width: 40,
@@ -88,7 +89,7 @@ class DailyAyahCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(1),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 ayah.ayahText,
                 textAlign: TextAlign.center,
@@ -98,7 +99,7 @@ class DailyAyahCard extends ConsumerWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               // Decorative bottom divider
               Container(
                 width: 40,
@@ -108,7 +109,7 @@ class DailyAyahCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(1),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 '﴿ ${ayah.surahName} : ${ayah.ayahNumber} ﴾',
                 style: GoogleFonts.amiri(
@@ -125,7 +126,7 @@ class DailyAyahCard extends ConsumerWidget {
         height: 150,
         decoration: BoxDecoration(
           color: AppColors.card,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
           border: Border.all(
             color: AppColors.secondary.withValues(alpha: 0.3),
             width: 1.5,

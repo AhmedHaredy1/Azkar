@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../domain/models/dua_category.dart';
 import '../providers/duas_provider.dart';
 
@@ -25,11 +26,11 @@ class DuaTextCard extends ConsumerWidget {
     final isFavorite = favorites.contains(duaKey);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.cardBorder, width: 0.5),
         boxShadow: [
           BoxShadow(
@@ -67,7 +68,7 @@ class DuaTextCard extends ConsumerWidget {
               ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           // Action buttons row
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -84,7 +85,7 @@ class DuaTextCard extends ConsumerWidget {
                 ),
                 tooltip: 'المفضلة',
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               // Copy button
               IconButton(
                 onPressed: () {
@@ -105,7 +106,7 @@ class DuaTextCard extends ConsumerWidget {
                 ),
                 tooltip: 'نسخ',
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               // Share button
               IconButton(
                 onPressed: () {
