@@ -207,15 +207,16 @@ class SettingsNotifier extends StateNotifier<AppSettingsState> {
   /// Apply a GPS auto-detected location. Clears the previously selected manual
   /// city/country and its UTC offset so stale values don't leak into the UI or
   /// prayer-time calculations (device local time is used when utcOffset is null).
-  Future<void> setAutoDetectedLocation(double lat, double lon) async {
+  Future<void> setAutoDetectedLocation(double lat, double lon,
+      {String? city, String? country}) async {
     state = AppSettingsState(
       fontSize: state.fontSize,
       calculationMethod: state.calculationMethod,
       themeMode: state.themeMode,
       latitude: lat,
       longitude: lon,
-      cityName: null,
-      countryName: null,
+      cityName: city,
+      countryName: country,
       utcOffsetHours: null,
       locationMode: LocationMode.auto,
       notifyFajr: state.notifyFajr,
@@ -230,8 +231,16 @@ class SettingsNotifier extends StateNotifier<AppSettingsState> {
     );
     await _storage.putSetting('latitude', lat);
     await _storage.putSetting('longitude', lon);
-    await _storage.deleteSetting('cityName');
-    await _storage.deleteSetting('countryName');
+    if (city != null) {
+      await _storage.putSetting('cityName', city);
+    } else {
+      await _storage.deleteSetting('cityName');
+    }
+    if (country != null) {
+      await _storage.putSetting('countryName', country);
+    } else {
+      await _storage.deleteSetting('countryName');
+    }
     await _storage.deleteSetting('utcOffsetHours');
     await _storage.putSetting('locationMode', 'auto');
 

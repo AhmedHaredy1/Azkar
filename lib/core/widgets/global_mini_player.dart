@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../constants/app_colors.dart';
 import '../services/global_audio_handler.dart';
 import '../theme/tokens.dart';
+import 'playback_controls.dart';
 import '../../features/live_radio/presentation/providers/live_radio_provider.dart';
 import '../../features/quran_listen/presentation/providers/quran_listen_provider.dart';
 import '../../features/quran/presentation/providers/quran_audio_provider.dart';
@@ -58,9 +60,12 @@ class GlobalMiniPlayer extends ConsumerWidget {
               _SourceArt(source: info.source),
               const SizedBox(width: AppSpacing.md),
 
-              // ── Title & subtitle ──
+              // ── Title & subtitle (tap to open source screen) ──
               Expanded(
-                child: Column(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _openSource(context, info.source),
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -91,22 +96,22 @@ class GlobalMiniPlayer extends ConsumerWidget {
                     ),
                   ],
                 ),
+                ),
               ),
 
-              // ── Ghost close ──
-              IconButton(
+              // ── Stop ──
+              PlaybackIconButton(
+                icon: PlaybackIcons.stop,
+                color: subtitleColor,
                 tooltip: 'إيقاف',
-                visualDensity: VisualDensity.compact,
-                icon: Icon(Icons.close_rounded,
-                    color: subtitleColor, size: 20),
                 onPressed: () => _onStop(ref, info.source),
               ),
 
               // ── Primary play/pause ──
-              _PlayButton(
+              PlaybackPlayButton(
                 isPlaying: info.isPlaying,
                 isLoading: info.isLoading,
-                color: scheme.primary,
+                backgroundColor: scheme.primary,
                 onPressed: () =>
                     _onPlayPause(ref, info.source, info.isPlaying),
               ),
@@ -115,6 +120,19 @@ class GlobalMiniPlayer extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _openSource(BuildContext context, ActiveAudioSource source) {
+    switch (source) {
+      case ActiveAudioSource.quranAyah:
+        context.go('/quran');
+      case ActiveAudioSource.quranListen:
+        context.go('/quran-listen');
+      case ActiveAudioSource.liveRadio:
+        context.go('/live-radio');
+      case ActiveAudioSource.none:
+        return;
+    }
   }
 
   String _labelForSource(ActiveAudioSource source) {
@@ -250,51 +268,3 @@ class _SourceArt extends StatelessWidget {
   }
 }
 
-/// Filled circular play/pause button — the primary action of the mini player.
-class _PlayButton extends StatelessWidget {
-  final bool isPlaying;
-  final bool isLoading;
-  final Color color;
-  final VoidCallback onPressed;
-
-  const _PlayButton({
-    required this.isPlaying,
-    required this.isLoading,
-    required this.color,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: color,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: isLoading ? null : onPressed,
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(
-            child: isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.4,
-                      color: Colors.white,
-                    ),
-                  )
-                : Icon(
-                    isPlaying
-                        ? Icons.pause_rounded
-                        : Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
-}

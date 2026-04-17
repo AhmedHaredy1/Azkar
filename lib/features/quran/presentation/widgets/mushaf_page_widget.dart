@@ -118,16 +118,17 @@ class MushafPageWidget extends ConsumerWidget {
       (s, sec) => s + sec.ayahs.fold<int>(0, (a, ay) => a + ay.text.length),
     );
 
-    // Adaptive font size
+    // Adaptive font size — slightly larger overall for readability while
+    // keeping the same ayah-per-page layout.
     double fontSize;
     if (totalTextLength > 1200) {
-      fontSize = 19;
-    } else if (totalTextLength > 800) {
       fontSize = 21;
-    } else if (totalTextLength > 400) {
+    } else if (totalTextLength > 800) {
       fontSize = 23;
-    } else {
+    } else if (totalTextLength > 400) {
       fontSize = 25;
+    } else {
+      fontSize = 27;
     }
 
     final sectionWidgets = <Widget>[];
@@ -205,12 +206,23 @@ class MushafPageWidget extends ConsumerWidget {
       );
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: sectionWidgets,
-      ),
+    // Center the ayah content vertically so short pages (e.g. short surahs)
+    // don't leave a large empty block at the bottom. The ayah distribution
+    // per page is unchanged — this only rebalances whitespace visually.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: sectionWidgets,
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
@@ -304,9 +305,33 @@ class _LocationSettingsCardState extends ConsumerState<_LocationSettingsCard> {
         locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
       );
 
+      // Reverse-geocode to a friendly city + country for display.
+      String? city;
+      String? country;
+      try {
+        await setLocaleIdentifier('ar');
+        final placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+        if (placemarks.isNotEmpty) {
+          final p = placemarks.first;
+          city = p.locality?.isNotEmpty == true
+              ? p.locality
+              : (p.subAdministrativeArea?.isNotEmpty == true
+                  ? p.subAdministrativeArea
+                  : p.administrativeArea);
+          country = p.country;
+        }
+      } catch (_) {
+        // Reverse geocode failed — keep city/country null.
+      }
+
       await ref.read(settingsProvider.notifier).setAutoDetectedLocation(
             position.latitude,
             position.longitude,
+            city: city,
+            country: country,
           );
       ref.invalidate(locationProvider);
       ref.invalidate(prayerTimesProvider);
@@ -330,37 +355,20 @@ class _LocationSettingsCardState extends ConsumerState<_LocationSettingsCard> {
     );
   }
 
-  void _showCityPicker() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => _CountryCityPickerSheet(
-        onCitySelected: (city) async {
-          await ref.read(settingsProvider.notifier).setLocationMode(LocationMode.manual);
-          await ref.read(settingsProvider.notifier).setLocation(
-                city.lat,
-                city.lng,
-                city: city.nameAr,
-                country: city.country,
-                utcOffsetHours: city.utcOffset,
-              );
-          ref.invalidate(locationProvider);
-          ref.invalidate(prayerTimesProvider);
-          ref.invalidate(nextPrayerProvider);
-          if (ctx.mounted) Navigator.of(ctx).pop();
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isAuto = widget.settings.locationMode == LocationMode.auto;
-    final hasLocation = widget.settings.latitude != null && widget.settings.longitude != null;
-    final activeColor = widget.isDark ? const Color(0xFF4CAF50) : const Color(0xFF1B5E20);
+    final hasLocation = widget.settings.latitude != null &&
+        widget.settings.longitude != null;
+    final city = widget.settings.cityName;
+    final country = widget.settings.countryName;
+    String? friendlyName;
+    if (city != null && country != null) {
+      friendlyName = '$city، $country';
+    } else if (city != null) {
+      friendlyName = city;
+    } else if (country != null) {
+      friendlyName = country;
+    }
 
     return Container(
       width: double.infinity,
@@ -369,138 +377,55 @@ class _LocationSettingsCardState extends ConsumerState<_LocationSettingsCard> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: widget.borderColor),
       ),
-      child: Column(
-        children: [
-          // Auto-detect toggle
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: SwitchListTile(
-              title: Text(
-                'تحديد الموقع تلقائياً',
-                style: GoogleFonts.cairo(fontSize: 15, color: widget.textPrimary),
-              ),
-              subtitle: Text(
-                'استخدام GPS لتحديد الموقع',
-                style: GoogleFonts.cairo(fontSize: 12, color: widget.textSecondary),
-              ),
-              value: isAuto,
-              onChanged: (value) async {
-                if (value) {
-                  await _autoDetectLocation();
-                } else {
-                  await ref.read(settingsProvider.notifier).setLocationMode(LocationMode.manual);
-                }
-              },
-              activeTrackColor: activeColor,
-              dense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Divider(color: widget.borderColor, thickness: 0.5, height: 0.5),
-          ),
-
-          // Manual city selection
-          if (!isAuto)
-            InkWell(
-              onTap: _showCityPicker,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(Icons.location_city, color: widget.primaryColor, size: 22),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'اختيار المدينة',
-                            style: GoogleFonts.cairo(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: widget.textPrimary,
-                            ),
-                          ),
-                          if (widget.settings.cityName != null) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              '${widget.settings.cityName}${widget.settings.countryName != null ? ' - ${widget.settings.countryName}' : ''}',
-                              style: GoogleFonts.cairo(
-                                fontSize: 13,
-                                color: widget.primaryColor,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ] else
-                            Text(
-                              'لم يتم اختيار مدينة بعد',
-                              style: GoogleFonts.cairo(
-                                fontSize: 13,
-                                color: widget.textSecondary,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.arrow_forward_ios, size: 16, color: widget.textSecondary),
-                  ],
-                ),
-              ),
-            ),
-
-          // Auto-detect status
-          if (isAuto)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(Icons.my_location, color: widget.primaryColor, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.my_location, color: widget.primaryColor, size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'الموقع الحالي',
-                          style: GoogleFonts.cairo(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: widget.textPrimary,
-                          ),
-                        ),
-                        if (hasLocation)
-                          Text(
-                            '${widget.settings.latitude!.toStringAsFixed(4)}, ${widget.settings.longitude!.toStringAsFixed(4)}',
-                            style: GoogleFonts.cairo(
-                              fontSize: 13,
-                              color: widget.textSecondary,
-                            ),
-                          ),
-                      ],
+                  Text(
+                    'الموقع الحالي',
+                    style: GoogleFonts.cairo(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: widget.textPrimary,
                     ),
                   ),
-                  if (_isDetecting)
-                    SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: widget.primaryColor,
-                      ),
-                    )
-                  else
-                    IconButton(
-                      onPressed: _autoDetectLocation,
-                      icon: Icon(Icons.refresh, color: widget.primaryColor),
-                      tooltip: 'إعادة تحديد الموقع',
+                  const SizedBox(height: 2),
+                  Text(
+                    friendlyName ??
+                        (hasLocation
+                            ? 'جارٍ تحديد المدينة...'
+                            : 'اضغط لتحديد الموقع تلقائياً'),
+                    style: GoogleFonts.cairo(
+                      fontSize: 13,
+                      color: widget.textSecondary,
                     ),
+                  ),
                 ],
               ),
             ),
-        ],
+            if (_isDetecting)
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: widget.primaryColor,
+                ),
+              )
+            else
+              IconButton(
+                onPressed: _autoDetectLocation,
+                icon: Icon(Icons.refresh, color: widget.primaryColor),
+                tooltip: 'إعادة تحديد الموقع',
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -157,10 +157,15 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
 
           final azkarList = category.azkarList;
 
-          // Initialize progress on first build
+          // Initialize progress on first build. The provider preserves
+          // per-dhikr progress when the same categoryKey is reused within
+          // the session, and fully resets when switching categories.
           if (!_initialized) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              ref.read(azkarProgressProvider.notifier).initialize(azkarList);
+              ref.read(azkarProgressProvider.notifier).initialize(
+                    azkarList,
+                    categoryKey: widget.categoryId,
+                  );
             });
             _initialized = true;
           }

@@ -202,9 +202,23 @@ class MainShellScreen extends ConsumerWidget {
     }
   }
 
+  /// Routes that render their own in-screen audio player UI — hide the
+  /// global mini player on these so the user doesn't see two player bars.
+  ///
+  /// Note: live radio and the surah list have no built-in player, so the
+  /// global mini player MUST stay visible there. /quran-listen has its own
+  /// bottom-sheet player; /quran reaches Mushaf via Navigator.push and
+  /// Mushaf has its own QuranAudioBar overlay.
+  bool _hasInScreenPlayer(String path) {
+    return path.startsWith('/quran-listen') ||
+        path.startsWith('/quran');
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = _calculateSelectedIndex(context);
+    final path = GoRouterState.of(context).uri.path;
+    final showMiniPlayer = !_hasInScreenPlayer(path);
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -212,7 +226,7 @@ class MainShellScreen extends ConsumerWidget {
         body: Column(
           children: [
             Expanded(child: child),
-            const GlobalMiniPlayer(),
+            if (showMiniPlayer) const GlobalMiniPlayer(),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(

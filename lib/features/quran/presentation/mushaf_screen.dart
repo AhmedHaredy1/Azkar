@@ -105,7 +105,7 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
     setState(() => _showControls = !_showControls);
     if (_showControls) {
       _controlsAnimController.forward();
-      Future.delayed(const Duration(seconds: 5), () {
+      Future.delayed(const Duration(seconds: 10), () {
         if (mounted && _showControls) {
           setState(() => _showControls = false);
           _controlsAnimController.reverse();
@@ -336,25 +336,58 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
                                     },
                                     tooltip: 'مسح العلامة',
                                   ),
-                                IconButton(
-                                  icon: const Icon(Icons.bookmark_border, color: Colors.white, size: 22),
-                                  onPressed: () {
+                                Builder(
+                                  builder: (_) {
                                     final p = pages[_currentPage];
-                                    if (p != null && p.sections.isNotEmpty) {
-                                      ref.read(bookmarkProvider.notifier).toggleBookmark(
-                                        p.sections.first.surahNumber,
-                                        p.sections.first.ayahs.first.ayahNumber,
-                                      );
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('تم حفظ العلامة', style: GoogleFonts.cairo()),
-                                          duration: const Duration(seconds: 1),
-                                          backgroundColor: const Color(0xFF2C1810),
-                                        ),
-                                      );
-                                    }
+                                    final bookmarks = ref.watch(bookmarkProvider);
+                                    final isSaved = p != null &&
+                                        p.sections.isNotEmpty &&
+                                        bookmarks.any((b) =>
+                                            b.surahNumber ==
+                                                p.sections.first.surahNumber &&
+                                            b.ayahNumber ==
+                                                p.sections.first.ayahs.first
+                                                    .ayahNumber);
+                                    return IconButton(
+                                      icon: Icon(
+                                        isSaved
+                                            ? Icons.bookmark
+                                            : Icons.bookmark_border,
+                                        color: isSaved
+                                            ? const Color(0xFFD4A017)
+                                            : Colors.white,
+                                        size: 22,
+                                      ),
+                                      onPressed: () {
+                                        if (p != null && p.sections.isNotEmpty) {
+                                          ref
+                                              .read(bookmarkProvider.notifier)
+                                              .toggleBookmark(
+                                                p.sections.first.surahNumber,
+                                                p.sections.first.ayahs.first
+                                                    .ayahNumber,
+                                              );
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                  isSaved
+                                                      ? 'تم مسح العلامة'
+                                                      : 'تم حفظ العلامة',
+                                                  style: GoogleFonts.cairo()),
+                                              duration:
+                                                  const Duration(seconds: 1),
+                                              backgroundColor:
+                                                  const Color(0xFF2C1810),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      tooltip: isSaved
+                                          ? 'مسح العلامة'
+                                          : 'علامة مرجعية',
+                                    );
                                   },
-                                  tooltip: 'علامة مرجعية',
                                 ),
                               ],
                             ),
@@ -454,7 +487,10 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
                 ],
 
                 // ===== AUDIO BAR =====
-                if (_showAudioBar || audioState.isPlaying || audioState.isLoading)
+                // Only visible when controls are revealed (tap on page) or when
+                // the user manually pinned the bar via the headset button.
+                // Auto-hides with the controls so it doesn't cover the page.
+                if (_showControls || _showAudioBar)
                   Positioned(
                     bottom: 0,
                     left: 0,
@@ -468,7 +504,7 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
                   ),
 
                 // ===== PAGE INDICATOR (always visible at bottom center) =====
-                if (!_showControls && !_showAudioBar && !audioState.isPlaying && !audioState.isLoading)
+                if (!_showControls && !_showAudioBar)
                   Positioned(
                     bottom: 8,
                     left: 0,

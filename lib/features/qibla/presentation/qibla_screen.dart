@@ -78,18 +78,22 @@ class QiblaScreen extends ConsumerWidget {
                         ),
                       ),
                     const SizedBox(height: AppSpacing.sm),
-                    // Kaaba icon
+                    // Kaaba image
                     Container(
-                      width: 64,
-                      height: 64,
+                      width: 72,
+                      height: 72,
                       decoration: BoxDecoration(
-                        color: AppColors.secondary.withValues(alpha: 0.1),
+                        color: AppColors.secondary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(AppRadius.lg),
                       ),
-                      child: const Icon(
-                        Icons.mosque,
-                        size: 36,
-                        color: AppColors.secondary,
+                      padding: const EdgeInsets.all(6),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        child: Image.asset(
+                          'assets/images/kaaba.png',
+                          fit: BoxFit.contain,
+                          filterQuality: FilterQuality.high,
+                        ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),

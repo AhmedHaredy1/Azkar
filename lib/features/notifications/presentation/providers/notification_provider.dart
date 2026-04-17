@@ -15,6 +15,17 @@ const Map<String, int> _prayerNotificationIds = {
   'Isha': NotificationService.ishaNotificationId,
 };
 
+/// Offset added to prayer notification IDs for the 15-min reminder.
+const int _reminderIdOffset = 50;
+
+/// Number of days ahead to schedule prayer notifications. Keeps alarms armed
+/// even if the user doesn't reopen the app for a while (OEM Doze / background
+/// restrictions mean the scheduler only runs when the app is launched or
+/// settings change). With [_dayIdMultiplier] = 5, max prayer id = 134 and max
+/// reminder id = 184, staying well below the Azkar ids (200+).
+const int _scheduleAheadDays = 7;
+const int _dayIdMultiplier = 5;
+
 /// Maps prayer name to Arabic notification title.
 const Map<String, String> _prayerNotificationTitles = {
   'Fajr': 'حان وقت صلاة الفجر',
@@ -22,6 +33,15 @@ const Map<String, String> _prayerNotificationTitles = {
   'Asr': 'حان وقت صلاة العصر',
   'Maghrib': 'حان وقت صلاة المغرب',
   'Isha': 'حان وقت صلاة العشاء',
+};
+
+/// Maps prayer name to Arabic 15-min reminder body.
+const Map<String, String> _prayerReminderBodies = {
+  'Fajr': 'متبقي ١٥ دقيقة على صلاة الفجر',
+  'Dhuhr': 'متبقي ١٥ دقيقة على صلاة الظهر',
+  'Asr': 'متبقي ١٥ دقيقة على صلاة العصر',
+  'Maghrib': 'متبقي ١٥ دقيقة على صلاة المغرب',
+  'Isha': 'متبقي ١٥ دقيقة على صلاة العشاء',
 };
 
 /// Maps prayer name to toggle key in settings.
@@ -51,13 +71,21 @@ class NotificationManager {
     await _service.init();
   }
 
-  /// Request all necessary permissions (notification + exact alarm).
+  /// Request all necessary permissions so prayer alerts fire reliably even
+  /// when the app is closed: POST_NOTIFICATIONS, SCHEDULE_EXACT_ALARM, and
+  /// the battery-optimization whitelist (the last one is what prevents
+  /// aggressive OEM skins from silently killing scheduled alarms).
   /// Returns true if notification permission was granted.
   Future<bool> requestPermissions() async {
     final notifGranted = await _service.requestPermission();
     if (notifGranted) {
-      // Also request exact alarm permission for Android 12+
+      // Exact alarms (Android 12+) — required for `exactAllowWhileIdle`.
       await _service.requestExactAlarmPermission();
+      // Battery optimization whitelist — required on many OEM skins so the
+      // scheduled adhan/reminder alarms actually fire in deep idle.
+      if (!await _service.isIgnoringBatteryOptimizations()) {
+        await _service.requestIgnoreBatteryOptimizations();
+      }
     }
     return notifGranted;
   }
@@ -111,15 +139,28 @@ class NotificationManager {
   }
 
   /// Schedule prayer time notifications for today and tomorrow.
+  /// Includes both the adhan notification at prayer time and a 15-minute
+  /// reminder before each prayer.
   Future<void> _schedulePrayerNotifications(
       AppSettingsState settings) async {
     final repo = PrayerTimesRepositoryImpl();
     repo.setCalculationMethod(settings.calculationMethod);
 
+    // Pre-cache adhan audio file for use as notification sound.
+    String? adhanSoundPath;
+    String? fajrAdhanSoundPath;
+    if (settings.playAdhan) {
+      adhanSoundPath = await AdhanAudioService.instance
+          .cacheAdhanFile(settings.adhanReciterId);
+      fajrAdhanSoundPath = await AdhanAudioService.instance
+          .cacheAdhanFile(settings.adhanReciterId, isFajr: true);
+    }
+
     final now = DateTime.now();
 
-    // Schedule for today (only future prayers) and tomorrow
-    for (final dayOffset in [0, 1]) {
+    // Schedule for today (only future prayers) plus the next several days so
+    // alarms remain armed even if the user doesn't reopen the app.
+    for (var dayOffset = 0; dayOffset < _scheduleAheadDays; dayOffset++) {
       final date = now.add(Duration(days: dayOffset));
       final times = repo.getPrayerTimesForDate(
         settings.latitude!,
@@ -146,10 +187,16 @@ class NotificationManager {
         if (notificationId == null) continue;
 
         // Use a unique ID: base ID + day offset to avoid overwriting
-        final uniqueId = notificationId + (dayOffset * 10);
+        final uniqueId = notificationId + (dayOffset * _dayIdMultiplier);
 
         final title = _prayerNotificationTitles[prayer.name] ?? 'حان وقت الصلاة';
         final timeStr = _formatTime(prayer.time);
+
+        // ── Adhan notification at prayer time ──
+        // Use the cached adhan audio as the notification sound when enabled.
+        final soundPath = prayer.name == 'Fajr'
+            ? (fajrAdhanSoundPath ?? adhanSoundPath)
+            : adhanSoundPath;
 
         await _service.scheduleNotification(
           id: uniqueId,
@@ -158,7 +205,24 @@ class NotificationManager {
           body: timeStr,
           scheduledTime: prayer.time,
           payload: 'prayer_times',
+          soundFilePath: settings.playAdhan ? soundPath : null,
         );
+
+        // ── 15-minute reminder before prayer ──
+        final reminderTime =
+            prayer.time.subtract(const Duration(minutes: 15));
+        if (reminderTime.isAfter(now)) {
+          final reminderBody = _prayerReminderBodies[prayer.name] ??
+              'متبقي ١٥ دقيقة على الصلاة';
+          await _service.scheduleNotification(
+            id: uniqueId + _reminderIdOffset,
+            channelId: NotificationService.prayerChannelId,
+            title: 'تذكير بالصلاة',
+            body: reminderBody,
+            scheduledTime: reminderTime,
+            payload: 'prayer_times',
+          );
+        }
       }
     }
   }
@@ -272,11 +336,15 @@ class NotificationManager {
     return '$displayHour:$minuteStr $period';
   }
 
-  /// Cancel all prayer notifications.
+  /// Cancel all prayer notifications (adhan + 15-min reminders) across the
+  /// full [_scheduleAheadDays] horizon.
   Future<void> cancelPrayerNotifications() async {
     for (final id in _prayerNotificationIds.values) {
-      await _service.cancelNotification(id);
-      await _service.cancelNotification(id + 10); // Tomorrow's
+      for (var dayOffset = 0; dayOffset < _scheduleAheadDays; dayOffset++) {
+        final dayId = id + (dayOffset * _dayIdMultiplier);
+        await _service.cancelNotification(dayId);
+        await _service.cancelNotification(dayId + _reminderIdOffset);
+      }
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/tokens.dart';
+import '../../../core/widgets/playback_controls.dart';
 import '../domain/models/mp3quran_reciter.dart';
 import 'providers/quran_listen_provider.dart';
 
@@ -174,7 +175,7 @@ class QuranListenScreen extends ConsumerWidget {
 
       // Mini player bar
       bottomSheet: playerState.hasAudio
-          ? _MiniPlayerBar(playerState: playerState, ref: ref)
+          ? _MiniPlayerBar(playerState: playerState)
           : null,
     );
   }
@@ -363,14 +364,18 @@ class _ReciterTile extends StatelessWidget {
 // Mini Player Bar
 // ──────────────────────────────────────────────
 
-class _MiniPlayerBar extends StatelessWidget {
+class _MiniPlayerBar extends ConsumerWidget {
   final ListenPlayerState playerState;
-  final WidgetRef ref;
 
-  const _MiniPlayerBar({required this.playerState, required this.ref});
+  const _MiniPlayerBar({required this.playerState});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final surahNames = ref.watch(surahNamesProvider).valueOrNull ?? const {};
+    final surahNum = playerState.surahNumber;
+    final surahLabel = surahNum == null
+        ? ''
+        : 'سورة ${surahNames[surahNum] ?? surahNum}';
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF2C1810),
@@ -414,14 +419,14 @@ class _MiniPlayerBar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               child: Row(
                 children: [
-                  // Reciter info
+                  // Surah + reciter info
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          playerState.reciterName ?? '',
+                          surahLabel,
                           style: GoogleFonts.cairo(
                             color: Colors.white,
                             fontSize: 14,
@@ -430,7 +435,7 @@ class _MiniPlayerBar extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          playerState.moshafName ?? '',
+                          playerState.reciterName ?? '',
                           style: GoogleFonts.cairo(
                             color: Colors.white54,
                             fontSize: 11,
@@ -440,40 +445,40 @@ class _MiniPlayerBar extends StatelessWidget {
                       ],
                     ),
                   ),
+                  // Previous surah
+                  PlaybackIconButton(
+                    icon: PlaybackIcons.skipPrevious,
+                    color: Colors.white,
+                    tooltip: 'السورة السابقة',
+                    onPressed: () =>
+                        ref.read(listenPlayerProvider.notifier).previousSurah(),
+                  ),
                   // Play/Pause
-                  if (playerState.isLoading)
-                    const SizedBox(
-                      width: 36,
-                      height: 36,
-                      child: Padding(
-                        padding: EdgeInsets.all(6),
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFD4A017),
-                          strokeWidth: 2,
-                        ),
-                      ),
-                    )
-                  else
-                    IconButton(
-                      icon: Icon(
-                        playerState.isPlaying
-                            ? Icons.pause_circle_filled
-                            : Icons.play_circle_filled,
-                        color: const Color(0xFFD4A017),
-                        size: 36,
-                      ),
-                      onPressed: () {
-                        if (playerState.isPlaying) {
-                          ref.read(listenPlayerProvider.notifier).pause();
-                        } else {
-                          ref.read(listenPlayerProvider.notifier).resume();
-                        }
-                      },
-                    ),
+                  PlaybackPlayButton(
+                    isPlaying: playerState.isPlaying,
+                    isLoading: playerState.isLoading,
+                    backgroundColor: const Color(0xFFD4A017),
+                    onPressed: () {
+                      if (playerState.isPlaying) {
+                        ref.read(listenPlayerProvider.notifier).pause();
+                      } else {
+                        ref.read(listenPlayerProvider.notifier).resume();
+                      }
+                    },
+                  ),
+                  // Next surah
+                  PlaybackIconButton(
+                    icon: PlaybackIcons.skipNext,
+                    color: Colors.white,
+                    tooltip: 'السورة التالية',
+                    onPressed: () =>
+                        ref.read(listenPlayerProvider.notifier).nextSurah(),
+                  ),
                   // Stop
-                  IconButton(
-                    icon: const Icon(Icons.stop_circle_outlined,
-                        color: Colors.white54, size: 28),
+                  PlaybackIconButton(
+                    icon: PlaybackIcons.stop,
+                    color: Colors.white54,
+                    tooltip: 'إيقاف',
                     onPressed: () =>
                         ref.read(listenPlayerProvider.notifier).stop(),
                   ),

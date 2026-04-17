@@ -185,9 +185,13 @@ class _QuickAccessCardState extends State<_QuickAccessCard>
               Expanded(
                 child: Text(
                   widget.item.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.start,
                   style: GoogleFonts.cairo(
-                    fontSize: 15,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w700,
+                    height: 1.2,
                     color: colorScheme.onSurface,
                   ),
                 ),

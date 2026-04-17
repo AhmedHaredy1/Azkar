@@ -12,27 +12,40 @@ class AzkarShortcutCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isMorning = ref.watch(isMorningProvider);
+    final window = ref.watch(azkarTimeWindowProvider);
 
-    // Show morning azkar button before Dhuhr, evening azkar button after
+    // Pick the category that matches the current moment of the day.
     final String label;
     final String subtitle;
     final IconData icon;
     final String categoryId;
     final Color accentColor;
 
-    if (isMorning) {
-      label = 'أذكار الصباح';
-      subtitle = 'ابدأ يومك بذكر الله';
-      icon = Icons.wb_sunny_outlined;
-      categoryId = 'morning';
-      accentColor = const Color(0xFFF57F17); // warm amber
-    } else {
-      label = 'أذكار المساء';
-      subtitle = 'لا تنسَ أذكار المساء';
-      icon = Icons.nights_stay_outlined;
-      categoryId = 'evening';
-      accentColor = const Color(0xFF5C6BC0); // indigo
+    switch (window) {
+      case AzkarTimeWindow.morning:
+        label = 'أذكار الصباح';
+        subtitle = 'ابدأ يومك بذكر الله';
+        icon = Icons.wb_sunny_outlined;
+        categoryId = 'morning';
+        accentColor = const Color(0xFFF57F17); // warm amber
+      case AzkarTimeWindow.evening:
+        label = 'أذكار المساء';
+        subtitle = 'لا تنسَ أذكار المساء';
+        icon = Icons.nights_stay_outlined;
+        categoryId = 'evening';
+        accentColor = const Color(0xFF5C6BC0); // indigo
+      case AzkarTimeWindow.sleep:
+        label = 'أذكار النوم';
+        subtitle = 'اختم يومك بذكر الله';
+        icon = Icons.bedtime_outlined;
+        categoryId = 'sleep';
+        accentColor = const Color(0xFF3949AB); // deep indigo
+      case AzkarTimeWindow.wakeUp:
+        label = 'أذكار الاستيقاظ';
+        subtitle = 'ابدأ لحظاتك الأولى بحمد الله';
+        icon = Icons.brightness_4_outlined;
+        categoryId = 'waking_up';
+        accentColor = const Color(0xFF00897B); // teal
     }
 
     return GestureDetector(
@@ -78,7 +91,7 @@ class AzkarShortcutCard extends ConsumerWidget {
                   Text(
                     label,
                     style: GoogleFonts.cairo(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                     ),

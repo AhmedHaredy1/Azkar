@@ -2,11 +2,11 @@ import 'package:audio_session/audio_session.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../../core/constants/surah_names.dart';
 import '../../../../core/services/global_audio_handler.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../live_radio/presentation/providers/live_radio_provider.dart';
 import '../../../quran/presentation/providers/quran_audio_provider.dart';
-import '../../../quran/presentation/providers/quran_provider.dart';
 import '../../data/mp3quran_api.dart';
 import '../../domain/models/mp3quran_reciter.dart';
 
@@ -315,6 +315,32 @@ class ListenPlayerNotifier extends StateNotifier<ListenPlayerState> {
     }
   }
 
+  /// Manually skip to the next surah available in the current reciter's moshaf.
+  Future<void> nextSurah() async {
+    final rwm = _currentRwm;
+    final currentSurah = state.surahNumber;
+    if (rwm == null || currentSurah == null) return;
+    for (int n = currentSurah + 1; n <= 114; n++) {
+      if (rwm.moshaf.hasSurah(n)) {
+        await play(rwm, n);
+        return;
+      }
+    }
+  }
+
+  /// Manually skip to the previous surah available in the current reciter's moshaf.
+  Future<void> previousSurah() async {
+    final rwm = _currentRwm;
+    final currentSurah = state.surahNumber;
+    if (rwm == null || currentSurah == null) return;
+    for (int n = currentSurah - 1; n >= 1; n--) {
+      if (rwm.moshaf.hasSurah(n)) {
+        await play(rwm, n);
+        return;
+      }
+    }
+  }
+
   Future<void> pause() async => _player.pause();
   Future<void> resume() async => _player.play();
 
@@ -349,7 +375,8 @@ final listenPlayerProvider =
 // ──────────────────────────────────────────────
 
 final surahNamesProvider = FutureProvider<Map<int, String>>((ref) async {
-  final localSource = ref.read(quranLocalSourceProvider);
-  final surahs = await localSource.loadSurahs();
-  return {for (final s in surahs) s.number: s.nameAr};
+  // Use the canonical, non-inflected Arabic surah names — the names in
+  // quran.json carry case-ending diacritics (e.g., "ٱلْفَاتِحَةِ") which
+  // read awkwardly in dropdowns and player labels.
+  return kSurahNamesAr;
 });

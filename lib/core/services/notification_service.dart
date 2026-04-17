@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -195,6 +196,26 @@ class NotificationService {
     return true;
   }
 
+  /// Whether the app is whitelisted from Android's battery optimization.
+  /// On non-Android platforms this always returns true.
+  ///
+  /// Without the whitelist, aggressive OEM skins (Xiaomi, Huawei, Oppo,
+  /// OnePlus, Samsung in some modes) will kill scheduled alarms while the
+  /// device is idle, so the adhan and 15-min reminders can silently miss.
+  Future<bool> isIgnoringBatteryOptimizations() async {
+    if (!Platform.isAndroid) return true;
+    return await Permission.ignoreBatteryOptimizations.isGranted;
+  }
+
+  /// Prompt the user to whitelist the app from battery optimization.
+  /// On Android 6+ this opens the system dialog; the user must accept.
+  /// Returns true if the whitelist is in place afterwards.
+  Future<bool> requestIgnoreBatteryOptimizations() async {
+    if (!Platform.isAndroid) return true;
+    final status = await Permission.ignoreBatteryOptimizations.request();
+    return status.isGranted;
+  }
+
   /// Check if exact alarms are permitted (Android 12+).
   Future<bool> canScheduleExactAlarms() async {
     if (Platform.isAndroid) {
@@ -215,6 +236,11 @@ class NotificationService {
   /// [channelId] determines which Android channel to use.
   /// [scheduledTime] is the local DateTime when the notification should fire.
   /// [payload] is passed back on notification tap (used for deep linking).
+  /// Schedule a notification at a specific date/time.
+  ///
+  /// [soundFilePath] — optional local MP3 path used as notification sound
+  /// (e.g., cached adhan audio). When provided, a dedicated channel with
+  /// alarm-level audio usage is used so the full audio plays.
   Future<void> scheduleNotification({
     required int id,
     required String channelId,
@@ -222,18 +248,32 @@ class NotificationService {
     required String body,
     required DateTime scheduledTime,
     String? payload,
+    String? soundFilePath,
   }) async {
     final isHighImportance = channelId == prayerChannelId;
+    final bool isAdhanSound = soundFilePath != null;
+
+    // Use a dedicated channel for adhan so full-length audio plays.
+    final effectiveChannelId =
+        isAdhanSound ? '${channelId}_adhan' : channelId;
+    final effectiveChannelName =
+        isAdhanSound ? 'أذان الصلاة' : (isHighImportance ? prayerChannelName : azkarChannelName);
 
     final androidDetails = AndroidNotificationDetails(
-      channelId,
-      isHighImportance ? prayerChannelName : azkarChannelName,
+      effectiveChannelId,
+      effectiveChannelName,
       channelDescription:
           isHighImportance ? prayerChannelDescription : azkarChannelDescription,
-      importance: isHighImportance ? Importance.high : Importance.defaultImportance,
-      priority: isHighImportance ? Priority.high : Priority.defaultPriority,
+      importance: Importance.high,
+      priority: Priority.high,
       playSound: true,
       enableVibration: true,
+      sound: isAdhanSound
+          ? UriAndroidNotificationSound(soundFilePath)
+          : null,
+      audioAttributesUsage: isAdhanSound
+          ? AudioAttributesUsage.alarm
+          : AudioAttributesUsage.notification,
       styleInformation: BigTextStyleInformation(
         body,
         contentTitle: title,

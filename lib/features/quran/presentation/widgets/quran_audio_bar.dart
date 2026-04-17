@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/widgets/playback_controls.dart';
 import '../providers/quran_audio_provider.dart';
 import '../providers/quran_provider.dart';
 
@@ -130,80 +131,56 @@ class QuranAudioBar extends ConsumerWidget {
 
                   const Spacer(),
 
-                  // Previous ayah
-                  IconButton(
-                    icon: const Icon(Icons.skip_next, color: Colors.white70, size: 24),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  // Previous ayah (RTL: skipNext icon points to where prior ayah lives)
+                  PlaybackIconButton(
+                    icon: PlaybackIcons.skipNext,
+                    color: Colors.white70,
+                    tooltip: 'الآية السابقة',
                     onPressed: isActive
                         ? () => ref.read(quranAudioProvider.notifier).previousAyah()
                         : null,
-                    tooltip: 'الآية السابقة',
                   ),
 
-                  // Play/Pause button
-                  if (audioState.isLoading && isCurrentSurah)
-                    const SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: Padding(
-                        padding: EdgeInsets.all(8),
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFD4A017),
-                          strokeWidth: 2,
-                        ),
-                      ),
-                    )
-                  else
-                    IconButton(
-                      icon: Icon(
-                        isActive
-                            ? Icons.pause_circle_filled
-                            : Icons.play_circle_filled,
-                        color: const Color(0xFFD4A017),
-                        size: 40,
-                      ),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                      onPressed: () {
-                        if (isActive) {
-                          ref.read(quranAudioProvider.notifier).pause();
-                        } else if (isCurrentSurah && !audioState.isPlaying) {
-                          ref.read(quranAudioProvider.notifier).resume();
+                  // Play/Pause
+                  PlaybackPlayButton(
+                    isPlaying: isActive,
+                    isLoading: audioState.isLoading && isCurrentSurah,
+                    backgroundColor: const Color(0xFFD4A017),
+                    onPressed: () {
+                      if (isActive) {
+                        ref.read(quranAudioProvider.notifier).pause();
+                      } else if (isCurrentSurah && !audioState.isPlaying) {
+                        ref.read(quranAudioProvider.notifier).resume();
+                      } else {
+                        final highlighted = ref.read(highlightedAyahProvider);
+                        if (highlighted != null && highlighted.surahNumber == surahNumber) {
+                          ref.read(quranAudioProvider.notifier).playFromAyah(
+                                surahNumber, highlighted.ayahNumber);
                         } else {
-                          // Start from highlighted ayah if available
-                          final highlighted = ref.read(highlightedAyahProvider);
-                          if (highlighted != null && highlighted.surahNumber == surahNumber) {
-                            ref.read(quranAudioProvider.notifier).playFromAyah(
-                                  surahNumber, highlighted.ayahNumber);
-                          } else {
-                            ref.read(quranAudioProvider.notifier).playSurah(surahNumber);
-                          }
+                          ref.read(quranAudioProvider.notifier).playSurah(surahNumber);
                         }
-                      },
-                    ),
+                      }
+                    },
+                  ),
 
-                  // Next ayah
-                  IconButton(
-                    icon: const Icon(Icons.skip_previous, color: Colors.white70, size: 24),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  // Next ayah (RTL: skipPrevious icon points to where next ayah lives)
+                  PlaybackIconButton(
+                    icon: PlaybackIcons.skipPrevious,
+                    color: Colors.white70,
+                    tooltip: 'الآية التالية',
                     onPressed: isActive
                         ? () => ref.read(quranAudioProvider.notifier).nextAyah()
                         : null,
-                    tooltip: 'الآية التالية',
                   ),
 
-                  // Stop button
+                  // Stop
                   if (isCurrentSurah)
-                    IconButton(
-                      icon: const Icon(Icons.stop_circle_outlined,
-                          color: Colors.white54, size: 28),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                      onPressed: () {
-                        ref.read(quranAudioProvider.notifier).stop();
-                      },
+                    PlaybackIconButton(
+                      icon: PlaybackIcons.stop,
+                      color: Colors.white54,
+                      tooltip: 'إيقاف',
+                      onPressed: () =>
+                          ref.read(quranAudioProvider.notifier).stop(),
                     ),
                 ],
               ),

@@ -30,7 +30,7 @@ class HajjUmrahScreen extends ConsumerWidget {
     final dataAsync = ref.watch(hajjUmrahDataProvider);
 
     return DefaultTabController(
-      length: 5,
+      length: 8,
       child: Scaffold(
         appBar: AppBar(
           title: Text(
@@ -51,17 +51,23 @@ class HajjUmrahScreen extends ConsumerWidget {
             ),
             unselectedLabelStyle: GoogleFonts.cairo(fontSize: 14),
             tabs: const [
+              Tab(text: 'التهيئة'),
               Tab(text: 'العمرة'),
               Tab(text: 'الحج'),
               Tab(text: 'أنواع الحج'),
+              Tab(text: 'الأركان والواجبات'),
               Tab(text: 'المحظورات'),
               Tab(text: 'الأدعية'),
+              Tab(text: 'زيارة المدينة'),
             ],
           ),
         ),
         body: dataAsync.when(
           data: (data) => TabBarView(
             children: [
+              _SectionsTab(
+                data: data['preparation'] as Map<String, dynamic>,
+              ),
               _RitualStepsTab(
                 data: data['umrah'] as Map<String, dynamic>,
                 isHajj: false,
@@ -73,11 +79,17 @@ class HajjUmrahScreen extends ConsumerWidget {
               _HajjTypesTab(
                 data: data['hajjTypes'] as Map<String, dynamic>,
               ),
+              _SectionsTab(
+                data: data['arkanWajibat'] as Map<String, dynamic>,
+              ),
               _ProhibitionsTab(
                 data: data['prohibitions'] as Map<String, dynamic>,
               ),
               _DuasTab(
                 data: data['commonDuas'] as Map<String, dynamic>,
+              ),
+              _SectionsTab(
+                data: data['madinahZiyarah'] as Map<String, dynamic>,
               ),
             ],
           ),
@@ -917,6 +929,201 @@ class _DuasTab extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// Sections Tab — reused for Preparation, Arkan/Wajibat, and Madinah Ziyarah.
+// Renders a header (title + description) and a list of section cards.
+// Each section card has a title (with optional emoji icon or ركن/واجب badge)
+// and a bulleted list of items.
+// ──────────────────────────────────────────────
+
+class _SectionsTab extends StatelessWidget {
+  final Map<String, dynamic> data;
+
+  const _SectionsTab({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final title = data['title'] as String? ?? '';
+    final description = data['description'] as String? ?? '';
+    final sections = (data['sections'] as List<dynamic>?) ?? [];
+
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      children: [
+        // Header banner
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primary.withValues(alpha: 0.08),
+                AppColors.primary.withValues(alpha: 0.03),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.cairo(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+              if (description.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  description,
+                  style: GoogleFonts.cairo(
+                    fontSize: 14,
+                    height: 1.7,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        ...sections.map(
+          (s) => _SectionCard(data: s as Map<String, dynamic>),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+
+  const _SectionCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final title = data['title'] as String? ?? '';
+    final icon = data['icon'] as String?;
+    final type = data['type'] as String?;
+    final items =
+        (data['items'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+            [];
+
+    final accent = _accentForType(type);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.cardBorder, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title row
+          Row(
+            children: [
+              if (icon != null && icon.isNotEmpty) ...[
+                Text(icon, style: const TextStyle(fontSize: 22)),
+                const SizedBox(width: AppSpacing.sm),
+              ],
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.cairo(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              if (type != null) _TypeBadge(type: type, color: accent),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Icon(
+                      Icons.check_circle,
+                      size: 14,
+                      color: accent,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      item,
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        height: 1.7,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _accentForType(String? type) {
+    switch (type) {
+      case 'arkan':
+        return const Color(0xFFC62828); // red — pillar
+      case 'wajib':
+        return const Color(0xFFE65100); // orange — obligation
+      default:
+        return AppColors.primary;
+    }
+  }
+}
+
+class _TypeBadge extends StatelessWidget {
+  final String type;
+  final Color color;
+
+  const _TypeBadge({required this.type, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = type == 'arkan'
+        ? 'ركن'
+        : type == 'wajib'
+            ? 'واجب'
+            : 'سنة';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.cairo(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
     );
   }
 }
