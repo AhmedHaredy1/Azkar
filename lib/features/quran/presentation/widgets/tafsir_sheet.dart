@@ -101,7 +101,7 @@ class _TafsirSheet extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.cloud_off,
-                            size: 48, color: Colors.red),
+                            size: 48, color: AppColors.error),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           'تعذّر جلب التفسير. تأكد من الاتصال بالإنترنت.',

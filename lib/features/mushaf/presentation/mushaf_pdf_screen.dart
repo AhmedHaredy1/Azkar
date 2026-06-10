@@ -122,8 +122,10 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
     if (!_isZoomedIn) {
       // RTL mushaf: swiping right (positive velocity) advances.
       if (vx > 200) {
+        HapticFeedback.selectionClick();
         _goToPdfPage(_currentPdfPage + 1);
       } else if (vx < -200) {
+        HapticFeedback.selectionClick();
         _goToPdfPage(_currentPdfPage - 1);
       }
       return;
@@ -156,6 +158,7 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
   }) {
     final target = toNext ? _currentPdfPage + 1 : _currentPdfPage - 1;
     if (target < 1 || target > _activeMushaf.totalPdfPages) return;
+    HapticFeedback.selectionClick();
     _goToPdfPage(target);
     final targetTx = toNext ? minTx : 0.0;
     _transformController.value = Matrix4.identity()
@@ -230,12 +233,29 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
                 },
               ),
             ),
-            if (_showControls) ...[
-              _buildTopBar(),
-              _buildBottomBar(),
-            ],
+            _buildTopBar(),
+            _buildBottomBar(),
             _buildFloatingTools(),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Fades + slides the reader chrome in and out instead of popping it.
+  /// Hidden bars ignore touches so the page underneath stays interactive.
+  Widget _animatedChrome({required Widget child, required double slideY}) {
+    return IgnorePointer(
+      ignoring: !_showControls,
+      child: AnimatedSlide(
+        offset: _showControls ? Offset.zero : Offset(0, slideY),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        child: AnimatedOpacity(
+          opacity: _showControls ? 1 : 0,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          child: child,
         ),
       ),
     );
@@ -246,7 +266,9 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
       top: 0,
       left: 0,
       right: 0,
-      child: Container(
+      child: _animatedChrome(
+        slideY: -0.35,
+        child: Container(
         padding: EdgeInsets.only(
           top: MediaQuery.of(context).padding.top + 8,
           left: AppSpacing.md,
@@ -308,6 +330,7 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
             ),
           ],
         ),
+        ),
       ),
     );
   }
@@ -317,7 +340,9 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
       bottom: 0,
       left: 0,
       right: 0,
-      child: Container(
+      child: _animatedChrome(
+        slideY: 0.35,
+        child: Container(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).padding.bottom + 8,
           left: AppSpacing.lg,
@@ -470,6 +495,7 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
               ],
             ),
           ],
+        ),
         ),
       ),
     );

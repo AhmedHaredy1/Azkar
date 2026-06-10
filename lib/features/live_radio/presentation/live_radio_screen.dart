@@ -392,7 +392,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
                 child: Center(
                   child: Column(
                     children: [
-                      Icon(Icons.wifi_off, size: 40, color: Colors.grey[400]),
+                      const Icon(Icons.wifi_off, size: 40, color: AppColors.ink3),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         'فشل تحميل الإذاعات\nتأكد من اتصال الإنترنت',

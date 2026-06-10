@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/constants/app_colors.dart';
+
 class FontSizeSlider extends StatelessWidget {
   final double value;
   final ValueChanged<double> onChanged;
@@ -14,7 +16,7 @@ class FontSizeSlider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? const Color(0xFF2A2A45) : const Color(0xFFFAF8F3);
+    final cardColor = isDark ? const Color(0xFF2A2A45) : AppColors.background;
     final borderColor = isDark ? const Color(0xFF3A3A55) : const Color(0xFFE8E4DB);
     final textColor = isDark ? const Color(0xFFE8E6E3) : const Color(0xFF1A1A1A);
     final secondaryText = isDark ? const Color(0xFFA0A0A0) : const Color(0xFF5A5A5A);

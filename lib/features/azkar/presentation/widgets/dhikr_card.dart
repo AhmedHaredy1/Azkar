@@ -22,7 +22,7 @@ class DhikrCard extends StatelessWidget {
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF6EF),
+        color: AppColors.parchment,
         borderRadius: BorderRadius.circular(AppRadius.xl),
         border: Border.all(
           color: AppColors.secondary.withValues(alpha: 0.3),

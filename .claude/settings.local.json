@@ -139,7 +139,8 @@
       "PowerShell(flutter build *)",
       "PowerShell(git status --porcelain | Measure-Object -Line | Select-Object -ExpandProperty Lines; git status --porcelain | Where-Object { $_ -match '^\\\\?\\\\?' } | Select-Object -First 20)",
       "PowerShell(git status --porcelain | Where-Object { $_ -match '^\\\\?\\\\?' } | Select-Object -Skip 20; \"---SIZES---\"; Get-ChildItem Books, .design-handoff -Recurse -ErrorAction SilentlyContinue | Measure-Object Length -Sum | Select-Object @{N='TotalMB';E={[math]::Round\\($_.Sum/1MB,1\\)}}; Get-Item E1.png, E2.png, Kabaa.png, \"Kabaa 2.png\", W1.png, assets/images/flash.jpg -ErrorAction SilentlyContinue | Select-Object Name, @{N='MB';E={[math]::Round\\($_.Length/1MB,2\\)}})",
-      "PowerShell(git *)"
+      "PowerShell(git *)",
+      "Bash(python *)"
     ]
   }
 }

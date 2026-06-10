@@ -178,7 +178,7 @@ class _MushafCard extends ConsumerWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               'حدث خطأ أثناء التحميل',
-              style: GoogleFonts.cairo(fontSize: 11, color: Colors.red),
+              style: GoogleFonts.cairo(fontSize: 11, color: AppColors.error),
             ),
           ],
           if (!isDownloading && !isDeleting) ...[
@@ -266,7 +266,7 @@ class _MushafCard extends ConsumerWidget {
               Navigator.pop(ctx);
               ref.read(mushafActionProvider.notifier).deleteMushaf(mushaf);
             },
-            child: Text('حذف', style: GoogleFonts.cairo(color: Colors.red)),
+            child: Text('حذف', style: GoogleFonts.cairo(color: AppColors.error)),
           ),
         ],
       ),
@@ -368,7 +368,7 @@ class _DownloadProgress extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                   border: Border.all(
-                    color: Colors.red.withValues(alpha: 0.3),
+                    color: AppColors.error.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Text(
@@ -376,7 +376,7 @@ class _DownloadProgress extends StatelessWidget {
                   style: GoogleFonts.cairo(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: Colors.red,
+                    color: AppColors.error,
                   ),
                 ),
               ),
@@ -409,7 +409,7 @@ class _ActionButton extends StatelessWidget {
     final color = !enabled
         ? AppColors.ink3
         : isDestructive
-            ? Colors.red
+            ? AppColors.error
             : isPrimary
                 ? AppColors.primary
                 : AppColors.ink2;
@@ -425,7 +425,7 @@ class _ActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
             color: isDestructive
-                ? Colors.red.withValues(alpha: 0.3)
+                ? AppColors.error.withValues(alpha: 0.3)
                 : AppColors.hairline,
           ),
         ),

@@ -76,7 +76,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
       decoration: const BoxDecoration(
-        color: Color(0xFFFAF6EF),
+        color: AppColors.parchment,
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       child: Column(
@@ -380,7 +380,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
                   return Card(
                     margin:
                         const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
-                    color: const Color(0xFFFAF8F3),
+                    color: AppColors.background,
                     child: ListTile(
                       title: Text(
                         r.text.length > 80

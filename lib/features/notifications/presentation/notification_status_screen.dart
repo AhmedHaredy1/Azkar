@@ -67,7 +67,7 @@ class _NotificationStatusScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: error ? Colors.red.shade700 : null,
+        backgroundColor: error ? AppColors.error : null,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -218,7 +218,7 @@ class _NotificationStatusScreenState
             ),
             const SizedBox(height: AppSpacing.sm),
             OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+              style: OutlinedButton.styleFrom(foregroundColor: AppColors.error),
               onPressed: _forceStorageRecovery,
               icon: const Icon(Icons.cleaning_services_outlined),
               label: const Text('إصلاح تخزين التنبيهات (للأخطاء)'),
@@ -261,9 +261,9 @@ class _NotificationStatusScreenState
       margin: const EdgeInsets.only(bottom: AppSpacing.lg),
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha: 0.1),
+        color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +271,7 @@ class _NotificationStatusScreenState
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.error_outline, color: Colors.red),
+              const Icon(Icons.error_outline, color: AppColors.error),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
@@ -417,7 +417,7 @@ class _NotificationStatusScreenState
         children: [
           Icon(
             ok ? Icons.check_circle : Icons.cancel,
-            color: ok ? Colors.green : Colors.red,
+            color: ok ? AppColors.success : AppColors.error,
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(

@@ -31,6 +31,12 @@ class AppColors {
   static const Color card = Color(0xFFFFFFFF);
   static const Color cardBorder = Color(0x141B2F1F); // hairline
 
+  // Parchment reading surfaces — warmer than [background], used for Quran /
+  // dhikr reading cards and sheets. Named so every screen uses the same tone.
+  static const Color parchment = Color(0xFFFAF6EF);
+  static const Color parchmentDeep = Color(0xFFFAF3E1); // gold-tinted hero
+  static const Color parchmentBorder = Color(0x2EB8892A); // soft gold hairline
+
   // Text / ink scale
   static const Color textPrimary = Color(0xFF141814);
   static const Color textSecondary = Color(0xFF4A524B);

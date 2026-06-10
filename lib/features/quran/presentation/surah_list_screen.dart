@@ -520,17 +520,21 @@ class _PillIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: AppColors.hairline, width: 1),
+    // Material + InkWell for ripple feedback; 40px meets comfortable
+    // touch-target sizing while keeping the compact pill look.
+    return Material(
+      color: AppColors.surface,
+      shape: const CircleBorder(
+        side: BorderSide(color: AppColors.hairline, width: 1),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Icon(icon, size: 16, color: AppColors.ink2),
         ),
-        child: Icon(icon, size: 15, color: AppColors.ink2),
       ),
     );
   }
@@ -554,15 +558,17 @@ class _ContinueReadingCard extends ConsumerWidget {
     final progress = (lastPage / totalPages).clamp(0.0, 1.0);
     final pct = (progress * 100).round();
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
+    return Material(
+      color: AppColors.parchmentDeep,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        side: const BorderSide(color: AppColors.parchmentBorder, width: 1),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFAF3E1),
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(color: const Color(0x2EB8892A), width: 1),
-        ),
         child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
@@ -651,6 +657,7 @@ class _ContinueReadingCard extends ConsumerWidget {
             ),
           ],
         ),
+        ),
       ),
     );
   }
@@ -672,27 +679,31 @@ class _FilterRow extends StatelessWidget {
     return Row(
       children: [
         for (final e in entries) ...[
-          GestureDetector(
-            onTap: () => onChange(e.$1),
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md + 2,
-                vertical: 7,
+          Material(
+            color: filter == e.$1 ? AppColors.ink : Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              side: BorderSide(
+                color: filter == e.$1 ? AppColors.ink : AppColors.hairline,
               ),
-              decoration: BoxDecoration(
-                color: filter == e.$1 ? AppColors.ink : Colors.transparent,
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-                border: Border.all(
-                  color: filter == e.$1 ? AppColors.ink : AppColors.hairline,
-                ),
-              ),
-              child: Text(
-                e.$2,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => onChange(e.$1),
+              child: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 150),
                 style: GoogleFonts.cairo(
                   fontSize: 12,
                   fontWeight:
                       filter == e.$1 ? FontWeight.w600 : FontWeight.w400,
                   color: filter == e.$1 ? Colors.white : AppColors.ink2,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md + 2,
+                    vertical: 7,
+                  ),
+                  child: Text(e.$2),
                 ),
               ),
             ),

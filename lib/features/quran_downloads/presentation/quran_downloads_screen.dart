@@ -455,7 +455,7 @@ class _SurahTile extends StatelessWidget {
           IconButton(
             tooltip: 'حذف',
             onPressed: onDelete,
-            icon: const Icon(Icons.delete_outline, color: Colors.red),
+            icon: const Icon(Icons.delete_outline, color: AppColors.error),
           ),
         ],
       );

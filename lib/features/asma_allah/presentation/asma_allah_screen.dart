@@ -220,7 +220,7 @@ class _Hero extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg + 4),
         decoration: BoxDecoration(
-          color: const Color(0xFFFAF3E1),
+          color: AppColors.parchmentDeep,
           border: Border.all(color: AppColors.secondary.withValues(alpha: 0.25)),
         ),
         child: Stack(

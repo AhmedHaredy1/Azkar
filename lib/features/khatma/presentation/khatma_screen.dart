@@ -435,10 +435,10 @@ class _ActivePlanState extends ConsumerState<_ActivePlan> {
                 await ref.read(khatmaProvider.notifier).resetPlan();
               }
             },
-            icon: const Icon(Icons.delete_outline, color: Colors.red),
+            icon: const Icon(Icons.delete_outline, color: AppColors.error),
             label: const Text(
               'إعادة تعيين الخطة',
-              style: TextStyle(color: Colors.red),
+              style: TextStyle(color: AppColors.error),
             ),
           ),
         ],
