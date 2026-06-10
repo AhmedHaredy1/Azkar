@@ -28,18 +28,20 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
     final favorites = ref.watch(radioFavoritesProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final appBarBg = isDark ? const Color(0xFF22223A) : AppColors.primary;
-    final bgColor = isDark ? const Color(0xFF1A1A2E) : AppColors.background;
-
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
           'البث المباشر',
-          style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 20),
+          style: GoogleFonts.cairo(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.ink,
+          ),
         ),
-        backgroundColor: appBarBg,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
         centerTitle: true,
       ),
       body: CustomScrollView(
@@ -217,7 +219,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                           itemCount: nationalities.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+                          separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
                           itemBuilder: (context, index) {
                             final nat = nationalities[index];
                             final isSelected = _selectedNationality == nat;
@@ -268,7 +270,7 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
               );
             },
             loading: () => const SliverToBoxAdapter(child: SizedBox()),
-            error: (_, __) => const SliverToBoxAdapter(child: SizedBox()),
+            error: (_, _) => const SliverToBoxAdapter(child: SizedBox()),
           ),
 
           // ── Reciter Radio List ──
@@ -376,9 +378,9 @@ class _LiveRadioScreenState extends ConsumerState<LiveRadioScreen> {
                 ),
               );
             },
-            loading: () => const SliverToBoxAdapter(
+            loading: () => SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.all(AppSpacing.xxl),
+                padding: const EdgeInsets.all(AppSpacing.xxl),
                 child: Center(
                   child: CircularProgressIndicator(color: AppColors.primary),
                 ),
@@ -459,22 +461,14 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor =
-        isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
-
-    return Row(
-      children: [
-        Icon(icon, size: 22, color: AppColors.primary),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          title,
-          style: GoogleFonts.cairo(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textColor,
-          ),
-        ),
-      ],
+    return Text(
+      title,
+      style: GoogleFonts.cairo(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.8,
+        color: AppColors.ink3,
+      ),
     );
   }
 }
@@ -641,11 +635,11 @@ class _ReciterRadioTile extends StatelessWidget {
 
                 // Status
                 if (isLoading)
-                  const SizedBox(
+                  SizedBox(
                     width: 28,
                     height: 28,
                     child: Padding(
-                      padding: EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(4),
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: AppColors.primary,
@@ -781,7 +775,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           color: Colors.black87,
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
-        child: const Center(
+        child: Center(
           child: CircularProgressIndicator(color: AppColors.secondary),
         ),
       );
@@ -952,11 +946,11 @@ class _RadioStationCard extends StatelessWidget {
               ),
               // Loading indicator / Play button
               if (isLoading && !isVideoMode)
-                const SizedBox(
+                SizedBox(
                   width: 36,
                   height: 36,
                   child: Padding(
-                    padding: EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(6),
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       color: AppColors.primary,

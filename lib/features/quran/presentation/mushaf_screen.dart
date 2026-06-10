@@ -162,7 +162,7 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8EC),
+      backgroundColor: const Color(0xFFFBF7EA),
       body: KeyboardListener(
         focusNode: _focusNode,
         autofocus: true,
@@ -279,6 +279,7 @@ class _MushafScreenState extends ConsumerState<MushafScreen>
                               children: [
                                 IconButton(
                                   icon: const Icon(Icons.close, color: Colors.white, size: 22),
+                                  tooltip: 'إغلاق',
                                   onPressed: () => Navigator.of(context).pop(),
                                 ),
                                 const SizedBox(width: 4),

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../data/quran_local_source.dart';
 import '../../data/quran_repository_impl.dart';
@@ -46,17 +47,17 @@ class LastReadPageNotifier extends StateNotifier<int> {
   final StorageService _storage;
 
   LastReadPageNotifier(this._storage)
-      : super(_storage.get('settings', 'lastReadPage') as int? ?? 1);
+      : super(_storage.getSetting<int>(StorageKeys.lastReadPage) ?? 1);
 
   void setPage(int page) {
     state = page;
-    _storage.put('settings', 'lastReadPage', page);
+    _storage.putSetting(StorageKeys.lastReadPage, page);
   }
 }
 
 final lastReadPageProvider =
     StateNotifierProvider<LastReadPageNotifier, int>((ref) {
-  return LastReadPageNotifier(StorageService.instance);
+  return LastReadPageNotifier(ref.watch(storageServiceProvider));
 });
 
 // Get page number for a surah
@@ -93,9 +94,9 @@ class HighlightedAyahNotifier extends StateNotifier<HighlightedAyah?> {
   }
 
   void _load() {
-    final surah = _storage.get<int>('settings', 'highlightSurah');
-    final ayah = _storage.get<int>('settings', 'highlightAyah');
-    final page = _storage.get<int>('settings', 'highlightPage');
+    final surah = _storage.getSetting<int>(StorageKeys.highlightSurah);
+    final ayah = _storage.getSetting<int>(StorageKeys.highlightAyah);
+    final page = _storage.getSetting<int>(StorageKeys.highlightPage);
     if (surah != null && ayah != null && page != null) {
       state = HighlightedAyah(
         surahNumber: surah,
@@ -111,22 +112,22 @@ class HighlightedAyahNotifier extends StateNotifier<HighlightedAyah?> {
       ayahNumber: ayahNumber,
       page: page,
     );
-    _storage.put('settings', 'highlightSurah', surahNumber);
-    _storage.put('settings', 'highlightAyah', ayahNumber);
-    _storage.put('settings', 'highlightPage', page);
+    _storage.putSetting(StorageKeys.highlightSurah, surahNumber);
+    _storage.putSetting(StorageKeys.highlightAyah, ayahNumber);
+    _storage.putSetting(StorageKeys.highlightPage, page);
   }
 
   void clearHighlight() {
     state = null;
-    _storage.delete('settings', 'highlightSurah');
-    _storage.delete('settings', 'highlightAyah');
-    _storage.delete('settings', 'highlightPage');
+    _storage.deleteSetting(StorageKeys.highlightSurah);
+    _storage.deleteSetting(StorageKeys.highlightAyah);
+    _storage.deleteSetting(StorageKeys.highlightPage);
   }
 }
 
 final highlightedAyahProvider =
     StateNotifierProvider<HighlightedAyahNotifier, HighlightedAyah?>((ref) {
-  return HighlightedAyahNotifier(StorageService.instance);
+  return HighlightedAyahNotifier(ref.watch(storageServiceProvider));
 });
 
 // Bookmarks
@@ -176,5 +177,5 @@ class BookmarkNotifier extends StateNotifier<List<Bookmark>> {
 
 final bookmarkProvider =
     StateNotifierProvider<BookmarkNotifier, List<Bookmark>>((ref) {
-  return BookmarkNotifier(StorageService.instance);
+  return BookmarkNotifier(ref.watch(storageServiceProvider));
 });

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>Azkar — App Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body { font-family: "IBM Plex Sans Arabic", system-ui, sans-serif; background: #f0eee9; }
+  * { box-sizing: border-box; }
+  /* cleaner scrollbars inside phone frames */
+  ::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="frames/ios-frame.jsx"></script>
+<script type="text/babel" src="frames/android-frame.jsx"></script>
+<script type="text/babel" src="frames/design-canvas.jsx"></script>
+<script type="text/babel" src="src/tokens.jsx"></script>
+<script type="text/babel" src="src/home.jsx"></script>
+<script type="text/babel" src="src/azkar.jsx"></script>
+<script type="text/babel" src="src/quran.jsx"></script>
+<script type="text/babel" src="src/more.jsx"></script>
+<script type="text/babel" src="src/extras.jsx"></script>
+<script type="text/babel" src="src/final.jsx"></script>
+
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent":    "#1B5E20",
+  "arabicScale": 1.0,
+  "density":   "comfortable"
+}/*EDITMODE-END*/;
+
+// ─── Phone wrappers ───────────────────────────────────────
+// Our screens already include their own status-bar-clearing padding,
+// so we wrap raw content inside the frames without their built-in nav.
+
+function PhoneiOS({ children, label }) {
+  return (
+    <div style={{ position: 'relative' }} data-screen-label={label}>
+      <FrameLabel>{label}  ·  iOS</FrameLabel>
+      <div style={{
+        width: 402, height: 874, borderRadius: 48, overflow: 'hidden',
+        position: 'relative', background: '#000',
+        boxShadow: '0 40px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.12)',
+      }}>
+        {/* dynamic island */}
+        <div style={{
+          position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)',
+          width: 126, height: 37, borderRadius: 24, background: '#000', zIndex: 50,
+        }}/>
+        {/* status bar */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+          <IOSStatusBar dark={false} />
+        </div>
+        <div style={{ height: '100%' }}>{children}</div>
+        {/* home indicator */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 60,
+          height: 34, display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
+          paddingBottom: 8, pointerEvents: 'none',
+        }}>
+          <div style={{ width: 139, height: 5, borderRadius: 100, background: 'rgba(0,0,0,0.25)' }}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PhoneAndroid({ children, label }) {
+  return (
+    <div style={{ position: 'relative' }} data-screen-label={label}>
+      <FrameLabel>{label}  ·  Android</FrameLabel>
+      <div style={{
+        width: 402, height: 874, borderRadius: 32, overflow: 'hidden',
+        background: '#FAF8F3',
+        border: '8px solid rgba(116,119,117,0.5)',
+        boxShadow: '0 30px 80px rgba(0,0,0,0.25)',
+        display: 'flex', flexDirection: 'column', boxSizing: 'border-box',
+        position: 'relative',
+      }}>
+        {/* status bar — simplified, dark glyphs on warm bg */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: 36, zIndex: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 18px',
+          fontFamily: 'Roboto, system-ui', fontSize: 13, fontWeight: 500, color: '#141814',
+        }}>
+          <div>9:41</div>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <svg width="14" height="10" viewBox="0 0 14 10"><path d="M7 0 L13.5 6 L7 9 L0.5 6 Z" fill="#141814"/></svg>
+            <svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="6" width="3" height="4" fill="#141814"/><rect x="4" y="4" width="3" height="6" fill="#141814"/><rect x="8" y="2" width="3" height="8" fill="#141814"/><rect x="12" y="0" width="3" height="10" fill="#141814" opacity="0.3"/></svg>
+            <svg width="20" height="10" viewBox="0 0 20 10"><rect x="0.5" y="1" width="17" height="8" rx="2" fill="none" stroke="#141814"/><rect x="2" y="2.5" width="12" height="5" fill="#141814"/></svg>
+          </div>
+        </div>
+        {/* camera punch-hole */}
+        <div style={{
+          position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+          width: 18, height: 18, borderRadius: 99, background: '#141814', zIndex: 20,
+        }}/>
+        <div style={{ flex: 1, overflow: 'hidden', paddingTop: 0 }}>
+          {children}
+        </div>
+        {/* gesture nav */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 22, zIndex: 20,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          pointerEvents: 'none',
+        }}>
+          <div style={{ width: 108, height: 4, borderRadius: 2, background: '#141814', opacity: 0.35 }}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Tweaks ───────────────────────────────────────────────
+function TweaksPanel({ state, setState }) {
+  if (!state._open) return null;
+  const R = ({ label, children }) => (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ fontSize: 11, color: T.ink3, fontWeight: 500, marginBottom: 6, letterSpacing: 0.4 }}>{label}</div>
+      {children}
+    </div>
+  );
+  const colors = [
+    { k: '#1B5E20', name: 'Islamic green' },
+    { k: '#2E5E5A', name: 'Teal' },
+    { k: '#5A4A8C', name: 'Plum' },
+    { k: '#8F5A2A', name: 'Terracotta' },
+    { k: '#141814', name: 'Ink' },
+  ];
+  return (
+    <div style={{
+      position: 'fixed', bottom: 20, right: 20, zIndex: 100,
+      width: 260, background: '#fff',
+      border: `1px solid ${T.hairline}`, borderRadius: 14,
+      boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+      padding: 16, fontFamily: T.fontUi, direction: 'ltr',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: T.ink }}>Tweaks</div>
+        <div style={{ cursor: 'pointer', padding: 4 }}
+          onClick={() => setState(s => ({...s, _open: false}))}>
+          <Icon name="close" size={14} color={T.ink2}/>
+        </div>
+      </div>
+      <R label="Accent">
+        <div style={{ display: 'flex', gap: 6 }}>
+          {colors.map(c => (
+            <div key={c.k} onClick={() => setState(s => ({...s, accent: c.k}))}
+              title={c.name}
+              style={{
+                width: 28, height: 28, borderRadius: 99, background: c.k,
+                cursor: 'pointer',
+                border: state.accent === c.k ? '2px solid #141814' : '2px solid transparent',
+                outline: state.accent === c.k ? '1px solid #fff' : 'none',
+                outlineOffset: -3,
+              }}/>
+          ))}
+        </div>
+      </R>
+      <R label={`Arabic scale · ${state.arabicScale.toFixed(2)}×`}>
+        <input type="range" min="0.85" max="1.3" step="0.05"
+          value={state.arabicScale}
+          onChange={e => setState(s => ({...s, arabicScale: parseFloat(e.target.value)}))}
+          style={{ width: '100%' }}/>
+      </R>
+      <R label="Density">
+        <div style={{ display: 'flex', gap: 6 }}>
+          {['compact', 'comfortable', 'airy'].map(d => (
+            <div key={d} onClick={() => setState(s => ({...s, density: d}))}
+              style={{
+                flex: 1, padding: '7px 0', borderRadius: 99, textAlign: 'center',
+                fontSize: 11, cursor: 'pointer', textTransform: 'capitalize',
+                background: state.density === d ? T.ink : 'transparent',
+                color: state.density === d ? '#fff' : T.ink2,
+                border: `1px solid ${state.density === d ? T.ink : T.hairline}`,
+              }}>{d}</div>
+          ))}
+        </div>
+      </R>
+    </div>
+  );
+}
+
+// ─── Main app ─────────────────────────────────────────────
+function App() {
+  const [state, setState] = React.useState({ ...TWEAK_DEFAULTS, _open: false });
+
+  // Expose Tweaks integration
+  React.useEffect(() => {
+    const handler = (e) => {
+      const d = e.data || {};
+      if (d.type === '__activate_edit_mode')   setState(s => ({...s, _open: true}));
+      if (d.type === '__deactivate_edit_mode') setState(s => ({...s, _open: false}));
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  // Live apply accent as a CSS var? We store it in T at runtime.
+  React.useEffect(() => {
+    T.primary = state.accent;
+    // derive soft tint
+  }, [state.accent]);
+
+  // Apply Arabic scale via CSS
+  React.useEffect(() => {
+    let el = document.getElementById('tweak-style');
+    if (!el) { el = document.createElement('style'); el.id = 'tweak-style'; document.head.appendChild(el); }
+    const s = state.arabicScale;
+    el.textContent = `
+      [dir="rtl"] { font-size: ${100 * s}%; }
+    `;
+  }, [state.arabicScale]);
+
+  return (
+    <>
+      <style>{`
+        /* Intro card */
+        .intro {
+          padding: 40px 60px 0;
+          max-width: 920px;
+          font-family: "IBM Plex Sans", system-ui, sans-serif;
+          color: rgba(40,30,20,0.85);
+        }
+        .intro h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.5px; margin: 0 0 6px; }
+        .intro p { font-size: 14px; color: rgba(60,50,40,0.7); line-height: 1.6; margin: 6px 0; }
+        .intro .sys { display: flex; gap: 20px; margin-top: 20px; font-size: 12px; color: rgba(60,50,40,0.65); }
+        .intro .sys b { color: rgba(40,30,20,0.85); font-weight: 600; }
+      `}</style>
+
+      <DesignCanvas>
+        <div className="intro">
+          <h1>Azkar — mobile app redesign</h1>
+          <p>
+            Minimal and modern, restrained Islamic green accent on warm off-white.
+            Arabic-first, RTL throughout. The only ornament is an 8-point geometric star,
+            used sparingly. Typography: IBM Plex Sans Arabic for UI, Noto Naskh Arabic for Quranic text.
+          </p>
+          <div className="sys">
+            <span><b>Accent</b> <span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:state.accent,verticalAlign:'middle',marginInline:4}}/> {state.accent}</span>
+            <span><b>BG</b> <span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:'#FAF8F3',verticalAlign:'middle',marginInline:4,border:'1px solid rgba(0,0,0,0.08)'}}/> #FAF8F3</span>
+            <span><b>Gold</b> <span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:'#B8892A',verticalAlign:'middle',marginInline:4}}/> #B8892A · reserved</span>
+            <span><b>Frames</b> iOS 402×874 · Android 402×874</span>
+          </div>
+          <p style={{ marginTop: 16, fontSize: 12, color: 'rgba(60,50,40,0.55)' }}>
+            Scroll / pinch to zoom · drag empty canvas to pan · toggle <b>Tweaks</b> in the toolbar to try accents, Arabic scale, and density.
+          </p>
+        </div>
+
+        <div style={{ height: 50 }}/>
+
+        <DCSection title="Home · Dashboard" subtitle="Next prayer is the hero. Quick actions sized consistently. RTL first.">
+          <DCArtboard label="iOS · Home"     width={402} height={874}><PhoneiOS label="01 Home"><HomeScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Home" width={402} height={874}><PhoneAndroid label="01 Home"><HomeScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Azkar" subtitle="Browse → read. Counter lives inside each card; reading mode is calm.">
+          <DCArtboard label="iOS · Categories"   width={402} height={874}><PhoneiOS label="02 Azkar List"><AzkarListScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="iOS · Reading mode" width={402} height={874}><PhoneiOS label="03 Azkar Reading"><AzkarReadingScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Categories" width={402} height={874}><PhoneAndroid label="02 Azkar List"><AzkarListScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Tasbeeh" subtitle="Ring that fills with each tap. 33 tick marks light up in sequence.">
+          <DCArtboard label="iOS · Counter"    width={402} height={874}><PhoneiOS label="04 Tasbeeh"><TasbeehScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Counter" width={402} height={874}><PhoneAndroid label="04 Tasbeeh"><TasbeehScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Quran" subtitle="Surah list has a continue-reading anchor. Mushaf mimics a real page.">
+          <DCArtboard label="iOS · Surah list" width={402} height={874}><PhoneiOS label="05 Surah List"><SurahListScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="iOS · Mushaf"     width={402} height={874}><PhoneiOS label="06 Mushaf"><MushafScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Mushaf" width={402} height={874}><PhoneAndroid label="06 Mushaf"><MushafScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Qibla & Prayer times" subtitle="Compass pairs a clean dial with a Kaaba pointer. Times detail lists all 5 with today's ‘active’ state.">
+          <DCArtboard label="iOS · Qibla"        width={402} height={874}><PhoneiOS label="07 Qibla"><QiblaScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="iOS · Prayer times" width={402} height={874}><PhoneiOS label="08 Prayer Times"><PrayerTimesScreen/></PhoneiOS></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Hijri calendar & Settings" subtitle="Calendar has an oversized today hero. Settings groups tidy.">
+          <DCArtboard label="iOS · Hijri"    width={402} height={874}><PhoneiOS label="09 Hijri"><HijriCalendarScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="iOS · Settings" width={402} height={874}><PhoneiOS label="10 Settings"><SettingsScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Settings" width={402} height={874}><PhoneAndroid label="10 Settings"><SettingsScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Onboarding" subtitle="3-step intro. Hero area accepts real illustrations later.">
+          <DCArtboard label="iOS · Onboarding"     width={402} height={874}><PhoneiOS label="11 Onboarding"><OnboardingScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Onboarding" width={402} height={874}><PhoneAndroid label="11 Onboarding"><OnboardingScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Nearby mosques" subtitle="Stylized map + distance list. Tap → native Maps app.">
+          <DCArtboard label="iOS · Mosques"     width={402} height={874}><PhoneiOS label="12 Mosques"><NearbyMosquesScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Mosques" width={402} height={874}><PhoneAndroid label="12 Mosques"><NearbyMosquesScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Asma Allah · 99 names" subtitle="Gold-framed numerals. Each name has audio + meaning.">
+          <DCArtboard label="iOS · Names"     width={402} height={874}><PhoneiOS label="13 Asma Allah"><AsmaAllahScreen/></PhoneiOS></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Ramadan" subtitle="Iftar/Suhoor countdown hero, 30-day meter, sub-experiences.">
+          <DCArtboard label="iOS · Ramadan"     width={402} height={874}><PhoneiOS label="14 Ramadan"><RamadanScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Ramadan" width={402} height={874}><PhoneAndroid label="14 Ramadan"><RamadanScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Wudu guide" subtitle="8 steps on a vertical rail. Current step expands with audio + visual.">
+          <DCArtboard label="iOS · Wudu"     width={402} height={874}><PhoneiOS label="15 Wudu"><WuduScreen/></PhoneiOS></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Hadith of day" subtitle="Source chip, Quranic typography for the متن, explanation and archive below.">
+          <DCArtboard label="iOS · Hadith"     width={402} height={874}><PhoneiOS label="16 Hadith"><HadithScreen/></PhoneiOS></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Live Quran radio + Reciter picker" subtitle="Global mini-player persists across screens. Reciters have inline download state.">
+          <DCArtboard label="iOS · Live radio"   width={402} height={874}><PhoneiOS label="17 Radio"><LiveRadioScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="iOS · Reciter picker" width={402} height={874}><PhoneiOS label="18 Reciters"><ReciterPickerScreen/></PhoneiOS></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Search" subtitle="Global search across azkar, Quran, duas, and names of Allah.">
+          <DCArtboard label="iOS · Search"     width={402} height={874}><PhoneiOS label="19 Search"><SearchScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Search" width={402} height={874}><PhoneAndroid label="19 Search"><SearchScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Bookmarks" subtitle="Saved verses, azkar, and duas grouped by source.">
+          <DCArtboard label="iOS · Bookmarks"     width={402} height={874}><PhoneiOS label="20 Bookmarks"><BookmarksScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Bookmarks" width={402} height={874}><PhoneAndroid label="20 Bookmarks"><BookmarksScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Profile · Streak & Stats" subtitle="Streak hero dominates. Weekly stats and achievements below.">
+          <DCArtboard label="iOS · Profile"     width={402} height={874}><PhoneiOS label="21 Profile"><ProfileScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Profile" width={402} height={874}><PhoneAndroid label="21 Profile"><ProfileScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Notifications & reminders" subtitle="Per-prayer adhan sound + Azkar time reminders.">
+          <DCArtboard label="iOS · Notifications" width={402} height={874}><PhoneiOS label="22 Notifications"><NotificationsScreen/></PhoneiOS></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Duas" subtitle="Featured daily dua + 6 thematic categories.">
+          <DCArtboard label="iOS · Duas"     width={402} height={874}><PhoneiOS label="23 Duas"><DuasScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Duas" width={402} height={874}><PhoneAndroid label="23 Duas"><DuasScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="Prayer tracker" subtitle="Today hero + weekly completion history.">
+          <DCArtboard label="iOS · Tracker"     width={402} height={874}><PhoneiOS label="24 Tracker"><PrayerTrackerScreen/></PhoneiOS></DCArtboard>
+          <DCArtboard label="Android · Tracker" width={402} height={874}><PhoneAndroid label="24 Tracker"><PrayerTrackerScreen/></PhoneAndroid></DCArtboard>
+        </DCSection>
+
+        <DCSection title="About & Share" subtitle="App metadata, sharing, legal links.">
+          <DCArtboard label="iOS · About"     width={402} height={874}><PhoneiOS label="25 About"><AboutScreen/></PhoneiOS></DCArtboard>
+        </DCSection>
+
+        <div style={{ height: 80 }}/>
+      </DesignCanvas>
+
+      <TweaksPanel state={state} setState={setState}/>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

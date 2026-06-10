@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/services/adhan_audio_service.dart';
 import '../providers/settings_provider.dart';
 
@@ -11,6 +13,10 @@ class NotificationToggles extends StatelessWidget {
   final void Function(String key, bool value) onToggle;
   final void Function(String reciterId)? onAdhanReciterChanged;
   final void Function(bool value)? onPlayAdhanChanged;
+  final void Function(bool value)? onUseGlobalReminderChanged;
+  final void Function(String prayer, int minutes)? onReminderMinutesChanged;
+  final void Function(bool value)? onPostPrayerDhikrToggleChanged;
+  final void Function(int minutes)? onPostPrayerDhikrDelayChanged;
 
   const NotificationToggles({
     super.key,
@@ -18,6 +24,10 @@ class NotificationToggles extends StatelessWidget {
     required this.onToggle,
     this.onAdhanReciterChanged,
     this.onPlayAdhanChanged,
+    this.onUseGlobalReminderChanged,
+    this.onReminderMinutesChanged,
+    this.onPostPrayerDhikrToggleChanged,
+    this.onPostPrayerDhikrDelayChanged,
   });
 
   @override
@@ -160,6 +170,160 @@ class NotificationToggles extends StatelessWidget {
 
         const SizedBox(height: 16),
 
+        // ── Pre-Prayer Reminder Timing ──
+        Container(
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: borderColor),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.timer_outlined,
+                        size: 18, color: secondaryText),
+                    const SizedBox(width: 8),
+                    Text(
+                      'تذكير قبل الصلاة',
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _NotificationTile(
+                title: 'نفس الوقت لجميع الصلوات',
+                value: settings.useGlobalReminder,
+                onChanged: (v) => onUseGlobalReminderChanged?.call(v),
+                textColor: textColor,
+                activeColor: activeColor,
+              ),
+              if (settings.useGlobalReminder) ...[
+                _buildDivider(borderColor),
+                _ReminderRow(
+                  label: 'لجميع الصلوات',
+                  minutes: settings.reminderMinutesGlobal,
+                  onChanged: (m) =>
+                      onReminderMinutesChanged?.call('global', m),
+                  textColor: textColor,
+                  secondaryText: secondaryText,
+                  activeColor: activeColor,
+                ),
+              ] else ...[
+                _buildDivider(borderColor),
+                _ReminderRow(
+                  label: 'الفجر',
+                  minutes: settings.reminderMinutesFajr,
+                  onChanged: (m) => onReminderMinutesChanged?.call('fajr', m),
+                  textColor: textColor,
+                  secondaryText: secondaryText,
+                  activeColor: activeColor,
+                ),
+                _buildDivider(borderColor),
+                _ReminderRow(
+                  label: 'الظهر',
+                  minutes: settings.reminderMinutesDhuhr,
+                  onChanged: (m) =>
+                      onReminderMinutesChanged?.call('dhuhr', m),
+                  textColor: textColor,
+                  secondaryText: secondaryText,
+                  activeColor: activeColor,
+                ),
+                _buildDivider(borderColor),
+                _ReminderRow(
+                  label: 'العصر',
+                  minutes: settings.reminderMinutesAsr,
+                  onChanged: (m) => onReminderMinutesChanged?.call('asr', m),
+                  textColor: textColor,
+                  secondaryText: secondaryText,
+                  activeColor: activeColor,
+                ),
+                _buildDivider(borderColor),
+                _ReminderRow(
+                  label: 'المغرب',
+                  minutes: settings.reminderMinutesMaghrib,
+                  onChanged: (m) =>
+                      onReminderMinutesChanged?.call('maghrib', m),
+                  textColor: textColor,
+                  secondaryText: secondaryText,
+                  activeColor: activeColor,
+                ),
+                _buildDivider(borderColor),
+                _ReminderRow(
+                  label: 'العشاء',
+                  minutes: settings.reminderMinutesIsha,
+                  onChanged: (m) => onReminderMinutesChanged?.call('isha', m),
+                  textColor: textColor,
+                  secondaryText: secondaryText,
+                  activeColor: activeColor,
+                ),
+              ],
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // ── Post-Prayer Dhikr Reminder ──
+        Container(
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: borderColor),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.format_list_numbered,
+                        size: 18, color: secondaryText),
+                    const SizedBox(width: 8),
+                    Text(
+                      'تذكير أذكار دبر الصلاة',
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _NotificationTile(
+                title: 'تذكير بأذكار ما بعد الصلاة',
+                value: settings.notifyPostPrayerDhikr,
+                onChanged: (v) =>
+                    onPostPrayerDhikrToggleChanged?.call(v),
+                textColor: textColor,
+                activeColor: activeColor,
+              ),
+              if (settings.notifyPostPrayerDhikr) ...[
+                _buildDivider(borderColor),
+                _ReminderRow(
+                  label: 'بعد الأذان بـ',
+                  minutes: settings.postPrayerDhikrDelayMinutes,
+                  onChanged: (m) => onPostPrayerDhikrDelayChanged?.call(m),
+                  textColor: textColor,
+                  secondaryText: secondaryText,
+                  activeColor: activeColor,
+                ),
+              ],
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
         // ── Azkar Reminders ──
         Container(
           decoration: BoxDecoration(
@@ -255,7 +419,7 @@ class _NotificationTile extends StatelessWidget {
 }
 
 /// Widget for selecting adhan reciter with preview button.
-class _AdhanReciterSelector extends StatefulWidget {
+class _AdhanReciterSelector extends ConsumerStatefulWidget {
   final String selectedReciterId;
   final void Function(String)? onChanged;
   final Color textColor;
@@ -275,21 +439,33 @@ class _AdhanReciterSelector extends StatefulWidget {
   });
 
   @override
-  State<_AdhanReciterSelector> createState() => _AdhanReciterSelectorState();
+  ConsumerState<_AdhanReciterSelector> createState() =>
+      _AdhanReciterSelectorState();
 }
 
-class _AdhanReciterSelectorState extends State<_AdhanReciterSelector> {
+class _AdhanReciterSelectorState
+    extends ConsumerState<_AdhanReciterSelector> {
   String? _previewingId;
+
+  // Captured in initState so dispose() can stop playback without touching
+  // ref after the element is unmounted.
+  late final AdhanAudioService _adhanAudio;
+
+  @override
+  void initState() {
+    super.initState();
+    _adhanAudio = ref.read(adhanAudioServiceProvider);
+  }
 
   Future<void> _preview(String reciterId) async {
     if (_previewingId == reciterId) {
       // Stop preview
-      await AdhanAudioService.instance.stop();
+      await _adhanAudio.stop();
       setState(() => _previewingId = null);
       return;
     }
     setState(() => _previewingId = reciterId);
-    await AdhanAudioService.instance.previewAdhan(reciterId);
+    await _adhanAudio.previewAdhan(reciterId);
     // Auto-clear after preview ends
     Future.delayed(const Duration(seconds: 16), () {
       if (mounted && _previewingId == reciterId) {
@@ -300,7 +476,7 @@ class _AdhanReciterSelectorState extends State<_AdhanReciterSelector> {
 
   @override
   void dispose() {
-    AdhanAudioService.instance.stop();
+    _adhanAudio.stop();
     super.dispose();
   }
 
@@ -391,6 +567,77 @@ class _AdhanReciterSelectorState extends State<_AdhanReciterSelector> {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+/// One row of the pre-prayer reminder section: a label + a dropdown that
+/// chooses the lead time (or "off" to disable that prayer's reminder).
+class _ReminderRow extends StatelessWidget {
+  final String label;
+  final int minutes; // 0 = disabled
+  final ValueChanged<int> onChanged;
+  final Color textColor;
+  final Color secondaryText;
+  final Color activeColor;
+
+  const _ReminderRow({
+    required this.label,
+    required this.minutes,
+    required this.onChanged,
+    required this.textColor,
+    required this.secondaryText,
+    required this.activeColor,
+  });
+
+  static const _options = <int>[0, 5, 10, 15, 20, 30, 45, 60];
+
+  String _labelFor(int m) {
+    if (m == 0) return 'بدون تذكير';
+    return 'قبل $m دقيقة';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // If a saved value somehow falls outside our supported options (e.g. the
+    // option list shrinks in a future update), fall back to 15 to keep the
+    // dropdown valid instead of crashing with a duplicate-value assertion.
+    final safeValue = _options.contains(minutes) ? minutes : 15;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.cairo(
+                fontSize: 15,
+                color: textColor,
+              ),
+            ),
+          ),
+          DropdownButton<int>(
+            value: safeValue,
+            underline: const SizedBox.shrink(),
+            style: GoogleFonts.cairo(
+              fontSize: 14,
+              color: minutes == 0 ? secondaryText : activeColor,
+              fontWeight: FontWeight.w600,
+            ),
+            items: _options
+                .map(
+                  (m) => DropdownMenuItem<int>(
+                    value: m,
+                    child: Text(_labelFor(m)),
+                  ),
+                )
+                .toList(),
+            onChanged: (v) {
+              if (v != null) onChanged(v);
+            },
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,5 +1,5 @@
 name: azkar
-description: "حصن المسلم - Hisn Al-Muslim Islamic App"
+description: "رفيق المسلم - Muslim Companion Islamic App"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -53,12 +53,17 @@ dependencies:
   # Timezone (required for flutter_local_notifications zonedSchedule)
   timezone: ^0.10.0
 
+  # PDF Viewer
+  flutter_pdfview: ^1.4.0
+
   # Utilities
   share_plus: ^10.1.4
   vibration: ^2.0.0
   intl: ^0.20.2
   hijri: ^3.0.0
   audio_service: ^0.18.18
+  url_launcher: ^6.3.1
+  home_widget: ^0.7.0
 
 dev_dependencies:
   flutter_test:
@@ -75,17 +80,15 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
 
 flutter_native_splash:
-  color: "#1B5E20"
-  image: "assets/images/app_icon.png"
-  image_dark: "assets/images/app_icon.png"
-  color_dark: "#0D3B0F"
+  background_image: "assets/images/flash_fullscreen.jpg"
+  background_image_dark: "assets/images/flash_fullscreen.jpg"
   android_12:
-    color: "#1B5E20"
-    icon_background_color: "#1B5E20"
-    image: "assets/images/app_icon_foreground.png"
+    image: "assets/images/flash_fullscreen.jpg"
+    color: "#0D3B0F"
+    icon_background_color: "#0D3B0F"
     color_dark: "#0D3B0F"
+    image_dark: "assets/images/flash_fullscreen.jpg"
     icon_background_color_dark: "#0D3B0F"
-    image_dark: "assets/images/app_icon_foreground.png"
 
 flutter:
   uses-material-design: true

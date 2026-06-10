@@ -93,7 +93,7 @@ class HajjUmrahScreen extends ConsumerWidget {
               ),
             ],
           ),
-          loading: () => const Center(
+          loading: () => Center(
             child: CircularProgressIndicator(color: AppColors.primary),
           ),
           error: (_, _) => Center(
@@ -354,7 +354,7 @@ class _HajjTypesTab extends StatelessWidget {
           ),
           child: Column(
             children: [
-              const Icon(Icons.mosque, color: AppColors.primary, size: 36),
+              Icon(Icons.mosque, color: AppColors.primary, size: 36),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 data['title'] as String? ?? '',

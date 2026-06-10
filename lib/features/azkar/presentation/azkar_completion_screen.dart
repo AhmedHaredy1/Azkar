@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/tokens.dart';
+import '../../azkar_streaks/presentation/providers/azkar_streaks_provider.dart';
 
-class AzkarCompletionScreen extends StatefulWidget {
+class AzkarCompletionScreen extends ConsumerStatefulWidget {
   final String categoryName;
 
   const AzkarCompletionScreen({
@@ -15,10 +17,11 @@ class AzkarCompletionScreen extends StatefulWidget {
   });
 
   @override
-  State<AzkarCompletionScreen> createState() => _AzkarCompletionScreenState();
+  ConsumerState<AzkarCompletionScreen> createState() =>
+      _AzkarCompletionScreenState();
 }
 
-class _AzkarCompletionScreenState extends State<AzkarCompletionScreen>
+class _AzkarCompletionScreenState extends ConsumerState<AzkarCompletionScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -55,6 +58,14 @@ class _AzkarCompletionScreenState extends State<AzkarCompletionScreen>
     );
 
     _controller.forward();
+
+    // Record streak for morning/evening completions.
+    final kind = azkarKindFromName(widget.categoryName);
+    if (kind != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(azkarStreaksProvider.notifier).markCompleted(kind);
+      });
+    }
   }
 
   @override
@@ -65,7 +76,7 @@ class _AzkarCompletionScreenState extends State<AzkarCompletionScreen>
 
   void _shareCompletion() {
     final text =
-        'الحمد لله، أتممت ${widget.categoryName} ✅\n\nتطبيق حصن المسلم';
+        'الحمد لله، أتممت ${widget.categoryName} ✅\n\nتطبيق رفيق المسلم';
     Share.share(text);
   }
 
@@ -201,7 +212,7 @@ class _AzkarCompletionScreenState extends State<AzkarCompletionScreen>
                           ),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.primary,
-                            side: const BorderSide(
+                            side: BorderSide(
                               color: AppColors.primary,
                               width: 1.5,
                             ),

@@ -3,138 +3,108 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../core/utils/arabic_number_utils.dart';
+import '../../../../core/widgets/ornaments.dart';
 
-/// A single onboarding page with an icon, title, and description.
 class OnboardingPage extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
-  final Color iconColor;
-  final Color iconBackgroundColor;
+  final int stepIndex;
+  final int totalSteps;
 
   const OnboardingPage({
     super.key,
     required this.icon,
     required this.title,
     required this.description,
-    this.iconColor = AppColors.secondary,
-    this.iconBackgroundColor = const Color(0x1AD4A017), // secondary 10%
+    this.stepIndex = 0,
+    this.totalSteps = 3,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+    final stepLabel =
+        'خطوة ${ArabicNumberUtils.toEasternArabic(stepIndex + 1)} من ${ArabicNumberUtils.toEasternArabic(totalSteps)}';
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl + 2),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Spacer(flex: 2),
-
-          // Decorative circle with icon
-          Container(
-            width: 160,
-            height: 160,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isDark
-                  ? AppColors.primaryLight.withValues(alpha: 0.15)
-                  : AppColors.primary.withValues(alpha: 0.08),
-              border: Border.all(
-                color: isDark
-                    ? AppColors.primaryLight.withValues(alpha: 0.3)
-                    : AppColors.primary.withValues(alpha: 0.15),
-                width: 2,
-              ),
-            ),
-            child: Center(
+          const SizedBox(height: AppSpacing.xl),
+          AspectRatio(
+            aspectRatio: 1 / 0.8,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.xl),
               child: Container(
-                width: 110,
-                height: 110,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isDark
-                      ? AppColors.primaryLight.withValues(alpha: 0.25)
-                      : AppColors.primary.withValues(alpha: 0.12),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
+                  border: Border.all(color: AppColors.hairline),
                 ),
-                child: Icon(
-                  icon,
-                  size: 56,
-                  color: isDark ? AppColors.secondaryLight : AppColors.secondary,
+                child: Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      top: -40,
+                      right: -40,
+                      child: GeoWatermark(
+                        size: 300,
+                        color: AppColors.primary,
+                        opacity: 0.12,
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 96,
+                          height: 96,
+                          decoration: BoxDecoration(
+                            color: AppColors.primarySoft,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(icon, size: 42, color: AppColors.primary),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          stepLabel,
+                          style: GoogleFonts.cairo(
+                            fontSize: 10,
+                            letterSpacing: 1,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.ink3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-
-          const SizedBox(height: AppSpacing.xxl),
-
-          // Decorative separator
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 30,
-                height: 1.5,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      isDark ? AppColors.secondaryLight : AppColors.secondary,
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Icon(
-                Icons.star,
-                size: 10,
-                color: isDark ? AppColors.secondaryLight : AppColors.secondary,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Container(
-                width: 30,
-                height: 1.5,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      isDark ? AppColors.secondaryLight : AppColors.secondary,
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: AppSpacing.xxl),
-
-          // Title
+          const SizedBox(height: AppSpacing.xl + AppSpacing.md),
           Text(
             title,
-            textAlign: TextAlign.center,
             style: GoogleFonts.cairo(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-              height: 1.5,
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.5,
+              height: 1.3,
+              color: AppColors.ink,
             ),
           ),
-
-          const SizedBox(height: AppSpacing.lg),
-
-          // Description
+          const SizedBox(height: AppSpacing.sm + 4),
           Text(
             description,
-            textAlign: TextAlign.center,
             style: GoogleFonts.cairo(
-              fontSize: 16,
-              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-              height: 1.7,
+              fontSize: 15,
+              height: 1.8,
+              color: AppColors.ink2,
             ),
           ),
-
-          const Spacer(flex: 3),
         ],
       ),
     );

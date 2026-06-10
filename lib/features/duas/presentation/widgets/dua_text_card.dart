@@ -111,7 +111,7 @@ class DuaTextCard extends ConsumerWidget {
               IconButton(
                 onPressed: () {
                   final shareText =
-                      '${dua.textAr}\n\n${dua.source.isNotEmpty ? "المصدر: ${dua.source}" : ""}\n\nمن تطبيق حصن المسلم';
+                      '${dua.textAr}\n\n${dua.source.isNotEmpty ? "المصدر: ${dua.source}" : ""}\n\nمن تطبيق رفيق المسلم';
                   Share.share(shareText);
                 },
                 icon: const Icon(

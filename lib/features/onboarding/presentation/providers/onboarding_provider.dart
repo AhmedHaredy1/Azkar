@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/services/storage_service.dart';
 
 /// State for the onboarding flow.
@@ -84,19 +85,21 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 
   /// Mark onboarding as completed and persist the flag.
   Future<void> completeOnboarding() async {
-    await _storage.putSetting('isFirstLaunch', false);
+    await _storage.putSetting(StorageKeys.isFirstLaunch, false);
   }
 }
 
 /// Provider for the onboarding flow.
 final onboardingProvider =
     StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {
-  return OnboardingNotifier(StorageService.instance);
+  return OnboardingNotifier(ref.watch(storageServiceProvider));
 });
 
 /// Provider to check if this is the first launch.
 final isFirstLaunchProvider = Provider<bool>((ref) {
-  final storage = StorageService.instance;
+  final storage = ref.watch(storageServiceProvider);
   // Default to true if key doesn't exist (first install)
-  return storage.getSetting<bool>('isFirstLaunch', defaultValue: true) ?? true;
+  return storage.getSetting<bool>(StorageKeys.isFirstLaunch,
+          defaultValue: true) ??
+      true;
 });

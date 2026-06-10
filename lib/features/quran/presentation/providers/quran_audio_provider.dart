@@ -4,6 +4,7 @@ import 'package:audio_session/audio_session.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../../core/constants/surah_names.dart';
 import '../../../../core/services/global_audio_handler.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../live_radio/presentation/providers/live_radio_provider.dart';
@@ -111,10 +112,38 @@ const List<int> _surahAyahOffsets = [
   6216, 6221, 6225, 6230, // 111-114
 ];
 
-int _getGlobalAyahNumber(int surahNumber, int ayahNumber) {
+/// Maps a (surah, ayah) pair to the 1-based global ayah index used by
+/// cdn.islamic.network audio URLs. Out-of-range surahs fall back to the
+/// raw ayah number so callers never crash on bad input.
+int getGlobalAyahNumber(int surahNumber, int ayahNumber) {
   if (surahNumber < 1 || surahNumber > 114) return ayahNumber;
   return _surahAyahOffsets[surahNumber - 1] + ayahNumber;
 }
+
+/// surah number → its ayahs in mushaf order, each carrying its page number.
+/// Built in a single pass over the page index and cached, so [playSurah]
+/// does an O(1) lookup instead of rescanning all 604 pages on every play.
+final surahAudioIndexProvider =
+    FutureProvider<Map<int, List<PlayingAyahInfo>>>((ref) async {
+  final pageIndex = await ref.watch(pageIndexProvider.future);
+  final index = <int, List<PlayingAyahInfo>>{};
+  final pages = pageIndex.keys.toList()..sort();
+  for (final p in pages) {
+    for (final section in pageIndex[p]!.sections) {
+      final list = index.putIfAbsent(section.surahNumber, () => []);
+      for (final ayah in section.ayahs) {
+        list.add(PlayingAyahInfo(
+          surahNumber: section.surahNumber,
+          ayahNumber: ayah.ayahNumber,
+          globalAyahNumber:
+              getGlobalAyahNumber(section.surahNumber, ayah.ayahNumber),
+          page: p,
+        ));
+      }
+    }
+  }
+  return index;
+});
 
 /// State for the Quran audio player
 class QuranAudioState {
@@ -331,27 +360,11 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
         duration: Duration.zero,
       );
 
-      // Get ayah count and page info from quran data
-      final pageIndex = await _ref.read(pageIndexProvider.future);
-      final ayahInfoList = <PlayingAyahInfo>[];
-
-      // Scan all pages to find ayahs for this surah
-      for (int p = 1; p <= 604; p++) {
-        final page = pageIndex[p];
-        if (page == null) continue;
-        for (final section in page.sections) {
-          if (section.surahNumber == surahNumber) {
-            for (final ayah in section.ayahs) {
-              ayahInfoList.add(PlayingAyahInfo(
-                surahNumber: surahNumber,
-                ayahNumber: ayah.ayahNumber,
-                globalAyahNumber: _getGlobalAyahNumber(surahNumber, ayah.ayahNumber),
-                page: p,
-              ));
-            }
-          }
-        }
-      }
+      // O(1) lookup in the cached surah → ayahs index. Copy the list:
+      // the Bismillah insert below must not mutate the shared cache.
+      final surahIndex = await _ref.read(surahAudioIndexProvider.future);
+      final ayahInfoList =
+          List<PlayingAyahInfo>.of(surahIndex[surahNumber] ?? const []);
 
       if (ayahInfoList.isEmpty) {
         state = state.copyWith(
@@ -411,20 +424,8 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
         isLoading: false,
       );
 
-      // Get surah name for notification
-      String surahName = 'سورة $surahNumber';
-      try {
-        final pageIndex = await _ref.read(pageIndexProvider.future);
-        for (final page in pageIndex.values) {
-          for (final section in page.sections) {
-            if (section.surahNumber == surahNumber) {
-              surahName = 'سورة ${section.surahNameAr}';
-              break;
-            }
-          }
-          if (surahName != 'سورة $surahNumber') break;
-        }
-      } catch (_) {}
+      // Surah name for the lock-screen notification — constant-time lookup.
+      final surahName = 'سورة ${kSurahNamesAr[surahNumber] ?? surahNumber}';
 
       _attachToHandler(
         title: surahName,
@@ -533,5 +534,5 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
 
 final quranAudioProvider =
     StateNotifierProvider<QuranAudioNotifier, QuranAudioState>((ref) {
-  return QuranAudioNotifier(StorageService.instance, ref);
+  return QuranAudioNotifier(ref.watch(storageServiceProvider), ref);
 });

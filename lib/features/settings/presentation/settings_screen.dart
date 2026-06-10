@@ -5,6 +5,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/tokens.dart';
+import '../../../core/widgets/ornaments.dart';
 import '../../../features/prayer_times/presentation/providers/prayer_times_provider.dart';
 import 'providers/settings_provider.dart';
 import 'widgets/font_size_slider.dart';
@@ -31,42 +34,47 @@ class SettingsScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Adaptive colors based on current theme
-    final primaryColor = isDark ? const Color(0xFF2E7D32) : const Color(0xFF1B5E20);
-    final textPrimary = isDark ? const Color(0xFFE8E6E3) : const Color(0xFF1A1A1A);
-    final textSecondary = isDark ? const Color(0xFFA0A0A0) : const Color(0xFF5A5A5A);
-    final cardColor = isDark ? const Color(0xFF2A2A45) : const Color(0xFFFAF8F3);
-    final borderColor = isDark ? const Color(0xFF3A3A55) : const Color(0xFFE8E4DB);
-    final appBarBg = isDark ? const Color(0xFF22223A) : const Color(0xFF1B5E20);
-    final appBarFg = isDark ? const Color(0xFFE8E6E3) : Colors.white;
+    final primaryColor = isDark ? const Color(0xFF4CAF50) : AppColors.primary;
+    final textPrimary = isDark ? const Color(0xFFE8E6E3) : AppColors.ink;
+    final textSecondary = isDark ? const Color(0xFFA0A0A0) : AppColors.ink3;
+    final cardColor = isDark ? const Color(0xFF22223A) : AppColors.surface;
+    final borderColor = isDark ? const Color(0xFF3A3A55) : AppColors.hairline;
+    final pageBg = isDark ? const Color(0xFF1A1A2E) : AppColors.background;
 
     return Scaffold(
+      backgroundColor: pageBg,
       appBar: AppBar(
         title: Text(
           'الإعدادات',
-          style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 20),
+          style: GoogleFonts.cairo(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: textPrimary,
+          ),
         ),
-        backgroundColor: appBarBg,
-        foregroundColor: appBarFg,
+        backgroundColor: pageBg,
+        foregroundColor: textPrimary,
+        elevation: 0,
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Appearance Section ──
-            _SectionHeader(title: 'المظهر', color: textPrimary),
-            const SizedBox(height: 12),
+            _SectionHeader(title: 'المظهر', color: textSecondary),
+            const SizedBox(height: AppSpacing.sm + 2),
 
-            // Theme selector
+            // Theme color picker
             ThemeSelector(
-              currentMode: settings.themeMode,
-              onChanged: (mode) {
-                ref.read(settingsProvider.notifier).setThemeMode(mode);
+              currentId: settings.themeColorId,
+              onChanged: (id) {
+                ref.read(settingsProvider.notifier).setThemeColor(id);
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.md),
 
             // Font size slider
             FontSizeSlider(
@@ -75,11 +83,11 @@ class SettingsScreen extends ConsumerWidget {
                 ref.read(settingsProvider.notifier).setFontSize(value);
               },
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: AppSpacing.xl),
 
             // ── Location Section ──
-            _SectionHeader(title: 'الموقع', color: textPrimary),
-            const SizedBox(height: 12),
+            _SectionHeader(title: 'الموقع', color: textSecondary),
+            const SizedBox(height: AppSpacing.sm + 2),
 
             _LocationSettingsCard(
               settings: settings,
@@ -90,19 +98,20 @@ class SettingsScreen extends ConsumerWidget {
               primaryColor: primaryColor,
               isDark: isDark,
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: AppSpacing.xl),
 
             // ── Prayer Times Section ──
-            _SectionHeader(title: 'مواقيت الصلاة', color: textPrimary),
-            const SizedBox(height: 12),
+            _SectionHeader(title: 'مواقيت الصلاة', color: textSecondary),
+            const SizedBox(height: AppSpacing.sm + 2),
 
             // Calculation method
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg, vertical: 4),
               decoration: BoxDecoration(
                 color: cardColor,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
                 border: Border.all(color: borderColor),
               ),
               child: DropdownButtonHideUnderline(
@@ -138,11 +147,11 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: AppSpacing.xl),
 
             // ── Notifications Section ──
-            _SectionHeader(title: 'التنبيهات', color: textPrimary),
-            const SizedBox(height: 12),
+            _SectionHeader(title: 'التنبيهات', color: textSecondary),
+            const SizedBox(height: AppSpacing.sm + 2),
             NotificationToggles(
               settings: settings,
               onToggle: (key, value) {
@@ -154,92 +163,39 @@ class SettingsScreen extends ConsumerWidget {
               onPlayAdhanChanged: (value) {
                 ref.read(settingsProvider.notifier).setPlayAdhan(value);
               },
+              onUseGlobalReminderChanged: (value) {
+                ref.read(settingsProvider.notifier).setUseGlobalReminder(value);
+              },
+              onReminderMinutesChanged: (prayer, minutes) {
+                ref
+                    .read(settingsProvider.notifier)
+                    .setReminderMinutes(prayer, minutes);
+              },
+              onPostPrayerDhikrToggleChanged: (value) {
+                ref
+                    .read(settingsProvider.notifier)
+                    .setNotifyPostPrayerDhikr(value);
+              },
+              onPostPrayerDhikrDelayChanged: (minutes) {
+                ref
+                    .read(settingsProvider.notifier)
+                    .setPostPrayerDhikrDelayMinutes(minutes);
+              },
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: AppSpacing.xl),
 
             // ── About Section ──
-            _SectionHeader(title: 'عن التطبيق', color: textPrimary),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: borderColor),
+            _SectionHeader(title: 'حول التطبيق', color: textSecondary),
+            const SizedBox(height: AppSpacing.sm + 2),
+            _AboutHero(isDark: isDark),
+            const SizedBox(height: AppSpacing.md),
+            _ShareCta(
+              onShare: () => Share.share(
+                'حمّل تطبيق رفيق المسلم - أذكار وأدعية من الكتاب والسنة',
               ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.mosque_outlined,
-                    size: 48,
-                    color: primaryColor,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'حصن المسلم',
-                    style: GoogleFonts.amiri(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'الإصدار 1.0.0',
-                    style: GoogleFonts.cairo(
-                      fontSize: 14,
-                      color: textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'تطبيق الأذكار والأدعية من الكتاب والسنة',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.cairo(
-                      fontSize: 14,
-                      color: textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'تطوير: Ahmed Haredy',
-                    style: GoogleFonts.cairo(
-                      fontSize: 13,
-                      color: textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+              onRate: () {},
             ),
-            const SizedBox(height: 16),
-
-            // Share App
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Share.share('حمّل تطبيق حصن المسلم - أذكار وأدعية من الكتاب والسنة');
-                },
-                icon: const Icon(Icons.share_outlined),
-                label: Text(
-                  'مشاركة التطبيق',
-                  style: GoogleFonts.cairo(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: primaryColor,
-                  side: BorderSide(color: primaryColor),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xl),
           ],
         ),
       ),
@@ -863,12 +819,162 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: GoogleFonts.cairo(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: color,
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: 4, bottom: 2),
+      child: Text(
+        title,
+        style: GoogleFonts.cairo(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
+          letterSpacing: 0.4,
+        ),
+      ),
+    );
+  }
+}
+
+class _AboutHero extends StatelessWidget {
+  final bool isDark;
+  const _AboutHero({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          'رفيق المسلم',
+          style: GoogleFonts.cairo(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.ink,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          'الإصدار ١٫٠٫٠',
+          style: GoogleFonts.cairo(
+            fontSize: 12,
+            color: AppColors.ink3,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ShareCta extends StatelessWidget {
+  final VoidCallback onShare;
+  final VoidCallback onRate;
+  const _ShareCta({required this.onShare, required this.onRate});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            const Positioned(
+              top: -60,
+              right: -60,
+              child: GeoWatermark(
+                size: 220,
+                color: Colors.white,
+                opacity: 0.1,
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  '«الدَّالُّ عَلَى الْخَيْرِ كَفَاعِلِهِ»',
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.amiri(
+                    fontSize: 18,
+                    height: 1.7,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'رواه الترمذي',
+                  style: GoogleFonts.cairo(
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.75),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: onShare,
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          alignment: Alignment.center,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.share_outlined,
+                                  size: 14, color: AppColors.ink),
+                              const SizedBox(width: AppSpacing.sm),
+                              Text(
+                                'شارك التطبيق',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: InkWell(
+                        onTap: onRate,
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.25),
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            'قيّمنا ★★★★★',
+                            style: GoogleFonts.cairo(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

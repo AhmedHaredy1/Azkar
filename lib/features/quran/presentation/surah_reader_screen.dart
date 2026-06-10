@@ -120,7 +120,7 @@ class SurahReaderScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(
+        loading: () => Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
         error: (error, _) => Center(

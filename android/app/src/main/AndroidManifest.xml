@@ -14,7 +14,7 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
 
     <application
-        android:label="حصن المسلم"
+        android:label="Rafeeq Al-Muslim"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
@@ -70,11 +70,51 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
+
+        <!-- Prayer times home-screen widget -->
+        <receiver
+            android:name=".PrayerWidgetProvider"
+            android:exported="true"
+            android:label="Rafeeq Al-Muslim - الصلاة القادمة">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/prayer_widget_info" />
+        </receiver>
+
+        <!-- Adhan playback foreground service. Plays the user's selected
+             adhan MP3 when triggered by the alarm at prayer time. -->
+        <service
+            android:name=".AdhanPlayerService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="false" />
+
+        <!-- Alarm receiver that fires at prayer time and starts the
+             AdhanPlayerService with the selected reciter's cached MP3. -->
+        <receiver
+            android:name=".AdhanAlarmReceiver"
+            android:exported="false" />
     </application>
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Required for url_launcher to resolve external apps (Google Maps,
+             browsers) on Android 11+ where package visibility is restricted. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="http"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="geo"/>
         </intent>
     </queries>
 </manifest>

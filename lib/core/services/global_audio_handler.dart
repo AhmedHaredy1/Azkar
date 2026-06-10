@@ -82,7 +82,7 @@ class GlobalAudioHandler extends BaseAudioHandler with SeekHandler {
       mediaItem.add(MediaItem(
         id: source.name,
         title: title,
-        artist: subtitle ?? 'حصن المسلم',
+        artist: subtitle ?? 'رفيق المسلم',
         album: _albumForSource(source),
         artUri: artUri,
       ));
@@ -137,7 +137,7 @@ class GlobalAudioHandler extends BaseAudioHandler with SeekHandler {
       case ActiveAudioSource.liveRadio:
         return 'البث المباشر';
       case ActiveAudioSource.none:
-        return 'حصن المسلم';
+        return 'رفيق المسلم';
     }
   }
 

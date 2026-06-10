@@ -1,55 +1,76 @@
 import 'package:flutter/material.dart';
 
+import '../theme/theme_palette.dart';
+
+/// Design system — minimal, modern, spiritual.
+/// Restrained accent on warm off-white. Gold reserved for highlight
+/// moments (Quran hero, streaks). Single ornament: 8-point star.
+///
+/// Palette-dependent fields (primary*, secondary*, navBarSelected) are
+/// non-const getters that read from [ActivePalette]. Layout-neutral
+/// fields (background, ink, hairline, etc.) stay `static const` because
+/// they don't change between palettes.
 class AppColors {
   AppColors._();
 
-  // Primary - Islamic Green
-  static const Color primary = Color(0xFF1B5E20);
-  static const Color primaryLight = Color(0xFF2E7D32);
-  static const Color primaryDark = Color(0xFF0D3B12);
+  // ── Palette-dependent (runtime-swappable) ──
+  static Color get primary => ActivePalette.current.primary;
+  static Color get primaryLight => ActivePalette.current.primaryLight;
+  static Color get primaryDark => ActivePalette.current.primaryDark;
+  static Color get primarySoft => ActivePalette.current.primarySoft;
+  static Color get primaryInk => ActivePalette.current.primaryInk;
+  static Color get secondary => ActivePalette.current.secondary;
+  static Color get secondaryLight => ActivePalette.current.secondaryLight;
+  static Color get secondaryDark => ActivePalette.current.secondaryDark;
+  static Color get secondarySoft => ActivePalette.current.secondarySoft;
 
-  // Secondary - Gold
-  static const Color secondary = Color(0xFFD4A017);
-  static const Color secondaryLight = Color(0xFFE6BE4D);
-  static const Color secondaryDark = Color(0xFFA67C00);
-
-  // Background & Surface (Light)
-  static const Color background = Color(0xFFF5F2EB);
+  // Background & Surface (constant across palettes)
+  static const Color background = Color(0xFFFAF8F3); // warm off-white page bg
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color card = Color(0xFFFAF8F3);
-  static const Color cardBorder = Color(0xFFE8E4DB);
+  static const Color surfaceSunk = Color(0xFFF2EFE8); // quiet sunken surfaces
+  static const Color card = Color(0xFFFFFFFF);
+  static const Color cardBorder = Color(0x141B2F1F); // hairline
 
-  // Text (Light)
-  static const Color textPrimary = Color(0xFF1A1A1A);
-  static const Color textSecondary = Color(0xFF5A5A5A);
+  // Text / ink scale
+  static const Color textPrimary = Color(0xFF141814);
+  static const Color textSecondary = Color(0xFF4A524B);
+  static const Color textTertiary = Color(0xFF8A8F88);
+  static const Color textPlaceholder = Color(0xFFB8BAB4);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
-  static const Color textOnSecondary = Color(0xFF1A1A1A);
+  static const Color textOnSecondary = Color(0xFF141814);
+
+  /// Aliases matching the design tokens file (T.ink, T.ink2, T.ink3, T.ink4).
+  static const Color ink = textPrimary;
+  static const Color ink2 = textSecondary;
+  static const Color ink3 = textTertiary;
+  static const Color ink4 = textPlaceholder;
+
+  // Hairlines — subtle borders used on cards + dividers.
+  static const Color hairline = Color(0x141B2F1F); // rgba(27,47,31,0.08)
+  static const Color hairlineStrong = Color(0x241B2F1F); // rgba(27,47,31,0.14)
 
   // Utility
-  static const Color divider = Color(0xFFD6D0C4);
-  static const Color error = Color(0xFFC62828);
-  static const Color success = Color(0xFF2E7D32);
-  static const Color shimmer = Color(0xFFE0DCD4);
+  static const Color divider = hairline;
+  static const Color error = Color(0xFFB42318);
+  static const Color success = Color(0xFF1B5E20);
+  static const Color shimmer = Color(0xFFE8E4DB);
 
-  // Bottom Navigation (Light)
+  // Bottom Navigation (Light) — selected color tracks the palette.
   static const Color navBarBackground = Color(0xFFFFFFFF);
-  static const Color navBarSelected = Color(0xFF1B5E20);
-  static const Color navBarUnselected = Color(0xFF9E9E9E);
+  static Color get navBarSelected => ActivePalette.current.primary;
+  static const Color navBarUnselected = Color(0xFF8A8F88);
 
-  // ── Dark Mode Colors ──
-
-  static const Color darkBackground = Color(0xFF1A1A2E);
-  static const Color darkSurface = Color(0xFF22223A);
-  static const Color darkCard = Color(0xFF2A2A45);
-  static const Color darkCardBorder = Color(0xFF3A3A55);
-
-  static const Color darkTextPrimary = Color(0xFFE8E6E3);
-  static const Color darkTextSecondary = Color(0xFFA0A0A0);
-
-  static const Color darkDivider = Color(0xFF3A3A55);
-  static const Color darkShimmer = Color(0xFF33334D);
-
-  static const Color darkNavBarBackground = Color(0xFF1A1A2E);
-  static const Color darkNavBarSelected = Color(0xFF4CAF50);
-  static const Color darkNavBarUnselected = Color(0xFF6E6E6E);
+  // ── Dark mode aliases (kept for backward-compat with files that still
+  // reference them; dark mode itself has been removed — all map to light
+  // tones). New code should use the light constants directly.
+  static const Color darkBackground = background;
+  static const Color darkSurface = surface;
+  static const Color darkCard = card;
+  static const Color darkCardBorder = cardBorder;
+  static const Color darkTextPrimary = textPrimary;
+  static const Color darkTextSecondary = textSecondary;
+  static const Color darkDivider = divider;
+  static const Color darkShimmer = shimmer;
+  static const Color darkNavBarBackground = navBarBackground;
+  static const Color darkNavBarUnselected = navBarUnselected;
 }

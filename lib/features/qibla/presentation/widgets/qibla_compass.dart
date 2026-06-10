@@ -25,9 +25,9 @@ class QiblaCompass extends StatelessWidget {
     if (isFacingQibla) {
       directionHint = 'أنت تواجه القبلة ✓';
     } else if (signedOffset > 0 && signedOffset <= 180) {
-      directionHint = 'أدر يساراً ←';
+      directionHint = 'أدر يميناً →';
     } else {
-      directionHint = '→ أدر يميناً';
+      directionHint = '← أدر يساراً';
     }
 
     return Column(

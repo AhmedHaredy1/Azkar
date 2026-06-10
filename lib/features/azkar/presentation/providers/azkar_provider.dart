@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../data/azkar_local_source.dart';
 import '../../data/azkar_repository_impl.dart';
@@ -201,23 +202,23 @@ final azkarProgressProvider =
 // ──────────────────────────────────────────────
 
 class AzkarFavoritesNotifier extends StateNotifier<Set<String>> {
-  AzkarFavoritesNotifier() : super({}) {
+  final StorageService _storage;
+
+  AzkarFavoritesNotifier(this._storage) : super({}) {
     _loadFavorites();
   }
 
-  static const String _hiveKey = 'azkar_favorites';
+  static const String _hiveKey = StorageKeys.azkarFavorites;
 
   void _loadFavorites() {
-    final storage = StorageService.instance;
-    final saved = storage.favoritesBox.get(_hiveKey);
+    final saved = _storage.favoritesBox.get(_hiveKey);
     if (saved != null && saved is List) {
       state = saved.cast<String>().toSet();
     }
   }
 
   Future<void> _saveFavorites() async {
-    final storage = StorageService.instance;
-    await storage.favoritesBox.put(_hiveKey, state.toList());
+    await _storage.favoritesBox.put(_hiveKey, state.toList());
   }
 
   /// Toggle favorite status for a dhikr. Key = "categoryId:dhikrId"
@@ -239,7 +240,7 @@ class AzkarFavoritesNotifier extends StateNotifier<Set<String>> {
 
 final azkarFavoritesProvider =
     StateNotifierProvider<AzkarFavoritesNotifier, Set<String>>((ref) {
-  return AzkarFavoritesNotifier();
+  return AzkarFavoritesNotifier(ref.watch(storageServiceProvider));
 });
 
 /// Provides all favorited Dhikr items across all categories

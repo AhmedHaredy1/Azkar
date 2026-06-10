@@ -36,6 +36,17 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+
+            // R8 minification is on by default for Flutter release builds. The
+            // keep-rules below preserve generic type info Gson needs (used by
+            // flutter_local_notifications for scheduled-notification storage)
+            // — without them every plugin call throws `Missing type parameter`.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }

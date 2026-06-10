@@ -19,14 +19,20 @@ class AzkarFavoritesScreen extends ConsumerWidget {
     final favorites = ref.watch(azkarFavoritesProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
+        centerTitle: false,
         title: Text(
-          'الأذكار المفضلة',
-          style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 20),
+          'الأذكار المحفوظة',
+          style: GoogleFonts.cairo(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppColors.ink,
+          ),
         ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textOnPrimary,
-        centerTitle: true,
       ),
       body: favoritedAzkarAsync.when(
         data: (items) {
@@ -82,7 +88,7 @@ class AzkarFavoritesScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(
+        loading: () => Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
         error: (error, _) => Center(

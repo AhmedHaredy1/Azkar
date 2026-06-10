@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/constants/app_strings.dart';
+import 'core/di/service_providers.dart';
 import 'core/router/app_router.dart';
 import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
@@ -20,7 +21,8 @@ class AzkarApp extends ConsumerStatefulWidget {
 
 class _AzkarAppState extends ConsumerState<AzkarApp>
     with WidgetsBindingObserver {
-  late final _router = createRouter();
+  late final _router =
+      createRouter(storage: ref.read(storageServiceProvider));
   StreamSubscription<String?>? _notificationTapSubscription;
 
   @override
@@ -62,6 +64,12 @@ class _AzkarAppState extends ConsumerState<AzkarApp>
     final manager = ref.read(notificationManagerProvider);
     await manager.init();
 
+    // Prompt for permissions on first launch so notifications actually fire
+    // on Android 13+ (where POST_NOTIFICATIONS is denied by default) and so
+    // exact-alarm + battery-optimization whitelist are in place before we
+    // schedule anything. Idempotent — no prompt when already granted.
+    await manager.requestPermissions();
+
     // Handle deep link from notification that launched the app
     final launchPayload = manager.getLaunchPayload();
     if (launchPayload != null) {
@@ -84,13 +92,47 @@ class _AzkarAppState extends ConsumerState<AzkarApp>
 
   /// Navigate to the correct screen based on notification payload.
   void _handleNotificationDeepLink(String payload) {
+    // ── Prayer-time adhan: play audio in-app when tapped ──
+    // Notification payloads from prayer scheduling follow the shape
+    // `prayer_adhan:<PrayerName>` (e.g. `prayer_adhan:Fajr`) and
+    // `prayer_reminder:<PrayerName>` for the 15-min pre-prayer alert.
+    // When the user taps a prayer-time notification we also start the
+    // in-app adhan via just_audio so they hear it even if the system
+    // couldn't play the custom sound on the notification channel
+    // (app-private paths don't reliably play as channel sound on newer
+    // Android — this is our fallback).
+    if (payload.startsWith('prayer_adhan:')) {
+      final prayerName = payload.substring('prayer_adhan:'.length);
+      final settings = ref.read(settingsProvider);
+      if (settings.playAdhan) {
+        ref
+            .read(adhanAudioServiceProvider)
+            .playAdhan(settings.adhanReciterId, isFajr: prayerName == 'Fajr');
+      }
+    }
+
     // Delay to ensure router is ready
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
 
+      // Post-prayer dhikr — payload format `post_prayer:<PrayerName>`. When the
+      // user taps the post-Fard reminder notification, route directly to the
+      // guided counter screen with the prayer pre-selected.
+      if (payload.startsWith('post_prayer:')) {
+        final prayer = payload.substring('post_prayer:'.length);
+        _router.go('/post-prayer-dhikr?prayer=$prayer');
+        return;
+      }
+
+      // Route to prayer-times for any prayer_* payload, keep legacy value too.
+      if (payload == 'prayer_times' ||
+          payload.startsWith('prayer_adhan:') ||
+          payload.startsWith('prayer_reminder:')) {
+        _router.go('/prayer-times');
+        return;
+      }
+
       switch (payload) {
-        case 'prayer_times':
-          _router.go('/prayer-times');
         case 'azkar/morning':
           _router.go('/azkar/morning');
         case 'azkar/evening':
@@ -104,7 +146,9 @@ class _AzkarAppState extends ConsumerState<AzkarApp>
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = ref.watch(themeModeProvider);
+    // Watching the palette rebuilds MaterialApp.theme so every screen
+    // (and every `AppColors.primary` reference) reflects the user's pick.
+    final palette = ref.watch(activePaletteProvider);
 
     // Listen for settings changes to reschedule notifications
     ref.listen(settingsProvider, (previous, next) {
@@ -120,7 +164,20 @@ class _AzkarAppState extends ConsumerState<AzkarApp>
           previous.notifyEveningAzkar != next.notifyEveningAzkar ||
           previous.calculationMethod != next.calculationMethod ||
           previous.latitude != next.latitude ||
-          previous.longitude != next.longitude;
+          previous.longitude != next.longitude ||
+          previous.utcOffset != next.utcOffset ||
+          previous.playAdhan != next.playAdhan ||
+          previous.adhanReciterId != next.adhanReciterId ||
+          previous.useGlobalReminder != next.useGlobalReminder ||
+          previous.reminderMinutesGlobal != next.reminderMinutesGlobal ||
+          previous.reminderMinutesFajr != next.reminderMinutesFajr ||
+          previous.reminderMinutesDhuhr != next.reminderMinutesDhuhr ||
+          previous.reminderMinutesAsr != next.reminderMinutesAsr ||
+          previous.reminderMinutesMaghrib != next.reminderMinutesMaghrib ||
+          previous.reminderMinutesIsha != next.reminderMinutesIsha ||
+          previous.notifyPostPrayerDhikr != next.notifyPostPrayerDhikr ||
+          previous.postPrayerDhikrDelayMinutes !=
+              next.postPrayerDhikrDelayMinutes;
 
       if (notifChanged) {
         _rescheduleNotifications();
@@ -132,9 +189,8 @@ class _AzkarAppState extends ConsumerState<AzkarApp>
       child: MaterialApp.router(
         title: AppStrings.appName,
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: themeMode,
+        theme: AppTheme.lightTheme(palette),
+        themeMode: ThemeMode.light,
         routerConfig: _router,
         locale: const Locale('ar'),
         supportedLocales: const [

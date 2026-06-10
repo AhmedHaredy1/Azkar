@@ -32,30 +32,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
-  /// Navigate to home after completing onboarding.
   Future<void> _completeOnboarding() async {
     final notifier = ref.read(onboardingProvider.notifier);
-
-    // Request permissions before completing
     await notifier.requestLocationPermission();
     await notifier.requestNotificationPermission();
-
-    // Mark onboarding as done
     await notifier.completeOnboarding();
-
-    if (mounted) {
-      context.go('/home');
-    }
+    if (mounted) context.go('/home');
   }
 
-  /// Skip onboarding — go directly to home.
   Future<void> _skipOnboarding() async {
     final notifier = ref.read(onboardingProvider.notifier);
     await notifier.completeOnboarding();
-
-    if (mounted) {
-      context.go('/home');
-    }
+    if (mounted) context.go('/home');
   }
 
   void _goToPage(int page) {
@@ -69,108 +57,100 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(onboardingProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isLastPage = state.currentPage == OnboardingNotifier.totalPages - 1;
+    final total = OnboardingNotifier.totalPages;
+    final isLastPage = state.currentPage == total - 1;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
+        backgroundColor: AppColors.background,
         body: SafeArea(
           child: Column(
             children: [
-              // Top bar with skip button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    if (!isLastPage)
-                      TextButton(
-                        onPressed: _skipOnboarding,
-                        child: Text(
-                          AppStrings.skip,
-                          style: GoogleFonts.cairo(
-                            fontSize: 16,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      )
-                    else
-                      const SizedBox(height: AppSpacing.xxl),
-                  ],
-                ),
-              ),
-
-              // Pages
               Expanded(
                 child: PageView(
                   controller: _pageController,
                   onPageChanged: (index) {
                     ref.read(onboardingProvider.notifier).goToPage(index);
                   },
-                  children: const [
-                    // Page 1: Azkar
+                  children: [
                     OnboardingPage(
                       icon: Icons.auto_stories_rounded,
                       title: AppStrings.onboardingTitle1,
                       description: AppStrings.onboardingDesc1,
+                      stepIndex: 0,
+                      totalSteps: total,
                     ),
-                    // Page 2: Prayer Times & Qibla
                     OnboardingPage(
                       icon: Icons.mosque_rounded,
                       title: AppStrings.onboardingTitle2,
                       description: AppStrings.onboardingDesc2,
+                      stepIndex: 1,
+                      totalSteps: total,
                     ),
-                    // Page 3: Quran
                     OnboardingPage(
                       icon: Icons.menu_book_rounded,
                       title: AppStrings.onboardingTitle3,
                       description: AppStrings.onboardingDesc3,
+                      stepIndex: 2,
+                      totalSteps: total,
                     ),
                   ],
                 ),
               ),
-
-              // Bottom section: dot indicator + button
               Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.xxl, 0, AppSpacing.xxl, AppSpacing.xxl),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl + 2,
+                  0,
+                  AppSpacing.xl + 2,
+                  AppSpacing.xl + AppSpacing.md,
+                ),
                 child: Column(
                   children: [
-                    // Dot indicator
                     DotIndicator(
-                      itemCount: OnboardingNotifier.totalPages,
+                      itemCount: total,
                       currentIndex: state.currentPage,
                     ),
-
-                    const SizedBox(height: AppSpacing.xxl),
-
-                    // Action button
+                    const SizedBox(height: AppSpacing.lg + 4),
                     SizedBox(
                       width: double.infinity,
                       height: 54,
-                      child: ElevatedButton(
+                      child: FilledButton(
                         onPressed: isLastPage
                             ? _completeOnboarding
                             : () => _goToPage(state.currentPage + 1),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isDark
-                              ? AppColors.primaryLight
-                              : AppColors.primary,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
-                          elevation: 2,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.md),
                           ),
                         ),
                         child: Text(
                           isLastPage ? AppStrings.getStarted : AppStrings.next,
                           style: GoogleFonts.cairo(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.2,
                           ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextButton(
+                      onPressed: isLastPage ? null : _skipOnboarding,
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.ink3,
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        AppStrings.skip,
+                        style: GoogleFonts.cairo(
+                          fontSize: 12,
+                          color: AppColors.ink3,
                         ),
                       ),
                     ),

@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:audio_session/audio_session.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
@@ -185,11 +185,21 @@ const availableAdhanReciters = [
 ];
 
 /// Service for playing Adhan audio at prayer times.
-class AdhanAudioService {
+class AdhanAudioService with WidgetsBindingObserver {
   AdhanAudioService._();
   static final AdhanAudioService instance = AdhanAudioService._();
 
   AudioPlayer? _player;
+  bool _lifecycleObserverAttached = false;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // When the screen is locked or the app moves off-screen, the lifecycle
+    // transitions to inactive/paused/hidden — stop the adhan in any of those.
+    if (_player != null && state != AppLifecycleState.resumed) {
+      stop();
+    }
+  }
 
   Future<void> _configureAudioSession() async {
     final session = await AudioSession.instance;
@@ -219,6 +229,7 @@ class AdhanAudioService {
 
     final player = AudioPlayer();
     _player = player;
+    _attachLifecycleObserver();
     try {
       await _configureAudioSession();
       final duration = await player.setUrl(url);
@@ -260,6 +271,7 @@ class AdhanAudioService {
   Future<void> stop() async {
     final player = _player;
     _player = null;
+    _detachLifecycleObserver();
     if (player != null) {
       try {
         await player.stop();
@@ -268,6 +280,22 @@ class AdhanAudioService {
         await player.dispose();
       } catch (_) {}
     }
+  }
+
+  void _attachLifecycleObserver() {
+    if (_lifecycleObserverAttached) return;
+    try {
+      WidgetsBinding.instance.addObserver(this);
+      _lifecycleObserverAttached = true;
+    } catch (_) {}
+  }
+
+  void _detachLifecycleObserver() {
+    if (!_lifecycleObserverAttached) return;
+    try {
+      WidgetsBinding.instance.removeObserver(this);
+    } catch (_) {}
+    _lifecycleObserverAttached = false;
   }
 
   bool get isPlaying => _player?.playing ?? false;

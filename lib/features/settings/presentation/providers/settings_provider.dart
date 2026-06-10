@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/di/service_providers.dart';
+import '../../../../core/services/adhan_audio_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/theme/theme_palette.dart';
 
 /// Location mode: auto-detect GPS or manual city selection.
 enum LocationMode { auto, manual }
@@ -10,6 +13,7 @@ class AppSettingsState {
   final double fontSize;
   final String calculationMethod;
   final ThemeMode themeMode;
+  final String themeColorId;
   final double? latitude;
   final double? longitude;
   final String? cityName;
@@ -30,10 +34,26 @@ class AppSettingsState {
   final String adhanReciterId; // which muezzin for prayer notifications
   final bool playAdhan; // whether to play adhan sound with prayer notification
 
+  // Pre-prayer reminder timing (in minutes; 0 = disabled)
+  // When [useGlobalReminder] is true, every prayer uses [reminderMinutesGlobal].
+  // When false, each prayer uses its own per-prayer value.
+  final bool useGlobalReminder;
+  final int reminderMinutesGlobal;
+  final int reminderMinutesFajr;
+  final int reminderMinutesDhuhr;
+  final int reminderMinutesAsr;
+  final int reminderMinutesMaghrib;
+  final int reminderMinutesIsha;
+
+  // Post-prayer dhikr reminder
+  final bool notifyPostPrayerDhikr; // schedule a reminder N min after adhan
+  final int postPrayerDhikrDelayMinutes; // 0 disables (default 5)
+
   const AppSettingsState({
     this.fontSize = 22.0,
     this.calculationMethod = 'UmmAlQura',
-    this.themeMode = ThemeMode.system,
+    this.themeMode = ThemeMode.light,
+    this.themeColorId = 'green',
     this.latitude,
     this.longitude,
     this.cityName,
@@ -49,7 +69,36 @@ class AppSettingsState {
     this.notifyEveningAzkar = true,
     this.adhanReciterId = 'adhan1',
     this.playAdhan = true,
+    this.useGlobalReminder = true,
+    this.reminderMinutesGlobal = 15,
+    this.reminderMinutesFajr = 15,
+    this.reminderMinutesDhuhr = 15,
+    this.reminderMinutesAsr = 15,
+    this.reminderMinutesMaghrib = 15,
+    this.reminderMinutesIsha = 15,
+    this.notifyPostPrayerDhikr = true,
+    this.postPrayerDhikrDelayMinutes = 5,
   });
+
+  /// Resolve the reminder lead time (minutes) for a given prayer name.
+  /// Returns 0 if reminders are disabled for that prayer.
+  int reminderMinutesFor(String prayerName) {
+    if (useGlobalReminder) return reminderMinutesGlobal;
+    switch (prayerName) {
+      case 'Fajr':
+        return reminderMinutesFajr;
+      case 'Dhuhr':
+        return reminderMinutesDhuhr;
+      case 'Asr':
+        return reminderMinutesAsr;
+      case 'Maghrib':
+        return reminderMinutesMaghrib;
+      case 'Isha':
+        return reminderMinutesIsha;
+      default:
+        return 0;
+    }
+  }
 
   /// Get the UTC offset as Duration, or null if not set.
   Duration? get utcOffset =>
@@ -59,6 +108,7 @@ class AppSettingsState {
     double? fontSize,
     String? calculationMethod,
     ThemeMode? themeMode,
+    String? themeColorId,
     double? latitude,
     double? longitude,
     String? cityName,
@@ -74,11 +124,21 @@ class AppSettingsState {
     bool? notifyEveningAzkar,
     String? adhanReciterId,
     bool? playAdhan,
+    bool? useGlobalReminder,
+    int? reminderMinutesGlobal,
+    int? reminderMinutesFajr,
+    int? reminderMinutesDhuhr,
+    int? reminderMinutesAsr,
+    int? reminderMinutesMaghrib,
+    int? reminderMinutesIsha,
+    bool? notifyPostPrayerDhikr,
+    int? postPrayerDhikrDelayMinutes,
   }) {
     return AppSettingsState(
       fontSize: fontSize ?? this.fontSize,
       calculationMethod: calculationMethod ?? this.calculationMethod,
       themeMode: themeMode ?? this.themeMode,
+      themeColorId: themeColorId ?? this.themeColorId,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       cityName: cityName ?? this.cityName,
@@ -94,14 +154,30 @@ class AppSettingsState {
       notifyEveningAzkar: notifyEveningAzkar ?? this.notifyEveningAzkar,
       adhanReciterId: adhanReciterId ?? this.adhanReciterId,
       playAdhan: playAdhan ?? this.playAdhan,
+      useGlobalReminder: useGlobalReminder ?? this.useGlobalReminder,
+      reminderMinutesGlobal:
+          reminderMinutesGlobal ?? this.reminderMinutesGlobal,
+      reminderMinutesFajr: reminderMinutesFajr ?? this.reminderMinutesFajr,
+      reminderMinutesDhuhr: reminderMinutesDhuhr ?? this.reminderMinutesDhuhr,
+      reminderMinutesAsr: reminderMinutesAsr ?? this.reminderMinutesAsr,
+      reminderMinutesMaghrib:
+          reminderMinutesMaghrib ?? this.reminderMinutesMaghrib,
+      reminderMinutesIsha: reminderMinutesIsha ?? this.reminderMinutesIsha,
+      notifyPostPrayerDhikr:
+          notifyPostPrayerDhikr ?? this.notifyPostPrayerDhikr,
+      postPrayerDhikrDelayMinutes:
+          postPrayerDhikrDelayMinutes ?? this.postPrayerDhikrDelayMinutes,
     );
   }
 }
 
 class SettingsNotifier extends StateNotifier<AppSettingsState> {
   final StorageService _storage;
+  final AdhanAudioService _adhanAudio;
 
-  SettingsNotifier(this._storage) : super(const AppSettingsState()) {
+  SettingsNotifier(this._storage, {AdhanAudioService? adhanAudio})
+      : _adhanAudio = adhanAudio ?? AdhanAudioService.instance,
+        super(const AppSettingsState()) {
     _loadSettings();
   }
 
@@ -110,8 +186,10 @@ class SettingsNotifier extends StateNotifier<AppSettingsState> {
     final method =
         _storage.getSetting<String>('calculationMethod', defaultValue: 'UmmAlQura') ??
             'UmmAlQura';
-    final themeModeStr =
-        _storage.getSetting<String>('themeMode', defaultValue: 'system') ?? 'system';
+    final themeColorId =
+        _storage.getSetting<String>('themeColorId', defaultValue: 'green') ?? 'green';
+    // Sync the global palette singleton early so first-frame widgets pick it up.
+    ActivePalette.set(AppPalettes.byId(themeColorId));
     final latitude = _storage.getSetting<double>('latitude');
     final longitude = _storage.getSetting<double>('longitude');
     final cityName = _storage.getSetting<String>('cityName');
@@ -134,13 +212,43 @@ class SettingsNotifier extends StateNotifier<AppSettingsState> {
 
     // Adhan settings
     final adhanReciterId =
-        _storage.getSetting<String>('adhanReciterId', defaultValue: 'mishary') ?? 'mishary';
+        _storage.getSetting<String>('adhanReciterId', defaultValue: 'adhan1') ?? 'adhan1';
     final playAdhan = _storage.getSetting<bool>('playAdhan', defaultValue: true) ?? true;
+
+    // Pre-prayer reminder settings
+    final useGlobalReminder =
+        _storage.getSetting<bool>('useGlobalReminder', defaultValue: true) ??
+            true;
+    final reminderMinutesGlobal = _storage.getSetting<int>(
+            'reminderMinutesGlobal',
+            defaultValue: 15) ??
+        15;
+    final reminderMinutesFajr =
+        _storage.getSetting<int>('reminderMinutesFajr', defaultValue: 15) ?? 15;
+    final reminderMinutesDhuhr =
+        _storage.getSetting<int>('reminderMinutesDhuhr', defaultValue: 15) ?? 15;
+    final reminderMinutesAsr =
+        _storage.getSetting<int>('reminderMinutesAsr', defaultValue: 15) ?? 15;
+    final reminderMinutesMaghrib = _storage.getSetting<int>(
+            'reminderMinutesMaghrib',
+            defaultValue: 15) ??
+        15;
+    final reminderMinutesIsha =
+        _storage.getSetting<int>('reminderMinutesIsha', defaultValue: 15) ?? 15;
+    final notifyPostPrayerDhikr = _storage.getSetting<bool>(
+            'notifyPostPrayerDhikr',
+            defaultValue: true) ??
+        true;
+    final postPrayerDhikrDelayMinutes = _storage.getSetting<int>(
+            'postPrayerDhikrDelayMinutes',
+            defaultValue: 5) ??
+        5;
 
     state = AppSettingsState(
       fontSize: fontSize,
       calculationMethod: method,
-      themeMode: _themeModeFromString(themeModeStr),
+      themeMode: ThemeMode.light,
+      themeColorId: themeColorId,
       latitude: latitude,
       longitude: longitude,
       cityName: cityName,
@@ -156,6 +264,15 @@ class SettingsNotifier extends StateNotifier<AppSettingsState> {
       notifyEveningAzkar: notifyEveningAzkar,
       adhanReciterId: adhanReciterId,
       playAdhan: playAdhan,
+      useGlobalReminder: useGlobalReminder,
+      reminderMinutesGlobal: reminderMinutesGlobal,
+      reminderMinutesFajr: reminderMinutesFajr,
+      reminderMinutesDhuhr: reminderMinutesDhuhr,
+      reminderMinutesAsr: reminderMinutesAsr,
+      reminderMinutesMaghrib: reminderMinutesMaghrib,
+      reminderMinutesIsha: reminderMinutesIsha,
+      notifyPostPrayerDhikr: notifyPostPrayerDhikr,
+      postPrayerDhikrDelayMinutes: postPrayerDhikrDelayMinutes,
     );
   }
 
@@ -169,9 +286,14 @@ class SettingsNotifier extends StateNotifier<AppSettingsState> {
     await _storage.putSetting('calculationMethod', method);
   }
 
-  Future<void> setThemeMode(ThemeMode mode) async {
-    state = state.copyWith(themeMode: mode);
-    await _storage.putSetting('themeMode', _themeModeToString(mode));
+  /// Switch the app's accent palette. Updates the global [ActivePalette] so
+  /// every `AppColors.primary`/`secondary` getter reflects the change, then
+  /// rebuilds [state] so [MaterialApp] picks up a new theme.
+  Future<void> setThemeColor(String paletteId) async {
+    if (state.themeColorId == paletteId) return;
+    ActivePalette.set(AppPalettes.byId(paletteId));
+    state = state.copyWith(themeColorId: paletteId);
+    await _storage.putSetting('themeColorId', paletteId);
   }
 
   Future<void> setLocation(double lat, double lon,
@@ -228,6 +350,15 @@ class SettingsNotifier extends StateNotifier<AppSettingsState> {
       notifyEveningAzkar: state.notifyEveningAzkar,
       adhanReciterId: state.adhanReciterId,
       playAdhan: state.playAdhan,
+      useGlobalReminder: state.useGlobalReminder,
+      reminderMinutesGlobal: state.reminderMinutesGlobal,
+      reminderMinutesFajr: state.reminderMinutesFajr,
+      reminderMinutesDhuhr: state.reminderMinutesDhuhr,
+      reminderMinutesAsr: state.reminderMinutesAsr,
+      reminderMinutesMaghrib: state.reminderMinutesMaghrib,
+      reminderMinutesIsha: state.reminderMinutesIsha,
+      notifyPostPrayerDhikr: state.notifyPostPrayerDhikr,
+      postPrayerDhikrDelayMinutes: state.postPrayerDhikrDelayMinutes,
     );
     await _storage.putSetting('latitude', lat);
     await _storage.putSetting('longitude', lon);
@@ -275,6 +406,11 @@ class SettingsNotifier extends StateNotifier<AppSettingsState> {
   }
 
   Future<void> setAdhanReciter(String reciterId) async {
+    if (state.adhanReciterId == reciterId) return;
+    // Drop the cached MP3s for the previous reciter so the next reschedule
+    // re-downloads the newly selected reciter's audio for both notification
+    // tap-playback and the native alarm-triggered playback.
+    await _adhanAudio.clearCache();
     state = state.copyWith(adhanReciterId: reciterId);
     await _storage.putSetting('adhanReciterId', reciterId);
   }
@@ -282,6 +418,44 @@ class SettingsNotifier extends StateNotifier<AppSettingsState> {
   Future<void> setPlayAdhan(bool value) async {
     state = state.copyWith(playAdhan: value);
     await _storage.putSetting('playAdhan', value);
+  }
+
+  Future<void> setUseGlobalReminder(bool value) async {
+    state = state.copyWith(useGlobalReminder: value);
+    await _storage.putSetting('useGlobalReminder', value);
+  }
+
+  Future<void> setReminderMinutes(String prayer, int minutes) async {
+    switch (prayer) {
+      case 'global':
+        state = state.copyWith(reminderMinutesGlobal: minutes);
+        await _storage.putSetting('reminderMinutesGlobal', minutes);
+      case 'fajr':
+        state = state.copyWith(reminderMinutesFajr: minutes);
+        await _storage.putSetting('reminderMinutesFajr', minutes);
+      case 'dhuhr':
+        state = state.copyWith(reminderMinutesDhuhr: minutes);
+        await _storage.putSetting('reminderMinutesDhuhr', minutes);
+      case 'asr':
+        state = state.copyWith(reminderMinutesAsr: minutes);
+        await _storage.putSetting('reminderMinutesAsr', minutes);
+      case 'maghrib':
+        state = state.copyWith(reminderMinutesMaghrib: minutes);
+        await _storage.putSetting('reminderMinutesMaghrib', minutes);
+      case 'isha':
+        state = state.copyWith(reminderMinutesIsha: minutes);
+        await _storage.putSetting('reminderMinutesIsha', minutes);
+    }
+  }
+
+  Future<void> setNotifyPostPrayerDhikr(bool value) async {
+    state = state.copyWith(notifyPostPrayerDhikr: value);
+    await _storage.putSetting('notifyPostPrayerDhikr', value);
+  }
+
+  Future<void> setPostPrayerDhikrDelayMinutes(int minutes) async {
+    state = state.copyWith(postPrayerDhikrDelayMinutes: minutes);
+    await _storage.putSetting('postPrayerDhikrDelayMinutes', minutes);
   }
 
   Future<void> setNotificationToggle(String key, bool value) async {
@@ -310,35 +484,23 @@ class SettingsNotifier extends StateNotifier<AppSettingsState> {
     }
   }
 
-  static ThemeMode _themeModeFromString(String value) {
-    switch (value) {
-      case 'light':
-        return ThemeMode.light;
-      case 'dark':
-        return ThemeMode.dark;
-      default:
-        return ThemeMode.system;
-    }
-  }
-
-  static String _themeModeToString(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return 'light';
-      case ThemeMode.dark:
-        return 'dark';
-      case ThemeMode.system:
-        return 'system';
-    }
-  }
 }
 
 final settingsProvider =
     StateNotifierProvider<SettingsNotifier, AppSettingsState>((ref) {
-  return SettingsNotifier(StorageService.instance);
+  return SettingsNotifier(
+    ref.watch(storageServiceProvider),
+    adhanAudio: ref.watch(adhanAudioServiceProvider),
+  );
 });
 
-/// Convenience provider for theme mode — used by app.dart
-final themeModeProvider = Provider<ThemeMode>((ref) {
-  return ref.watch(settingsProvider).themeMode;
+/// Currently active palette derived from the persisted [themeColorId].
+/// Watching this rebuilds [MaterialApp.theme] when the user picks a color.
+final activePaletteProvider = Provider<ThemePalette>((ref) {
+  final id = ref.watch(settingsProvider.select((s) => s.themeColorId));
+  final palette = AppPalettes.byId(id);
+  // Keep the global singleton in sync so non-Riverpod call sites
+  // (`AppColors.primary`, etc.) see the same palette.
+  ActivePalette.set(palette);
+  return palette;
 });

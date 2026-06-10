@@ -7,6 +7,7 @@ import '../domain/models/azkar_category.dart';
 
 class AzkarLocalSource {
   List<AzkarCategory>? _cachedCategories;
+  Map<String, AzkarCategory>? _categoryById;
 
   Future<List<AzkarCategory>> loadCategories() async {
     if (_cachedCategories != null) return _cachedCategories!;
@@ -18,15 +19,14 @@ class AzkarLocalSource {
     _cachedCategories = jsonList
         .map((e) => AzkarCategory.fromJson(e as Map<String, dynamic>))
         .toList();
+    // Id → category lookup built once alongside the list, so repeated
+    // getCategoryById calls stay O(1) as the catalog grows.
+    _categoryById = {for (final c in _cachedCategories!) c.id: c};
     return _cachedCategories!;
   }
 
   Future<AzkarCategory?> getCategoryById(String id) async {
-    final categories = await loadCategories();
-    try {
-      return categories.firstWhere((c) => c.id == id);
-    } catch (_) {
-      return null;
-    }
+    await loadCategories();
+    return _categoryById?[id];
   }
 }

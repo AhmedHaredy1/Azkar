@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../data/duas_local_source.dart';
 import '../../data/duas_repository_impl.dart';
@@ -27,23 +28,23 @@ final duaCategoryProvider = FutureProvider.family<DuaCategory?, String>((ref, id
 // ──────────────────────────────────────────────
 
 class DuaFavoritesNotifier extends StateNotifier<Set<String>> {
-  DuaFavoritesNotifier() : super({}) {
+  final StorageService _storage;
+
+  DuaFavoritesNotifier(this._storage) : super({}) {
     _loadFavorites();
   }
 
-  static const String _hiveKey = 'dua_favorites';
+  static const String _hiveKey = StorageKeys.duaFavorites;
 
   void _loadFavorites() {
-    final storage = StorageService.instance;
-    final saved = storage.favoritesBox.get(_hiveKey);
+    final saved = _storage.favoritesBox.get(_hiveKey);
     if (saved != null && saved is List) {
       state = saved.cast<String>().toSet();
     }
   }
 
   Future<void> _saveFavorites() async {
-    final storage = StorageService.instance;
-    await storage.favoritesBox.put(_hiveKey, state.toList());
+    await _storage.favoritesBox.put(_hiveKey, state.toList());
   }
 
   /// Toggle favorite status for a dua. Key = "categoryId:duaId"
@@ -65,7 +66,7 @@ class DuaFavoritesNotifier extends StateNotifier<Set<String>> {
 
 final duaFavoritesProvider =
     StateNotifierProvider<DuaFavoritesNotifier, Set<String>>((ref) {
-  return DuaFavoritesNotifier();
+  return DuaFavoritesNotifier(ref.watch(storageServiceProvider));
 });
 
 /// Provides all favorited Dua items across all categories

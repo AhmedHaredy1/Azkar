@@ -58,7 +58,7 @@ class QiblaScreen extends ConsumerWidget {
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.warning_amber_rounded,
                               color: AppColors.secondary,
                               size: 28,
@@ -127,7 +127,7 @@ class QiblaScreen extends ConsumerWidget {
             loading: () => Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const CircularProgressIndicator(color: AppColors.primary),
+                CircularProgressIndicator(color: AppColors.primary),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
                   'جاري تحديد الاتجاه...',

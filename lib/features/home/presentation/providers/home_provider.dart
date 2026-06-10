@@ -2,8 +2,11 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:hijri/hijri_calendar.dart';
 
+import '../../../../core/di/service_providers.dart';
+import '../../../../core/utils/arabic_number_utils.dart';
 import '../../../prayer_times/presentation/providers/prayer_times_provider.dart';
 import '../../../prayer_times/domain/models/prayer_time.dart';
 import '../../../quran/presentation/providers/quran_provider.dart';
@@ -54,30 +57,24 @@ final greetingProvider = Provider<GreetingState>((ref) {
   // We'll use the actual Dhuhr time if available, otherwise default noon = 12
   final prayerTimesAsync = ref.watch(prayerTimesProvider);
 
-  int dhuhrHour = 12; // default
+  // Defaults used until prayer times load. Evening Azkar start after Asr,
+  // Morning Azkar start after Fajr.
+  int dhuhrHour = 12;
+  int asrHour = 15;
+  int fajrHour = 5;
+  int ishaHour = 20;
   prayerTimesAsync.whenData((prayers) {
     for (final p in prayers) {
-      if (p.name == 'Dhuhr') {
-        dhuhrHour = p.time.hour;
-        break;
+      switch (p.name) {
+        case 'Dhuhr':
+          dhuhrHour = p.time.hour;
+        case 'Asr':
+          asrHour = p.time.hour;
+        case 'Fajr':
+          fajrHour = p.time.hour;
+        case 'Isha':
+          ishaHour = p.time.hour;
       }
-    }
-  });
-
-  // Evening Azkar start after Asr, Morning Azkar start after Fajr.
-  int asrHour = 15; // default
-  int fajrHour = 5; // default
-  prayerTimesAsync.whenData((prayers) {
-    for (final p in prayers) {
-      if (p.name == 'Asr') asrHour = p.time.hour;
-      if (p.name == 'Fajr') fajrHour = p.time.hour;
-    }
-  });
-
-  int ishaHour = 20; // default
-  prayerTimesAsync.whenData((prayers) {
-    for (final p in prayers) {
-      if (p.name == 'Isha') ishaHour = p.time.hour;
     }
   });
 
@@ -181,11 +178,15 @@ final hijriDateProvider = Provider<HijriDateState>((ref) {
       hijri.hMonth >= 1 && hijri.hMonth <= 12
           ? hijriMonths[hijri.hMonth - 1]
           : '';
-  final hijriFormatted = '${hijri.hDay} $hijriMonth ${hijri.hYear} هـ';
+  final hDay = ArabicNumberUtils.toEasternArabic(hijri.hDay);
+  final hYear = ArabicNumberUtils.toEasternArabic(hijri.hYear);
+  final hijriFormatted = '$hDay $hijriMonth $hYear هـ';
 
   final dayName = dayNames[now.weekday - 1];
   final gregMonth = gregorianMonths[now.month - 1];
-  final gregorianFormatted = '$dayName ${now.day} $gregMonth ${now.year}';
+  final gDay = ArabicNumberUtils.toEasternArabic(now.day);
+  final gYear = ArabicNumberUtils.toEasternArabic(now.year);
+  final gregorianFormatted = '$dayName $gDay $gregMonth $gYear';
 
   return HijriDateState(
     hijriFormatted: hijriFormatted,
@@ -304,6 +305,7 @@ class PrayerCountdownNotifier extends StateNotifier<PrayerCountdownState> {
       remaining: remaining.isNegative ? Duration.zero : remaining,
       hasData: true,
     );
+    _pushWidget(state);
   }
 
   void _startTimer(PrayerTime prayer) {
@@ -326,7 +328,37 @@ class PrayerCountdownNotifier extends StateNotifier<PrayerCountdownState> {
         remaining: remaining,
         hasData: true,
       );
+      // Refresh home-screen widget once per minute so countdown stays live
+      // without hammering SharedPreferences every second.
+      if (remaining.inSeconds % 60 == 0) {
+        _pushWidget(state);
+      }
     });
+  }
+
+  static const _widgetDhikrs = <String>[
+    'سبحان الله وبحمده، سبحان الله العظيم',
+    'لا إله إلا الله وحده لا شريك له',
+    'اللهم صلِّ وسلِّم على نبينا محمد',
+    'أستغفر الله العظيم وأتوب إليه',
+    'الحمد لله رب العالمين',
+  ];
+
+  void _pushWidget(PrayerCountdownState s) {
+    if (!s.hasData) return;
+    final dayOfYear = _dayOfYear(DateTime.now());
+    final dhikr = _widgetDhikrs[dayOfYear % _widgetDhikrs.length];
+    _ref.read(homeWidgetServiceProvider).update(
+          nextPrayerName: s.prayerNameAr,
+          nextPrayerTime: s.formattedTime,
+          countdown: s.formattedCountdown,
+          dhikr: dhikr,
+        );
+  }
+
+  int _dayOfYear(DateTime d) {
+    final start = DateTime(d.year);
+    return d.difference(start).inDays;
   }
 
   @override
@@ -471,4 +503,69 @@ final azkarTimeWindowProvider = Provider<AzkarTimeWindow>((ref) {
     return AzkarTimeWindow.wakeUp;
   }
   return AzkarTimeWindow.sleep;
+});
+
+// ──────────────────────────────────────────────
+// City Label Provider
+// ──────────────────────────────────────────────
+
+class CityLabel {
+  final String? city;
+  final String? country;
+  const CityLabel({this.city, this.country});
+
+  bool get hasAny => (city?.isNotEmpty ?? false) || (country?.isNotEmpty ?? false);
+
+  String get display {
+    if (city != null && city!.isNotEmpty && country != null && country!.isNotEmpty) {
+      return '$city، $country';
+    }
+    return city?.isNotEmpty == true ? city! : (country ?? '');
+  }
+}
+
+/// Resolves a human-readable "City, Country" label for the home screen pill.
+///
+/// 1. If settings already have a cached cityName/countryName (set by onboarding
+///    or the settings screen), return them immediately — no network call.
+/// 2. Otherwise, reverse-geocode the user's coordinates from [locationProvider]
+///    and persist the result back into settings so subsequent reads are instant.
+final cityLabelProvider = FutureProvider<CityLabel>((ref) async {
+  final cachedCity = ref.watch(settingsProvider.select((s) => s.cityName));
+  final cachedCountry = ref.watch(settingsProvider.select((s) => s.countryName));
+  if ((cachedCity?.isNotEmpty ?? false) || (cachedCountry?.isNotEmpty ?? false)) {
+    return CityLabel(city: cachedCity, country: cachedCountry);
+  }
+
+  final position = await ref.watch(locationProvider.future);
+  try {
+    await setLocaleIdentifier('ar');
+    final placemarks = await placemarkFromCoordinates(
+      position.latitude,
+      position.longitude,
+    );
+    if (placemarks.isEmpty) return const CityLabel();
+    final p = placemarks.first;
+    final city = p.locality?.isNotEmpty == true
+        ? p.locality
+        : (p.subAdministrativeArea?.isNotEmpty == true
+            ? p.subAdministrativeArea
+            : p.administrativeArea);
+    final country = p.country;
+
+    // Persist so we don't re-geocode on every app start.
+    if ((city?.isNotEmpty ?? false) || (country?.isNotEmpty ?? false)) {
+      unawaited(
+        ref.read(settingsProvider.notifier).setLocation(
+              position.latitude,
+              position.longitude,
+              city: city,
+              country: country,
+            ),
+      );
+    }
+    return CityLabel(city: city, country: country);
+  } catch (_) {
+    return const CityLabel();
+  }
 });

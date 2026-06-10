@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../domain/models/quran_page.dart';
 import '../providers/quran_audio_provider.dart';
 import '../providers/quran_provider.dart';
+import 'tafsir_sheet.dart';
 
 class MushafPageWidget extends ConsumerWidget {
   final QuranPage page;
@@ -17,11 +18,11 @@ class MushafPageWidget extends ConsumerWidget {
     this.onToggleControls,
   });
 
-  static const _mushafBg = Color(0xFFFFF8EC);
-  static const _frameColor = Color(0xFFB8860B);
-  static const _headerBg = Color(0xFFF5E6C8);
-  static const _textColor = Color(0xFF1C1C1C);
-  static const _ayahMarkerColor = Color(0xFF8B6914);
+  static const _mushafBg = Color(0xFFFBF7EA);
+  static const _frameColor = Color(0xFFB8892A);
+  static const _headerBg = Color(0xFFF5ECD9);
+  static const _textColor = Color(0xFF141814);
+  static const _ayahMarkerColor = Color(0xFFB8892A);
   static const _highlightColor = Color(0xFF90CAF9);
 
   String _toArabicNumber(int number) {
@@ -64,7 +65,7 @@ class MushafPageWidget extends ConsumerWidget {
                     color: _frameColor.withValues(alpha: 0.4),
                   ),
                   Expanded(
-                    child: _buildTextArea(ref, highlighted),
+                    child: _buildTextArea(context, ref, highlighted),
                   ),
                   Container(
                     height: 1,
@@ -112,7 +113,8 @@ class MushafPageWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildTextArea(WidgetRef ref, HighlightedAyah? highlighted) {
+  Widget _buildTextArea(
+      BuildContext context, WidgetRef ref, HighlightedAyah? highlighted) {
     final totalTextLength = page.sections.fold<int>(
       0,
       (s, sec) => s + sec.ayahs.fold<int>(0, (a, ay) => a + ay.text.length),
@@ -163,6 +165,19 @@ class MushafPageWidget extends ConsumerWidget {
           ),
           recognizer: TapGestureRecognizer()
             ..onTap = () {
+              final current = ref.read(highlightedAyahProvider);
+              final alreadyHighlighted = current != null &&
+                  current.surahNumber == section.surahNumber &&
+                  current.ayahNumber == ayah.ayahNumber;
+              if (alreadyHighlighted) {
+                // Second tap on the same ayah — show tafsir.
+                showTafsirSheet(
+                  context,
+                  surah: section.surahNumber,
+                  ayah: ayah.ayahNumber,
+                );
+                return;
+              }
               // Highlight the ayah
               ref.read(highlightedAyahProvider.notifier).setHighlight(
                     section.surahNumber,

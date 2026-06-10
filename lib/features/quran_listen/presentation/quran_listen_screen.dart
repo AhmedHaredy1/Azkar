@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -28,6 +29,13 @@ class QuranListenScreen extends ConsumerWidget {
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnPrimary,
         centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: 'التلاوات المحملة',
+            icon: const Icon(Icons.download_for_offline_outlined),
+            onPressed: () => context.push('/quran-downloads'),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -55,6 +63,46 @@ class QuranListenScreen extends ConsumerWidget {
               ),
               error: (_, _) => const SizedBox(),
             ),
+          ),
+
+          // Downloaded-only toggle (only when the user has any downloads)
+          Consumer(
+            builder: (context, ref, _) {
+              final hasDownloads = ref.watch(hasAnyDownloadedProvider);
+              if (!hasDownloads) return const SizedBox.shrink();
+              final downloadedOnly =
+                  ref.watch(listenFilterProvider).downloadedOnly;
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.xs,
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.download_done,
+                        size: 18, color: AppColors.primary),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'عرض التلاوات المحملة فقط',
+                        style: GoogleFonts.cairo(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    Switch(
+                      value: downloadedOnly,
+                      activeThumbColor: AppColors.primary,
+                      onChanged: (v) => ref
+                          .read(listenFilterProvider.notifier)
+                          .setDownloadedOnly(v),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
 
           // Moshaf type filter chips
@@ -101,9 +149,13 @@ class QuranListenScreen extends ConsumerWidget {
             child: filteredAsync.when(
               data: (reciters) {
                 if (reciters.isEmpty) {
+                  final emptyMsg = filter.downloadedOnly
+                      ? 'لم تقم بتحميل هذه السورة لأي قارئ بعد'
+                      : 'لا يوجد قراء لهذه السورة بهذا المصحف';
                   return Center(
                     child: Text(
-                      'لا يوجد قراء لهذه السورة بهذا المصحف',
+                      emptyMsg,
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.cairo(
                         fontSize: 16,
                         color: AppColors.textSecondary,
@@ -141,7 +193,7 @@ class QuranListenScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(
+              loading: () => Center(
                 child: CircularProgressIndicator(color: AppColors.primary),
               ),
               error: (error, _) => Center(
@@ -341,7 +393,7 @@ class _ReciterTile extends StatelessWidget {
           ),
         ),
         trailing: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(

@@ -1,171 +1,150 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/tokens.dart';
-import 'providers/home_provider.dart';
 import 'widgets/azkar_shortcut_card.dart';
 import 'widgets/daily_ayah_card.dart';
-import 'widgets/prayer_countdown_card.dart';
+import 'widgets/home_hero_card.dart';
 import 'widgets/quick_access_grid.dart';
+import 'widgets/streak_mini_card.dart';
 
+/// Home screen — two-zone layout matching the Rafeeq Al-Muslim design.
+///
+/// Top zone (cream): hero card (location + dates + logo + next prayer +
+/// prayer chips) and the time-aware azkar shortcut card.
+/// Bottom zone (deep green): الأقسام grid + Daily Ayah + Streak — all
+/// sections kept and reachable by scrolling.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final greeting = ref.watch(greetingProvider);
-    final hijriDate = ref.watch(hijriDateProvider);
-
     return Scaffold(
+      backgroundColor: AppColors.primary,
       body: SafeArea(
+        bottom: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.zero,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _GreetingCard(greeting: greeting, hijriDate: hijriDate),
+              // ── Top zone: cream parchment ──
+              Container(
+                color: AppColors.background,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: const [
+                    HomeHeroCard(),
+                    SizedBox(height: AppSpacing.md),
+                    AzkarShortcutCard(),
+                  ],
+                ),
+              ),
 
-              const SizedBox(height: AppSpacing.lg),
-              const PrayerCountdownCard(),
+              // ── Bottom zone: deep-green sections ──
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(AppRadius.xxl),
+                  ),
+                ),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                  AppSpacing.xl,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _OnGreenSectionHeader(title: 'الأقسام'),
+                    const SizedBox(height: AppSpacing.sm),
+                    const QuickAccessGrid(),
 
-              const SizedBox(height: AppSpacing.lg),
-              const AzkarShortcutCard(),
+                    const SizedBox(height: AppSpacing.lg),
+                    const _OnGreenSectionHeader(title: 'آية اليوم'),
+                    const SizedBox(height: AppSpacing.sm),
+                    const DailyAyahCard(),
 
-              const SizedBox(height: AppSpacing.xl),
-              _SectionHeader(title: 'الأقسام'),
-              const SizedBox(height: AppSpacing.md),
-              const QuickAccessGrid(),
+                    const SizedBox(height: AppSpacing.lg),
+                    _OnGreenSectionHeader(
+                      title: 'نشاطك',
+                      action: 'عرض الكل',
+                      onAction: () => context.push('/azkar-streaks'),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    const StreakMiniCard(),
 
-              const SizedBox(height: AppSpacing.xl),
-              const DailyAyahCard(),
-
-              const SizedBox(height: AppSpacing.lg),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(start: AppSpacing.xs),
-      child: Text(
-        title,
-        style: GoogleFonts.cairo(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
-        ),
-      ),
-    );
-  }
-}
-
-class _GreetingCard extends StatelessWidget {
-  final GreetingState greeting;
-  final HijriDateState hijriDate;
-  const _GreetingCard({required this.greeting, required this.hijriDate});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [AppColors.primary, AppColors.primaryLight],
-        ),
-        borderRadius: const BorderRadius.all(Radius.circular(AppRadius.xl)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.25),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.mosque_rounded,
-                  color: AppColors.secondary, size: 28),
-              const Spacer(),
-              Text(
-                'حصن المسلم',
-                style: GoogleFonts.amiri(
-                  fontSize: 16,
-                  color: Colors.white.withValues(alpha: 0.75),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+        ),
+      ),
+    );
+  }
+}
+
+/// Section header for the green-bg zone — cream/gold title text.
+class _OnGreenSectionHeader extends StatelessWidget {
+  final String title;
+  final String? action;
+  final VoidCallback? onAction;
+
+  const _OnGreenSectionHeader({
+    required this.title,
+    this.action,
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
           Text(
-            greeting.greeting,
+            title,
             style: GoogleFonts.cairo(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              height: 1.2,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: AppColors.secondaryLight,
+              letterSpacing: -0.1,
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            greeting.subtitle,
-            style: GoogleFonts.cairo(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.75),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius:
-                  const BorderRadius.all(Radius.circular(AppRadius.md)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.calendar_today_rounded,
-                    size: 14, color: AppColors.secondary),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  hijriDate.hijriFormatted,
+          if (action != null)
+            GestureDetector(
+              onTap: onAction,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xs,
+                  vertical: 2,
+                ),
+                child: Text(
+                  action!,
                   style: GoogleFonts.cairo(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.secondary,
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.75),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    hijriDate.gregorianFormatted,
-                    textAlign: TextAlign.end,
-                    style: GoogleFonts.cairo(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.65),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );

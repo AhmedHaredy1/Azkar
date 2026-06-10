@@ -8,8 +8,8 @@ class SebhaNotifier extends StateNotifier<SebhaState> {
 
   SebhaNotifier(this._storage)
       : super(SebhaState(
-          totalCount: StorageService.instance.getSebhaTotal(),
-          selectedDhikr: StorageService.instance.getSebhaDhikr(),
+          totalCount: _storage.getSebhaTotal(),
+          selectedDhikr: _storage.getSebhaDhikr(),
         ));
 
   void increment() {
@@ -42,5 +42,5 @@ class SebhaNotifier extends StateNotifier<SebhaState> {
 }
 
 final sebhaProvider = StateNotifierProvider<SebhaNotifier, SebhaState>((ref) {
-  return SebhaNotifier(StorageService.instance);
+  return SebhaNotifier(ref.watch(storageServiceProvider));
 });

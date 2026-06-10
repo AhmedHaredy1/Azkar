@@ -3,150 +3,163 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../core/utils/arabic_number_utils.dart';
 import '../../domain/models/azkar_category.dart';
 
+/// Minimal category row — white surface, hairline border, soft icon tint.
+/// Alternates between green (primarySoft/primary) and gold
+/// (secondarySoft/secondary) tints based on `index` to match the
+/// Claude Design prototype's variety.
 class AzkarCategoryCard extends StatelessWidget {
   final AzkarCategory category;
+  final int index;
   final VoidCallback onTap;
 
   const AzkarCategoryCard({
     super.key,
     required this.category,
     required this.onTap,
+    this.index = 0,
   });
 
-  (IconData, Color) _getIconAndColor() {
+  (IconData, String) _iconAndSubtitle() {
     final id = category.id.toLowerCase();
-    if (id.contains('morning') || id.contains('صباح')) {
-      return (Icons.wb_sunny_outlined, const Color(0xFFF57F17));
+    if (id.contains('morning') || category.nameAr.contains('الصباح')) {
+      return (Icons.wb_sunny_outlined, 'بعد صلاة الفجر');
     }
-    if (id.contains('evening') || id.contains('مساء')) {
-      return (Icons.nights_stay_outlined, const Color(0xFF283593));
+    if (id.contains('evening') || category.nameAr.contains('المساء')) {
+      return (Icons.nights_stay_outlined, 'بعد صلاة العصر');
     }
-    if (id.contains('sleep') || id.contains('نوم')) {
-      return (Icons.bedtime_outlined, const Color(0xFF4527A0));
+    if (id.contains('sleep') || category.nameAr.contains('النوم')) {
+      return (Icons.bedtime_outlined, 'قبل النوم');
     }
-    if (id.contains('waking') || id.contains('استيقاظ')) {
-      return (Icons.alarm_outlined, const Color(0xFFEF6C00));
+    if (id.contains('waking') || category.nameAr.contains('الاستيقاظ')) {
+      return (Icons.brightness_4_outlined, 'عند الاستيقاظ');
     }
-    if (id.contains('prayer') || id.contains('صلاة')) {
-      return (Icons.mosque_outlined, const Color(0xFF2E7D32));
+    if (id.contains('prayer') || category.nameAr.contains('الصلاة')) {
+      return (Icons.mosque_outlined, 'بعد كل فريضة');
     }
-    if (id.contains('mosque') || id.contains('مسجد')) {
-      return (Icons.mosque, const Color(0xFF00695C));
+    if (id.contains('mosque') || category.nameAr.contains('المسجد')) {
+      return (Icons.place_outlined, 'عند دخول المسجد');
     }
-    if (id.contains('home') || id.contains('منزل')) {
-      return (Icons.home_outlined, const Color(0xFF5D4037));
+    if (id.contains('home') || category.nameAr.contains('المنزل')) {
+      return (Icons.home_outlined, 'عند دخول البيت');
     }
-    if (id.contains('food') || id.contains('طعام')) {
-      return (Icons.restaurant_outlined, const Color(0xFFD84315));
+    if (id.contains('food') || category.nameAr.contains('الطعام')) {
+      return (Icons.restaurant_outlined, 'عند الأكل والشرب');
     }
-    if (id.contains('travel') || id.contains('سفر')) {
-      return (Icons.flight_outlined, const Color(0xFF0277BD));
+    if (id.contains('travel') || category.nameAr.contains('السفر')) {
+      return (Icons.flight_outlined, 'عند السفر');
     }
-    if (id.contains('clothes') || id.contains('لبس')) {
-      return (Icons.checkroom_outlined, const Color(0xFF6A1B9A));
+    if (id.contains('clothes') || category.nameAr.contains('اللباس')) {
+      return (Icons.checkroom_outlined, 'عند لبس الثوب');
     }
-    if (id.contains('bathroom') || id.contains('خلاء')) {
-      return (Icons.water_drop_outlined, const Color(0xFF00838F));
+    if (id.contains('bathroom') || category.nameAr.contains('الخلاء')) {
+      return (Icons.water_drop_outlined, 'عند دخول وخروج الخلاء');
     }
-    if (id.contains('adhan') || id.contains('أذان')) {
-      return (Icons.volume_up_outlined, const Color(0xFF1565C0));
+    if (id.contains('adhan') || category.nameAr.contains('الأذان')) {
+      return (Icons.volume_up_outlined, 'عند سماع الأذان');
     }
-    if (id.contains('istikharah') || id.contains('استخارة')) {
-      return (Icons.star_outline, const Color(0xFFAD1457));
+    if (id.contains('istikharah') || category.nameAr.contains('الاستخارة')) {
+      return (Icons.star_outline, 'دعاء الاستخارة');
     }
-    if (id.contains('anxiety') || id.contains('كرب') || id.contains('هم')) {
-      return (Icons.healing_outlined, const Color(0xFF00897B));
+    if (category.nameAr.contains('كرب') || category.nameAr.contains('هم')) {
+      return (Icons.healing_outlined, 'عند الكرب والهم');
     }
-    if (id.contains('ruqyah') || id.contains('رقية')) {
-      return (Icons.shield_outlined, const Color(0xFF4E342E));
+    if (id.contains('ruqyah') || category.nameAr.contains('الرقية')) {
+      return (Icons.shield_outlined, 'رقية شرعية');
     }
-    if (id.contains('general') || id.contains('عامة')) {
-      return (Icons.auto_awesome_outlined, const Color(0xFF37474F));
-    }
-    return (Icons.auto_stories_outlined, AppColors.primary);
-  }
-
-  String _toArabicNumber(int number) {
-    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return number
-        .toString()
-        .split('')
-        .map((d) => arabicDigits[int.parse(d)])
-        .join();
+    return (Icons.auto_stories_outlined, 'مجموعة أذكار مختارة');
   }
 
   @override
   Widget build(BuildContext context) {
-    final (icon, color) = _getIconAndColor();
+    final (icon, subtitle) = _iconAndSubtitle();
+    final isGold = index.isEven;
+    final tint = isGold ? AppColors.secondarySoft : AppColors.primarySoft;
+    final iconColor = isGold ? AppColors.secondary : AppColors.primary;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-      elevation: 0,
-      color: AppColors.card,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(
-              color: color.withValues(alpha: 0.12),
-              width: 1,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: 4,
+      ),
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: AppColors.hairline, width: 1),
             ),
-          ),
-          child: Row(
-            children: [
-              // Icon with gradient background
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      color.withValues(alpha: 0.15),
-                      color.withValues(alpha: 0.05),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md + 2,
+              vertical: AppSpacing.md + 2,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: tint,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Icon(icon, size: 20, color: iconColor),
+                ),
+                const SizedBox(width: AppSpacing.md + 2),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category.nameAr,
+                        style: GoogleFonts.cairo(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.cairo(
+                          fontSize: 12,
+                          color: AppColors.ink3,
+                        ),
+                      ),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: color, size: 26),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      category.nameAr,
-                      style: GoogleFonts.cairo(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceSunk,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: Text(
+                    ArabicNumberUtils.toEasternArabic(category.azkarList.length),
+                    style: GoogleFonts.cairo(
+                      fontSize: 12,
+                      color: AppColors.ink3,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${_toArabicNumber(category.azkarList.length)} ذكر',
-                      style: GoogleFonts.cairo(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              Icon(
-                Icons.arrow_back_ios_new,
-                size: 14,
-                color: color.withValues(alpha: 0.5),
-              ),
-            ],
+                const SizedBox(width: AppSpacing.sm),
+                const Icon(
+                  Icons.chevron_left_rounded,
+                  size: 18,
+                  color: AppColors.ink3,
+                ),
+              ],
+            ),
           ),
         ),
       ),

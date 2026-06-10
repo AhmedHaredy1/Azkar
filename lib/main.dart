@@ -1,6 +1,7 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hijri/hijri_calendar.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'app.dart';
@@ -10,6 +11,9 @@ import 'core/services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Render Hijri month names in Arabic (affects HijriCalendar.longMonthName).
+  HijriCalendar.setLocal('ar');
 
   // Initialize Hive for local storage
   await Hive.initFlutter();
@@ -23,7 +27,7 @@ void main() async {
     builder: () => GlobalAudioHandler(),
     config: AudioServiceConfig(
       androidNotificationChannelId: 'com.ahmedharedy.azkar.audio',
-      androidNotificationChannelName: 'حصن المسلم',
+      androidNotificationChannelName: 'رفيق المسلم',
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
       androidNotificationIcon: 'mipmap/ic_launcher',

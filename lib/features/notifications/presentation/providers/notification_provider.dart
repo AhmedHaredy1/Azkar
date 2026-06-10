@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/storage_keys.dart';
+import '../../../../core/di/service_providers.dart';
+import '../../../../core/services/adhan_alarm_scheduler.dart';
 import '../../../../core/services/adhan_audio_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/storage_service.dart';
@@ -18,6 +21,11 @@ const Map<String, int> _prayerNotificationIds = {
 /// Offset added to prayer notification IDs for the 15-min reminder.
 const int _reminderIdOffset = 50;
 
+/// Offset added to prayer notification IDs for the post-prayer dhikr reminder.
+/// Lands at base 150 (e.g. Fajr post-prayer = 100 + 150 = 250). With day
+/// offset × 5 the max id is 284 — comfortably above the azkar range (200–211).
+const int _postPrayerIdOffset = 150;
+
 /// Number of days ahead to schedule prayer notifications. Keeps alarms armed
 /// even if the user doesn't reopen the app for a while (OEM Doze / background
 /// restrictions mean the scheduler only runs when the app is launched or
@@ -35,14 +43,37 @@ const Map<String, String> _prayerNotificationTitles = {
   'Isha': 'حان وقت صلاة العشاء',
 };
 
-/// Maps prayer name to Arabic 15-min reminder body.
-const Map<String, String> _prayerReminderBodies = {
-  'Fajr': 'متبقي ١٥ دقيقة على صلاة الفجر',
-  'Dhuhr': 'متبقي ١٥ دقيقة على صلاة الظهر',
-  'Asr': 'متبقي ١٥ دقيقة على صلاة العصر',
-  'Maghrib': 'متبقي ١٥ دقيقة على صلاة المغرب',
-  'Isha': 'متبقي ١٥ دقيقة على صلاة العشاء',
+/// Maps prayer name to its Arabic display name (used in the dynamic reminder
+/// body so the wording matches whatever lead time the user picked).
+const Map<String, String> _prayerArabicNames = {
+  'Fajr': 'الفجر',
+  'Dhuhr': 'الظهر',
+  'Asr': 'العصر',
+  'Maghrib': 'المغرب',
+  'Isha': 'العشاء',
 };
+
+const List<String> _arabicDigits = [
+  '٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩',
+];
+
+/// Convert an integer to Arabic-Indic digits (e.g. 15 → ١٥).
+String _toArabicNumber(int n) {
+  return n
+      .toString()
+      .split('')
+      .map((c) {
+        final d = int.tryParse(c);
+        return d == null ? c : _arabicDigits[d];
+      })
+      .join();
+}
+
+/// Build the Arabic body string for a pre-prayer reminder.
+String _buildReminderBody(String prayerName, int minutes) {
+  final ar = _prayerArabicNames[prayerName] ?? 'الصلاة';
+  return 'متبقي ${_toArabicNumber(minutes)} دقيقة على صلاة $ar';
+}
 
 /// Maps prayer name to toggle key in settings.
 const Map<String, String> _prayerSettingsKeys = {
@@ -58,12 +89,18 @@ const Map<String, String> _prayerSettingsKeys = {
 class NotificationManager {
   final NotificationService _service;
   final StorageService _storage;
+  final AdhanAudioService _adhanAudio;
+  final AdhanAlarmScheduler _alarmScheduler;
 
   NotificationManager({
     NotificationService? service,
     StorageService? storage,
+    AdhanAudioService? adhanAudio,
+    AdhanAlarmScheduler? alarmScheduler,
   })  : _service = service ?? NotificationService.instance,
-        _storage = storage ?? StorageService.instance;
+        _storage = storage ?? StorageService.instance,
+        _adhanAudio = adhanAudio ?? AdhanAudioService.instance,
+        _alarmScheduler = alarmScheduler ?? AdhanAlarmScheduler.instance;
 
   /// Initialize the notification system.
   /// Call this once during app startup.
@@ -99,7 +136,7 @@ class NotificationManager {
   /// Called when a prayer notification fires while the app is open.
   Future<void> playAdhanIfEnabled(AppSettingsState settings, {bool isFajr = false}) async {
     if (!settings.playAdhan) return;
-    await AdhanAudioService.instance.playAdhan(
+    await _adhanAudio.playAdhan(
       settings.adhanReciterId,
       isFajr: isFajr,
     );
@@ -107,7 +144,7 @@ class NotificationManager {
 
   /// Stop any currently playing Adhan.
   Future<void> stopAdhan() async {
-    await AdhanAudioService.instance.stop();
+    await _adhanAudio.stop();
   }
 
   /// Reschedule ALL notifications based on current settings and prayer times.
@@ -122,14 +159,26 @@ class NotificationManager {
       return;
     }
 
-    // Check permission
+    // Ensure permission — on Android 13+ this is denied by default and nothing
+    // fires until granted. Silent early-return here was the primary reason
+    // the user never received any alerts; now we prompt instead of giving up.
     final hasPermission = await _service.isPermissionGranted();
     if (!hasPermission) {
-      return;
+      final granted = await _service.requestPermission();
+      if (!granted) return;
+      // Also grab exact-alarm + battery-opt permissions once we're in prompt
+      // mode, so the first-launch flow only asks once.
+      await _service.requestExactAlarmPermission();
+      if (!await _service.isIgnoringBatteryOptimizations()) {
+        await _service.requestIgnoreBatteryOptimizations();
+      }
     }
 
     // Cancel all existing notifications first
     await _service.cancelAllNotifications();
+    // Also cancel any previously scheduled native adhan alarms so a reciter
+    // change or toggle flip doesn't leave the old one armed.
+    await _alarmScheduler.cancelAll();
 
     // Schedule prayer notifications
     await _schedulePrayerNotifications(settings);
@@ -140,23 +189,27 @@ class NotificationManager {
 
   /// Schedule prayer time notifications for today and tomorrow.
   /// Includes both the adhan notification at prayer time and a 15-minute
-  /// reminder before each prayer.
+  /// reminder before each prayer. The adhan audio itself plays in-app when
+  /// the user taps a `prayer_adhan:*` notification — see
+  /// `app.dart _handleNotificationDeepLink`.
   Future<void> _schedulePrayerNotifications(
       AppSettingsState settings) async {
     final repo = PrayerTimesRepositoryImpl();
     repo.setCalculationMethod(settings.calculationMethod);
 
-    // Pre-cache adhan audio file for use as notification sound.
-    String? adhanSoundPath;
-    String? fajrAdhanSoundPath;
-    if (settings.playAdhan) {
-      adhanSoundPath = await AdhanAudioService.instance
-          .cacheAdhanFile(settings.adhanReciterId);
-      fajrAdhanSoundPath = await AdhanAudioService.instance
-          .cacheAdhanFile(settings.adhanReciterId, isFajr: true);
-    }
-
     final now = DateTime.now();
+
+    // Pre-cache the selected adhan MP3 once so every alarm in the horizon can
+    // reference the same local file. Fajr has its own melody for some
+    // reciters, so we cache both. Skipped entirely when the user turned off
+    // adhan playback — the visible notification still fires either way.
+    String? adhanMp3Path;
+    String? fajrAdhanMp3Path;
+    if (settings.playAdhan) {
+      adhanMp3Path = await _adhanAudio.cacheAdhanFile(settings.adhanReciterId);
+      fajrAdhanMp3Path =
+          await _adhanAudio.cacheAdhanFile(settings.adhanReciterId, isFajr: true);
+    }
 
     // Schedule for today (only future prayers) plus the next several days so
     // alarms remain armed even if the user doesn't reopen the app.
@@ -193,35 +246,80 @@ class NotificationManager {
         final timeStr = _formatTime(prayer.time);
 
         // ── Adhan notification at prayer time ──
-        // Use the cached adhan audio as the notification sound when enabled.
-        final soundPath = prayer.name == 'Fajr'
-            ? (fajrAdhanSoundPath ?? adhanSoundPath)
-            : adhanSoundPath;
-
-        await _service.scheduleNotification(
-          id: uniqueId,
-          channelId: NotificationService.prayerChannelId,
-          title: title,
-          body: timeStr,
-          scheduledTime: prayer.time,
-          payload: 'prayer_times',
-          soundFilePath: settings.playAdhan ? soundPath : null,
-        );
-
-        // ── 15-minute reminder before prayer ──
-        final reminderTime =
-            prayer.time.subtract(const Duration(minutes: 15));
-        if (reminderTime.isAfter(now)) {
-          final reminderBody = _prayerReminderBodies[prayer.name] ??
-              'متبقي ١٥ دقيقة على الصلاة';
+        // Fault-tolerant scheduling: one bad time must not abort the whole
+        // horizon, or we risk leaving the user with zero notifications.
+        try {
           await _service.scheduleNotification(
-            id: uniqueId + _reminderIdOffset,
+            id: uniqueId,
             channelId: NotificationService.prayerChannelId,
-            title: 'تذكير بالصلاة',
-            body: reminderBody,
-            scheduledTime: reminderTime,
-            payload: 'prayer_times',
+            title: title,
+            body: timeStr,
+            scheduledTime: prayer.time,
+            payload: 'prayer_adhan:${prayer.name}',
           );
+        } catch (_) {}
+
+        // ── Native adhan playback alarm at prayer time ──
+        // Fires AdhanAlarmReceiver → AdhanPlayerService which plays the
+        // selected reciter's MP3 via MediaPlayer in a foreground service —
+        // works even when the app is killed. Only scheduled when adhan
+        // playback is enabled and the MP3 was successfully cached.
+        final adhanPath =
+            prayer.name == 'Fajr' ? fajrAdhanMp3Path : adhanMp3Path;
+        if (settings.playAdhan && adhanPath != null) {
+          try {
+            await _alarmScheduler.schedule(
+              id: uniqueId,
+              triggerAt: prayer.time,
+              mp3Path: adhanPath,
+              prayer: _prayerArabicNames[prayer.name] ?? prayer.name,
+            );
+          } catch (_) {}
+        }
+
+        // ── Post-prayer dhikr reminder ──
+        // Fires N minutes after the adhan to nudge the user toward the
+        // guided أذكار دبر الصلاة flow. Tapping it deep-links into
+        // /post-prayer-dhikr?prayer=<Name>.
+        if (settings.notifyPostPrayerDhikr &&
+            settings.postPrayerDhikrDelayMinutes > 0) {
+          final postTime = prayer.time.add(
+            Duration(minutes: settings.postPrayerDhikrDelayMinutes),
+          );
+          if (postTime.isAfter(now)) {
+            try {
+              await _service.scheduleNotification(
+                id: uniqueId + _postPrayerIdOffset,
+                channelId: NotificationService.azkarChannelId,
+                title: 'أذكار دبر الصلاة',
+                body: 'لا تنسَ أذكار ما بعد صلاة '
+                    '${_prayerArabicNames[prayer.name] ?? ''}',
+                scheduledTime: postTime,
+                payload: 'post_prayer:${prayer.name}',
+              );
+            } catch (_) {}
+          }
+        }
+
+        // ── Configurable pre-prayer reminder ──
+        // Lead time depends on user settings (global vs. per-prayer); 0 means
+        // the reminder is disabled for that prayer.
+        final leadMinutes = settings.reminderMinutesFor(prayer.name);
+        if (leadMinutes > 0) {
+          final reminderTime =
+              prayer.time.subtract(Duration(minutes: leadMinutes));
+          if (reminderTime.isAfter(now)) {
+            try {
+              await _service.scheduleNotification(
+                id: uniqueId + _reminderIdOffset,
+                channelId: NotificationService.prayerChannelId,
+                title: 'تذكير بالصلاة',
+                body: _buildReminderBody(prayer.name, leadMinutes),
+                scheduledTime: reminderTime,
+                payload: 'prayer_reminder:${prayer.name}',
+              );
+            } catch (_) {}
+          }
         }
       }
     }
@@ -233,11 +331,12 @@ class NotificationManager {
 
     // Morning Azkar reminder
     if (settings.notifyMorningAzkar) {
-      final morningHour = _storage.getSetting<int>('morningAzkarHour',
+      final morningHour = _storage.getSetting<int>(
+              StorageKeys.morningAzkarHour,
               defaultValue: 6) ??
           6;
       final morningMinute = _storage.getSetting<int>(
-              'morningAzkarMinute',
+              StorageKeys.morningAzkarMinute,
               defaultValue: 0) ??
           0;
 
@@ -269,11 +368,12 @@ class NotificationManager {
 
     // Evening Azkar reminder
     if (settings.notifyEveningAzkar) {
-      final eveningHour = _storage.getSetting<int>('eveningAzkarHour',
+      final eveningHour = _storage.getSetting<int>(
+              StorageKeys.eveningAzkarHour,
               defaultValue: 16) ??
           16;
       final eveningMinute = _storage.getSetting<int>(
-              'eveningAzkarMinute',
+              StorageKeys.eveningAzkarMinute,
               defaultValue: 0) ??
           0;
 
@@ -332,8 +432,8 @@ class NotificationManager {
         : hour > 12
             ? hour - 12
             : hour;
-    final minuteStr = minute.toString().padLeft(2, '0');
-    return '$displayHour:$minuteStr $period';
+    final minuteStr = _toArabicNumber(minute).padLeft(2, '٠');
+    return '${_toArabicNumber(displayHour)}:$minuteStr $period';
   }
 
   /// Cancel all prayer notifications (adhan + 15-min reminders) across the
@@ -344,6 +444,7 @@ class NotificationManager {
         final dayId = id + (dayOffset * _dayIdMultiplier);
         await _service.cancelNotification(dayId);
         await _service.cancelNotification(dayId + _reminderIdOffset);
+        await _service.cancelNotification(dayId + _postPrayerIdOffset);
       }
     }
   }
@@ -370,7 +471,12 @@ class NotificationManager {
 
 /// Singleton provider for the NotificationManager.
 final notificationManagerProvider = Provider<NotificationManager>((ref) {
-  return NotificationManager();
+  return NotificationManager(
+    service: ref.watch(notificationServiceProvider),
+    storage: ref.watch(storageServiceProvider),
+    adhanAudio: ref.watch(adhanAudioServiceProvider),
+    alarmScheduler: ref.watch(adhanAlarmSchedulerProvider),
+  );
 });
 
 /// Provider that initializes notifications and schedules them.

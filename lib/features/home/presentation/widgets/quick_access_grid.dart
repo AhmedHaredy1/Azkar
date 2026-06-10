@@ -2,132 +2,235 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 
 class _QuickAccessItem {
   final String label;
   final IconData icon;
   final String route;
-  final Color color;
-  final Color bgColor;
 
   const _QuickAccessItem({
     required this.label,
     required this.icon,
     required this.route,
-    required this.color,
-    required this.bgColor,
   });
 }
 
+/// الأقسام grid — sits on the deep-green home zone. Cream tiles with
+/// gold-soft borders and dark-green icons. Layout follows the mockup:
+///
+///   [3-up] المصحف ، الأذكار ، الأدعية
+///   [3-up] المساجد ، القبلة ، المسبحة
+///   [2-up wide] البث المباشر ، استمع للقرآن
+///   [3-up] أسماء الله ، حديث اليوم ، رمضان
+///
+/// Remaining feature tiles continue below in 3-up rows so every section
+/// stays reachable without removing anything from the home.
 class QuickAccessGrid extends StatelessWidget {
   const QuickAccessGrid({super.key});
 
-  static final _items = <_QuickAccessItem>[
+  // Top-priority tiles — order matches the mockup exactly.
+  static const _row1 = <_QuickAccessItem>[
+    _QuickAccessItem(
+      label: 'المصحف',
+      icon: Icons.menu_book_rounded,
+      route: '/quran',
+    ),
     _QuickAccessItem(
       label: 'الأذكار',
-      icon: Icons.auto_stories,
+      icon: Icons.auto_stories_rounded,
       route: '/azkar',
-      color: const Color(0xFF1B5E20),
-      bgColor: const Color(0xFF1B5E20).withValues(alpha: 0.08),
     ),
     _QuickAccessItem(
       label: 'الأدعية',
-      icon: Icons.volunteer_activism,
+      icon: Icons.volunteer_activism_rounded,
       route: '/duas',
-      color: const Color(0xFF6A1B9A),
-      bgColor: const Color(0xFF6A1B9A).withValues(alpha: 0.08),
+    ),
+  ];
+
+  static const _row2 = <_QuickAccessItem>[
+    _QuickAccessItem(
+      label: 'المساجد',
+      icon: Icons.mosque_rounded,
+      route: '/nearby-mosques',
     ),
     _QuickAccessItem(
-      label: 'المصحف الشريف',
-      icon: Icons.menu_book,
-      route: '/quran',
-      color: const Color(0xFF00695C),
-      bgColor: const Color(0xFF00695C).withValues(alpha: 0.08),
-    ),
-    _QuickAccessItem(
-      label: 'السبحة',
-      icon: Icons.radio_button_checked,
-      route: '/sebha',
-      color: const Color(0xFFE65100),
-      bgColor: const Color(0xFFE65100).withValues(alpha: 0.08),
-    ),
-    _QuickAccessItem(
-      label: 'مواقيت الصلاة',
-      icon: Icons.access_time_filled,
-      route: '/prayer-times',
-      color: const Color(0xFF1565C0),
-      bgColor: const Color(0xFF1565C0).withValues(alpha: 0.08),
-    ),
-    _QuickAccessItem(
-      label: 'اتجاه القبلة',
-      icon: Icons.explore,
+      label: 'القبلة',
+      icon: Icons.explore_rounded,
       route: '/qibla',
-      color: const Color(0xFFC62828),
-      bgColor: const Color(0xFFC62828).withValues(alpha: 0.08),
+    ),
+    _QuickAccessItem(
+      label: 'المسبحة',
+      icon: Icons.radio_button_checked_rounded,
+      route: '/sebha',
+    ),
+  ];
+
+  static const _wideRow = <_QuickAccessItem>[
+    _QuickAccessItem(
+      label: 'البث المباشر',
+      icon: Icons.radio_rounded,
+      route: '/live-radio',
     ),
     _QuickAccessItem(
       label: 'استمع للقرآن',
-      icon: Icons.headphones,
+      icon: Icons.headphones_rounded,
       route: '/quran-listen',
-      color: const Color(0xFF00838F),
-      bgColor: const Color(0xFF00838F).withValues(alpha: 0.08),
+    ),
+  ];
+
+  static const _row4 = <_QuickAccessItem>[
+    _QuickAccessItem(
+      label: 'أسماء الله',
+      icon: Icons.star_outline_rounded,
+      route: '/asma-allah',
     ),
     _QuickAccessItem(
-      label: 'البث المباشر',
-      icon: Icons.radio,
-      route: '/live-radio',
-      color: const Color(0xFF4E342E),
-      bgColor: const Color(0xFF4E342E).withValues(alpha: 0.08),
+      label: 'حديث اليوم',
+      icon: Icons.format_quote_rounded,
+      route: '/hadith-of-day',
+    ),
+    _QuickAccessItem(
+      label: 'رمضان',
+      icon: Icons.brightness_3_rounded,
+      route: '/ramadan',
+    ),
+  ];
+
+  // Remaining tiles — kept so every feature stays reachable from home.
+  static const _rest = <_QuickAccessItem>[
+    _QuickAccessItem(
+      label: 'مواقيت الصلاة',
+      icon: Icons.access_time_filled_rounded,
+      route: '/prayer-times',
+    ),
+    _QuickAccessItem(
+      label: 'كيفية الوضوء',
+      icon: Icons.water_drop_rounded,
+      route: '/wudu',
+    ),
+    _QuickAccessItem(
+      label: 'أذكار دبر الصلاة',
+      icon: Icons.format_list_numbered_rounded,
+      route: '/post-prayer-dhikr',
     ),
     _QuickAccessItem(
       label: 'دليل الحج والعمرة',
-      icon: Icons.mosque,
+      icon: Icons.flight_takeoff_rounded,
       route: '/hajj-umrah',
-      color: const Color(0xFF827717),
-      bgColor: const Color(0xFF827717).withValues(alpha: 0.08),
+    ),
+    _QuickAccessItem(
+      label: 'ختمة القرآن',
+      icon: Icons.bookmark_added_rounded,
+      route: '/khatma',
+    ),
+    _QuickAccessItem(
+      label: 'التقويم الإسلامي',
+      icon: Icons.calendar_month_rounded,
+      route: '/islamic-calendar',
+    ),
+    _QuickAccessItem(
+      label: 'سجلّي',
+      icon: Icons.local_fire_department_rounded,
+      route: '/azkar-streaks',
+    ),
+    _QuickAccessItem(
+      label: 'تحميل التلاوات',
+      icon: Icons.download_for_offline_rounded,
+      route: '/quran-downloads',
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: AppSpacing.md,
-      crossAxisSpacing: AppSpacing.md,
-      childAspectRatio: 1.6,
-      children: _items.map((item) => _QuickAccessCard(item: item)).toList(),
+    return Column(
+      children: [
+        _Row3(items: _row1),
+        const SizedBox(height: AppSpacing.sm),
+        _Row3(items: _row2),
+        const SizedBox(height: AppSpacing.sm),
+        _Row2Wide(items: _wideRow),
+        const SizedBox(height: AppSpacing.sm),
+        _Row3(items: _row4),
+        if (_rest.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          // Remaining tiles in standard 3-up rows.
+          for (var i = 0; i < _rest.length; i += 3) ...[
+            _Row3(items: _rest.sublist(i, (i + 3).clamp(0, _rest.length))),
+            if (i + 3 < _rest.length) const SizedBox(height: AppSpacing.sm),
+          ],
+        ],
+      ],
     );
   }
 }
 
-class _QuickAccessCard extends StatefulWidget {
+/// Three-up tile row with consistent spacing and aspect ratio.
+class _Row3 extends StatelessWidget {
+  final List<_QuickAccessItem> items;
+  const _Row3({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (var i = 0; i < 3; i++) ...[
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 1.05,
+              child: i < items.length
+                  ? _QuickTile(item: items[i])
+                  : const SizedBox.shrink(),
+            ),
+          ),
+          if (i < 2) const SizedBox(width: AppSpacing.sm),
+        ],
+      ],
+    );
+  }
+}
+
+/// Two-up wide tile row (radio + listen-to-Quran).
+class _Row2Wide extends StatelessWidget {
+  final List<_QuickAccessItem> items;
+  const _Row2Wide({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (var i = 0; i < items.length; i++) ...[
+          Expanded(
+            child: SizedBox(
+              height: 56,
+              child: _WideTile(item: items[i]),
+            ),
+          ),
+          if (i < items.length - 1) const SizedBox(width: AppSpacing.sm),
+        ],
+      ],
+    );
+  }
+}
+
+/// Standard square tile — green icon, label below.
+class _QuickTile extends StatefulWidget {
   final _QuickAccessItem item;
-
-  const _QuickAccessCard({required this.item});
+  const _QuickTile({required this.item});
 
   @override
-  State<_QuickAccessCard> createState() => _QuickAccessCardState();
+  State<_QuickTile> createState() => _QuickTileState();
 }
 
-class _QuickAccessCardState extends State<_QuickAccessCard>
+class _QuickTileState extends State<_QuickTile>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 110),
+  );
+  late final Animation<double> _scale = Tween<double>(begin: 1, end: 0.96)
+      .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
   @override
   void dispose() {
@@ -137,7 +240,6 @@ class _QuickAccessCardState extends State<_QuickAccessCard>
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
       onTapUp: (_) {
@@ -146,62 +248,132 @@ class _QuickAccessCardState extends State<_QuickAccessCard>
       },
       onTapCancel: () => _controller.reverse(),
       child: ScaleTransition(
-        scale: _scaleAnimation,
+        scale: _scale,
         child: Container(
           decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: AppRadius.card,
+            color: AppColors.secondarySoft,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             border: Border.all(
-              color: widget.item.color.withValues(alpha: 0.15),
-              width: 1,
+              color: AppColors.primaryDark.withValues(alpha: 0.55),
+              width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: widget.item.color.withValues(alpha: 0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
-          child: Row(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.sm,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(width: AppSpacing.md),
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: widget.item.bgColor,
-                  borderRadius: const BorderRadius.all(
-                    Radius.circular(AppRadius.md),
-                  ),
-                ),
-                child: Icon(
-                  widget.item.icon,
-                  size: 26,
-                  color: widget.item.color,
-                ),
+              Icon(
+                widget.item.icon,
+                size: 30,
+                color: AppColors.primaryDark,
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
+              const SizedBox(height: 6),
+              FittedBox(
+                fit: BoxFit.scaleDown,
                 child: Text(
                   widget.item.label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.start,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
                   style: GoogleFonts.cairo(
-                    fontSize: 13.5,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    height: 1.2,
-                    color: colorScheme.onSurface,
+                    height: 1.15,
+                    color: AppColors.primaryInk,
                   ),
                 ),
               ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 14,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Wide horizontal tile — label + small icon side by side.
+class _WideTile extends StatefulWidget {
+  final _QuickAccessItem item;
+  const _WideTile({required this.item});
+
+  @override
+  State<_WideTile> createState() => _WideTileState();
+}
+
+class _WideTileState extends State<_WideTile>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 110),
+  );
+  late final Animation<double> _scale = Tween<double>(begin: 1, end: 0.97)
+      .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        context.push(widget.item.route);
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: ScaleTransition(
+        scale: _scale,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.secondarySoft,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(
+              color: AppColors.primaryDark.withValues(alpha: 0.55),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
               ),
-              const SizedBox(width: AppSpacing.md),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  widget.item.label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.cairo(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primaryInk,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Icon(
+                widget.item.icon,
+                size: 22,
+                color: AppColors.primaryDark,
+              ),
             ],
           ),
         ),

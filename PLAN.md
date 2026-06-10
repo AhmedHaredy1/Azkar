@@ -632,7 +632,7 @@ Flutter's `Directionality` widget and `MaterialApp`'s `locale` handle RTL automa
 **Screen 1: Splash Screen**
 - Full-screen background (cream/green gradient)
 - Centered app logo (Islamic geometric design)
-- App name "أذكار" in large Amiri font below logo
+- App name "رفيق المسلم" in large Amiri font below logo
 - Subtle fade-in animation
 - Duration: 2 seconds, then navigate
 
@@ -1103,7 +1103,7 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 
 ### 10.1 Pre-Deployment Checklist
 
-- [ ] App name set: "أذكار" (Arabic) / "Azkar" (English fallback)
+- [x] App name set: "رفيق المسلم" (Arabic) / "Muslim Companion" (English fallback)
 - [ ] Package name: `com.ahmedharedy.azkar`
 - [ ] Version: 1.0.0+1
 - [ ] App icon generated (adaptive icon for Android)
@@ -1134,7 +1134,7 @@ Target: < 25 MB for APK, < 15 MB for AAB (with app bundles)
 
 | Field | Value |
 |-------|-------|
-| App name | أذكار - حصن المسلم |
+| App name | رفيق المسلم |
 | Short description (80 chars) | أذكار وأدعية وقرآن ومواقيت صلاة وسبحة واتجاه القبلة في تطبيق واحد |
 | Full description | Detailed Arabic description covering all features |
 | Category | Lifestyle or Books & Reference |

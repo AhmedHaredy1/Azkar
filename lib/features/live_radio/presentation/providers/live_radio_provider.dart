@@ -454,5 +454,5 @@ class RadioFavoritesNotifier extends StateNotifier<Set<int>> {
 
 final radioFavoritesProvider =
     StateNotifierProvider<RadioFavoritesNotifier, Set<int>>((ref) {
-  return RadioFavoritesNotifier(StorageService.instance);
+  return RadioFavoritesNotifier(ref.watch(storageServiceProvider));
 });

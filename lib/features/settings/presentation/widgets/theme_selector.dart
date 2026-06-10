@@ -1,125 +1,115 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/theme_palette.dart';
+import '../../../../core/theme/tokens.dart';
+
+/// Color-swatch picker used in Settings → Appearance.
+///
+/// Replaces the old light/dark/system mode toggle. The app is now light-only;
+/// what the user picks here is the *accent palette* (primary + secondary tones)
+/// that propagates through the whole app via [ActivePalette]/[AppColors].
 class ThemeSelector extends StatelessWidget {
-  final ThemeMode currentMode;
-  final ValueChanged<ThemeMode> onChanged;
+  final String currentId;
+  final ValueChanged<String> onChanged;
 
   const ThemeSelector({
     super.key,
-    required this.currentMode,
+    required this.currentId,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? const Color(0xFF2A2A45) : const Color(0xFFFAF8F3);
-    final borderColor = isDark ? const Color(0xFF3A3A55) : const Color(0xFFE8E4DB);
-    final textColor = isDark ? const Color(0xFFE8E6E3) : const Color(0xFF1A1A1A);
-    final secondaryText = isDark ? const Color(0xFFA0A0A0) : const Color(0xFF5A5A5A);
-    final selectedColor = isDark ? const Color(0xFF2E7D32) : const Color(0xFF1B5E20);
-
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _ThemeOption(
-          icon: Icons.light_mode_outlined,
-          label: 'فاتح',
-          isSelected: currentMode == ThemeMode.light,
-          onTap: () => onChanged(ThemeMode.light),
-          cardColor: cardColor,
-          borderColor: borderColor,
-          textColor: textColor,
-          secondaryText: secondaryText,
-          selectedColor: selectedColor,
+        Text(
+          'لون التطبيق',
+          style: GoogleFonts.cairo(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.ink2,
+          ),
         ),
-        const SizedBox(width: 10),
-        _ThemeOption(
-          icon: Icons.dark_mode_outlined,
-          label: 'داكن',
-          isSelected: currentMode == ThemeMode.dark,
-          onTap: () => onChanged(ThemeMode.dark),
-          cardColor: cardColor,
-          borderColor: borderColor,
-          textColor: textColor,
-          secondaryText: secondaryText,
-          selectedColor: selectedColor,
-        ),
-        const SizedBox(width: 10),
-        _ThemeOption(
-          icon: Icons.settings_brightness_outlined,
-          label: 'تلقائي',
-          isSelected: currentMode == ThemeMode.system,
-          onTap: () => onChanged(ThemeMode.system),
-          cardColor: cardColor,
-          borderColor: borderColor,
-          textColor: textColor,
-          secondaryText: secondaryText,
-          selectedColor: selectedColor,
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            for (int i = 0; i < AppPalettes.all.length; i++) ...[
+              if (i > 0) const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: _PaletteSwatch(
+                  palette: AppPalettes.all[i],
+                  isSelected: AppPalettes.all[i].id == currentId,
+                  onTap: () => onChanged(AppPalettes.all[i].id),
+                ),
+              ),
+            ],
+          ],
         ),
       ],
     );
   }
 }
 
-class _ThemeOption extends StatelessWidget {
-  final IconData icon;
-  final String label;
+class _PaletteSwatch extends StatelessWidget {
+  final ThemePalette palette;
   final bool isSelected;
   final VoidCallback onTap;
-  final Color cardColor;
-  final Color borderColor;
-  final Color textColor;
-  final Color secondaryText;
-  final Color selectedColor;
 
-  const _ThemeOption({
-    required this.icon,
-    required this.label,
+  const _PaletteSwatch({
+    required this.palette,
     required this.isSelected,
     required this.onTap,
-    required this.cardColor,
-    required this.borderColor,
-    required this.textColor,
-    required this.secondaryText,
-    required this.selectedColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: isSelected ? selectedColor.withValues(alpha: 0.1) : cardColor,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? selectedColor : borderColor,
-              width: isSelected ? 2.0 : 1.0,
-            ),
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: isSelected ? palette.primary : AppColors.hairline,
+            width: isSelected ? 2.0 : 1.0,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 28,
-                color: isSelected ? selectedColor : secondaryText,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: GoogleFonts.cairo(
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected ? selectedColor : textColor,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [palette.primary, palette.secondary],
                 ),
               ),
-            ],
-          ),
+              alignment: Alignment.center,
+              child: isSelected
+                  ? const Icon(Icons.check, color: Colors.white, size: 20)
+                  : null,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              palette.nameAr,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.cairo(
+                fontSize: 11.5,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? palette.primary : AppColors.ink2,
+              ),
+            ),
+          ],
         ),
       ),
     );

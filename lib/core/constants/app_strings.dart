@@ -2,7 +2,7 @@ class AppStrings {
   AppStrings._();
 
   // App
-  static const String appName = 'حصن المسلم';
+  static const String appName = 'رفيق المسلم';
 
   // Tab Names
   static const String homeTab = 'الرئيسية';

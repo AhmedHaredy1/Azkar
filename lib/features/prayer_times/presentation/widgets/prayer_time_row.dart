@@ -8,10 +8,15 @@ import '../../domain/models/prayer_time.dart';
 
 class PrayerTimeRow extends StatelessWidget {
   final PrayerTime prayerTime;
+  final bool isPast;
 
-  const PrayerTimeRow({super.key, required this.prayerTime});
+  const PrayerTimeRow({
+    super.key,
+    required this.prayerTime,
+    this.isPast = false,
+  });
 
-  IconData _getIcon() {
+  IconData _icon() {
     switch (prayerTime.name) {
       case 'Fajr':
         return Icons.wb_twilight;
@@ -30,82 +35,132 @@ class PrayerTimeRow extends StatelessWidget {
     }
   }
 
+  String _subtitle() {
+    switch (prayerTime.name) {
+      case 'Fajr':
+        return 'قبل شروق الشمس';
+      case 'Sunrise':
+        return 'الشروق';
+      case 'Dhuhr':
+        return 'منتصف النهار';
+      case 'Asr':
+        return 'ما قبل الغروب';
+      case 'Maghrib':
+        return 'غروب الشمس';
+      case 'Isha':
+        return 'بعد المغرب';
+      default:
+        return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final timeFormatted = DateFormat('hh:mm a', 'ar').format(prayerTime.time);
+    final time = DateFormat('hh:mm a', 'ar').format(prayerTime.time);
+    final active = prayerTime.isNext;
+
+    final rowColor = active ? AppColors.primarySoft : AppColors.surface;
+    final tileColor = active
+        ? AppColors.primary.withValues(alpha: 0.18)
+        : AppColors.surfaceSunk;
+    final iconColor =
+        active ? AppColors.primary : (isPast ? AppColors.ink3 : AppColors.ink2);
+    final nameColor =
+        active ? AppColors.primary : (isPast ? AppColors.ink3 : AppColors.ink);
+    final timeColor = active ? AppColors.primary : AppColors.ink;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 14),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xs,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md + 2,
+        vertical: AppSpacing.md,
+      ),
       decoration: BoxDecoration(
-        color: prayerTime.isNext
-            ? AppColors.primary.withValues(alpha: 0.08)
-            : AppColors.card,
-        borderRadius: BorderRadius.circular(14),
+        color: rowColor,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
-          color: prayerTime.isNext
-              ? AppColors.primary.withValues(alpha: 0.3)
-              : AppColors.cardBorder,
-          width: prayerTime.isNext ? 1.5 : 0.5,
+          color: active ? AppColors.hairlineStrong : AppColors.hairline,
         ),
       ),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              color: prayerTime.isNext
-                  ? AppColors.primary.withValues(alpha: 0.15)
-                  : AppColors.primary.withValues(alpha: 0.08),
+              color: tileColor,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
-            child: Icon(
-              _getIcon(),
-              color: AppColors.primary,
-              size: 24,
-            ),
+            child: Icon(_icon(), color: iconColor, size: 20),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  prayerTime.nameAr,
-                  style: GoogleFonts.cairo(
-                    fontSize: 17,
-                    fontWeight: prayerTime.isNext ? FontWeight.bold : FontWeight.w500,
-                    color: prayerTime.isNext ? AppColors.primary : AppColors.textPrimary,
-                  ),
-                ),
-                if (prayerTime.isNext) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
-                    child: Text(
-                      'التالي',
+                Row(
+                  children: [
+                    Text(
+                      prayerTime.nameAr,
                       style: GoogleFonts.cairo(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: nameColor,
                       ),
                     ),
+                    if (active) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius:
+                              BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: Text(
+                          'التالي',
+                          style: GoogleFonts.cairo(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _subtitle(),
+                  style: GoogleFonts.cairo(
+                    fontSize: 11,
+                    color: AppColors.ink3,
                   ),
-                ],
+                ),
               ],
             ),
           ),
           Text(
-            timeFormatted,
+            time,
             style: GoogleFonts.cairo(
-              fontSize: 16,
-              fontWeight: prayerTime.isNext ? FontWeight.bold : FontWeight.w500,
-              color: prayerTime.isNext ? AppColors.primary : AppColors.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: timeColor,
             ),
+          ),
+          const SizedBox(width: AppSpacing.sm + 2),
+          Icon(
+            active
+                ? Icons.notifications_active_outlined
+                : Icons.notifications_none_outlined,
+            size: 18,
+            color: active ? AppColors.primary : AppColors.ink3,
           ),
         ],
       ),

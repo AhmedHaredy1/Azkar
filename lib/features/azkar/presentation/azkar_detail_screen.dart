@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:vibration/vibration.dart';
 
@@ -7,7 +8,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/utils/arabic_number_utils.dart';
 import '../domain/models/azkar_category.dart';
-import 'azkar_completion_screen.dart';
 import 'providers/azkar_provider.dart';
 import 'widgets/dhikr_card.dart';
 
@@ -117,27 +117,11 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
     final categoryAsync = ref.read(azkarCategoryProvider(widget.categoryId));
     final categoryName = categoryAsync.valueOrNull?.nameAr ?? 'الأذكار';
 
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            AzkarCompletionScreen(categoryName: categoryName),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.1),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOut,
-              )),
-              child: child,
-            ),
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 500),
-      ),
+    // The fade + rise-in transition lives on the route itself
+    // (see `azkar-complete` in app_router.dart).
+    context.pushReplacement(
+      '/azkar/${widget.categoryId}/complete'
+      '?name=${Uri.encodeComponent(categoryName)}',
     );
   }
 
@@ -178,7 +162,7 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
                 _navigateToCompletion();
               }
             });
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             );
           }
@@ -249,7 +233,7 @@ class _AzkarDetailScreenState extends ConsumerState<AzkarDetailScreen>
             ),
           );
         },
-        loading: () => const Center(
+        loading: () => Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
         error: (error, _) => _buildErrorState(),

@@ -127,7 +127,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
                 // Surah tab
                 surahsAsync.when(
                   data: (surahs) => _buildSurahTab(surahs),
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
                   ),
                   error: (_, _) => const Center(child: Text('خطأ')),
@@ -173,7 +173,7 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.md),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                borderSide: BorderSide(color: AppColors.primary, width: 2),
               ),
               contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
             ),
@@ -340,13 +340,13 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
             decoration: InputDecoration(
               hintText: 'ابحث في القرآن...',
               hintStyle: GoogleFonts.cairo(color: AppColors.textSecondary),
-              prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+              prefixIcon: Icon(Icons.search, color: AppColors.primary),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.md),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                borderSide: BorderSide(color: AppColors.primary, width: 2),
               ),
             ),
             onSubmitted: _performSearch,
@@ -356,8 +356,8 @@ class _QuranSearchDialogState extends ConsumerState<QuranSearchDialog>
           ),
           const SizedBox(height: AppSpacing.md),
           if (_isSearching)
-            const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: CircularProgressIndicator(color: AppColors.primary),
             )
           else if (_searchResults.isEmpty && _searchController.text.isNotEmpty)

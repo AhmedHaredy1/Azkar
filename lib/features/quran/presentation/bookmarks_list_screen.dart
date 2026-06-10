@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/utils/arabic_number_utils.dart';
-import 'mushaf_screen.dart';
 import 'providers/quran_provider.dart';
 
 class BookmarksListScreen extends ConsumerWidget {
@@ -121,7 +121,7 @@ class BookmarksListScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(AppRadius.md),
                           ),
                           alignment: Alignment.center,
-                          child: const Icon(
+                          child: Icon(
                             Icons.bookmark,
                             color: AppColors.secondary,
                             size: 24,
@@ -146,19 +146,13 @@ class BookmarksListScreen extends ConsumerWidget {
                           Icons.chevron_left,
                           color: AppColors.textSecondary,
                         ),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => MushafScreen(initialPage: page),
-                            ),
-                          );
-                        },
+                        onTap: () => context.push('/mushaf-text?page=$page'),
                       ),
                     );
                   },
                 );
               },
-              loading: () => const Center(
+              loading: () => Center(
                 child: CircularProgressIndicator(color: AppColors.primary),
               ),
               error: (_, _) => Center(
