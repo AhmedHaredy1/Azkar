@@ -7,10 +7,34 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/utils/arabic_number_utils.dart';
+import '../../mushaf/presentation/providers/mushaf_provider.dart';
 import 'providers/quran_provider.dart';
 
 class BookmarksListScreen extends ConsumerWidget {
   const BookmarksListScreen({super.key});
+
+  /// Bookmarks open in whichever reading mode is active: the PDF mushaf
+  /// (page mapped into its layout) or the text reader.
+  Future<void> _openBookmark(
+      BuildContext context, WidgetRef ref, int textPage) async {
+    final mode = ref.read(quranReadingModeProvider);
+    if (mode == 'mushaf') {
+      final mushaf = await ref.read(activeMushafProvider.future);
+      if (mushaf != null) {
+        final pdfPage = await ref.read(
+          textToPdfPageProvider((mushafId: mushaf.id, textPage: textPage))
+              .future,
+        );
+        if (context.mounted) {
+          context.push('/mushaf-pdf/${mushaf.id}?page=$pdfPage');
+        }
+        return;
+      }
+    }
+    if (context.mounted) {
+      context.push('/mushaf-text?page=$textPage');
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -146,7 +170,7 @@ class BookmarksListScreen extends ConsumerWidget {
                           Icons.chevron_left,
                           color: AppColors.textSecondary,
                         ),
-                        onTap: () => context.push('/mushaf-text?page=$page'),
+                        onTap: () => _openBookmark(context, ref, page),
                       ),
                     );
                   },

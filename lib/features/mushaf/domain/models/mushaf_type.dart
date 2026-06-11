@@ -47,6 +47,13 @@ class MushafType {
   /// Raw PDF page for a printed mushaf page the user entered.
   int pdfPageFromMushaf(int mushafPage) =>
       (mushafPage + pdfPageOffset).clamp(1, totalPdfPages);
+
+  /// True when the printed layout matches the standard 604-page Madinah
+  /// mushaf page-for-page (An-Nas opens printed page 604), which lets the
+  /// app's per-page text data (ayah lists) apply to this PDF directly.
+  bool get isMadinahLayout =>
+      totalMushafPages >= 604 &&
+      mushafPageFromPdf(getSurahStartPage(114)) == 604;
 }
 
 const List<MushafType> availableMushafs = [

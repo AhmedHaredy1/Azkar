@@ -116,29 +116,14 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
     }
   }
 
-  /// Map a standard 604-layout text page into a PDF page of [mushaf]:
-  /// exact at surah starts, proportional within the surah's span. For the
-  /// Madinah-layout mushafs this resolves to the identical printed page.
+  /// Map a standard 604-layout text page into a PDF page of [mushaf] via
+  /// the shared mapping provider (exact for Madinah-layout mushafs).
   Future<int> _textPageToPdfPage(int textPage, MushafType mushaf) async {
     try {
-      final pageIndex = await ref.read(pageIndexProvider.future);
-      final surah =
-          pageIndex[textPage]?.sections.firstOrNull?.surahNumber ?? 1;
-      final src = ref.read(quranLocalSourceProvider);
-      final textStart = await src.getPageForSurah(surah);
-      var textEnd = 604;
-      if (surah < 114) {
-        textEnd = await src.getPageForSurah(surah + 1) - 1;
-        if (textEnd < textStart) textEnd = textStart;
-      }
-      final pdfStart = mushaf.getSurahStartPage(surah);
-      final pdfEnd = mushaf.getSurahEndPage(surah);
-      final span = textEnd - textStart;
-      final frac =
-          span <= 0 ? 0.0 : ((textPage - textStart) / span).clamp(0.0, 1.0);
-      return (pdfStart + frac * (pdfEnd - pdfStart))
-          .round()
-          .clamp(1, mushaf.totalPdfPages);
+      return await ref.read(
+        textToPdfPageProvider((mushafId: mushaf.id, textPage: textPage))
+            .future,
+      );
     } catch (_) {
       // Front-matter offset alone is a close fallback for the wide mushafs.
       return mushaf.pdfPageFromMushaf(textPage);

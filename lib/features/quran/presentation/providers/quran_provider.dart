@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../mushaf/domain/models/mushaf_type.dart';
 import '../../data/quran_local_source.dart';
 import '../../data/quran_repository_impl.dart';
 import '../../domain/models/bookmark.dart';
@@ -63,6 +64,65 @@ final lastReadPageProvider =
 // Get page number for a surah
 final surahPageProvider = FutureProvider.family<int, int>((ref, surahNumber) {
   return ref.read(quranLocalSourceProvider).getPageForSurah(surahNumber);
+});
+
+// ── Text layout ↔ PDF mushaf page mapping ──
+// The text reader uses the standard 604-page layout. Madinah-layout PDFs
+// match it page-for-page; other layouts are mapped proportionally within
+// the surah's span (exact at surah starts).
+
+/// The surah's text-layout page span (start, end inclusive).
+Future<(int, int)> _textSpanForSurah(Ref ref, int surah) async {
+  final src = ref.read(quranLocalSourceProvider);
+  final start = await src.getPageForSurah(surah);
+  var end = 604;
+  if (surah < 114) {
+    end = await src.getPageForSurah(surah + 1) - 1;
+    if (end < start) end = start;
+  }
+  return (start, end);
+}
+
+/// PDF page of a mushaf for a standard text-layout page.
+final textToPdfPageProvider =
+    FutureProvider.family<int, ({String mushafId, int textPage})>(
+        (ref, arg) async {
+  final mushaf = getMushafById(arg.mushafId);
+  if (mushaf == null) return arg.textPage;
+  if (mushaf.isMadinahLayout) {
+    return mushaf.pdfPageFromMushaf(arg.textPage);
+  }
+  final pageIndex = await ref.watch(pageIndexProvider.future);
+  final surah =
+      pageIndex[arg.textPage]?.sections.firstOrNull?.surahNumber ?? 1;
+  final (textStart, textEnd) = await _textSpanForSurah(ref, surah);
+  final pdfStart = mushaf.getSurahStartPage(surah);
+  final pdfEnd = mushaf.getSurahEndPage(surah);
+  final span = textEnd - textStart;
+  final frac =
+      span <= 0 ? 0.0 : ((arg.textPage - textStart) / span).clamp(0.0, 1.0);
+  return (pdfStart + frac * (pdfEnd - pdfStart))
+      .round()
+      .clamp(1, mushaf.totalPdfPages);
+});
+
+/// Standard text-layout page shown on a mushaf's PDF page.
+final pdfToTextPageProvider =
+    FutureProvider.family<int, ({String mushafId, int pdfPage})>(
+        (ref, arg) async {
+  final mushaf = getMushafById(arg.mushafId);
+  if (mushaf == null) return arg.pdfPage.clamp(1, 604);
+  if (mushaf.isMadinahLayout) {
+    return mushaf.mushafPageFromPdf(arg.pdfPage).clamp(1, 604);
+  }
+  final surah = mushaf.getSurahForPage(arg.pdfPage) ?? 1;
+  final (textStart, textEnd) = await _textSpanForSurah(ref, surah);
+  final pdfStart = mushaf.getSurahStartPage(surah);
+  final pdfEnd = mushaf.getSurahEndPage(surah);
+  final span = pdfEnd - pdfStart;
+  final frac =
+      span <= 0 ? 0.0 : ((arg.pdfPage - pdfStart) / span).clamp(0.0, 1.0);
+  return (textStart + frac * (textEnd - textStart)).round().clamp(1, 604);
 });
 
 // Search

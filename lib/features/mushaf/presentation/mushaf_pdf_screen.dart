@@ -6,7 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/surah_names.dart';
 import '../../../core/theme/tokens.dart';
+import '../../quran/presentation/providers/quran_audio_provider.dart';
+import '../../quran/presentation/widgets/mushaf_ayah_actions_sheet.dart';
+import '../../quran/presentation/widgets/quran_audio_bar.dart';
 import '../domain/models/mushaf_type.dart';
 import 'providers/mushaf_provider.dart';
 
@@ -170,6 +174,18 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
     setState(() => _showControls = !_showControls);
   }
 
+  /// Per-ayah actions for the visible page — same capability set as the
+  /// text reader (listen from ayah, tafsir, copy, share, bookmark).
+  void _openAyahActions() {
+    HapticFeedback.selectionClick();
+    showMushafAyahSheet(
+      context,
+      ref,
+      mushafId: _activeMushaf.id,
+      pdfPage: _currentPdfPage,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -182,6 +198,7 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
           children: [
             GestureDetector(
               onTap: _toggleControls,
+              onLongPress: _openAyahActions,
               child: LayoutBuilder(
                 builder: (ctx, constraints) {
                   _viewerSize =
@@ -236,7 +253,30 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
             _buildTopBar(),
             _buildBottomBar(),
             _buildFloatingTools(),
+            _buildAudioBar(),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Same playback bar as the text reader, shown while recitation is active
+  /// and the chrome is hidden (the chrome's own bars take over otherwise).
+  Widget _buildAudioBar() {
+    final audioActive =
+        ref.watch(quranAudioProvider.select((s) => s.currentSurah != null));
+    if (!audioActive || _showControls) return const SizedBox.shrink();
+    final surah =
+        _activeMushaf.getSurahForPage(_currentPdfPage) ?? 1;
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: SafeArea(
+        top: false,
+        child: QuranAudioBar(
+          surahNumber: surah,
+          surahName: kSurahNamesAr[surah] ?? 'سورة $surah',
         ),
       ),
     );
@@ -316,6 +356,11 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
                   ),
                 ],
               ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.touch_app_outlined, color: Colors.white),
+              tooltip: 'آيات الصفحة',
+              onPressed: _openAyahActions,
             ),
             IconButton(
               icon: const Icon(Icons.center_focus_strong_rounded,
@@ -628,6 +673,26 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
+              ListTile(
+                leading: Icon(Icons.touch_app_outlined,
+                    color: AppColors.primary),
+                title: Text(
+                  'آيات الصفحة',
+                  style: GoogleFonts.cairo(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.ink,
+                  ),
+                ),
+                subtitle: Text(
+                  'استماع، تفسير، نسخ، مشاركة، علامة — كما في وضع القراءة النصي',
+                  style: GoogleFonts.cairo(
+                      fontSize: 11, color: AppColors.ink3),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _openAyahActions();
+                },
+              ),
               ListTile(
                 leading: Icon(Icons.zoom_in_rounded,
                     color: AppColors.primary),
