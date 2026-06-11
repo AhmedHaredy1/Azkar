@@ -10,6 +10,7 @@ import '../../../../core/utils/arabic_number_utils.dart';
 import '../../domain/models/quran_page.dart';
 import '../providers/quran_audio_provider.dart';
 import '../providers/quran_provider.dart';
+import 'reciter_picker_sheet.dart';
 import 'tafsir_sheet.dart';
 
 /// Opens the per-ayah action sheet for a PDF mushaf page.
@@ -129,6 +130,39 @@ class _MushafAyahSheetState extends ConsumerState<_MushafAyahSheet> {
           Text(
             'اختر آية لعرض الإجراءات — استماع، تفسير، نسخ، مشاركة، علامة',
             style: GoogleFonts.cairo(fontSize: 11, color: AppColors.ink3),
+          ),
+          const SizedBox(height: 6),
+          // Reciter quick-switch right where playback usually starts.
+          InkWell(
+            onTap: () => showReciterPicker(context, ref),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                border: Border.all(color: AppColors.hairline),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.person_outline,
+                      size: 14, color: AppColors.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    'القارئ: ${ref.watch(quranAudioProvider.select((s) => s.reciter.nameAr))}',
+                    style: GoogleFonts.cairo(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.ink2,
+                    ),
+                  ),
+                  Icon(Icons.arrow_drop_down,
+                      size: 16, color: AppColors.ink3),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Expanded(

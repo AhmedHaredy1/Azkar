@@ -11,6 +11,7 @@ import '../../../../core/constants/surah_names.dart';
 import '../../../../core/utils/arabic_number_utils.dart';
 import '../../../quran/presentation/providers/quran_audio_provider.dart';
 import '../../../quran/presentation/providers/quran_provider.dart';
+import '../../../quran/presentation/widgets/reciter_picker_sheet.dart';
 
 /// Display info for the ayah currently being recited (text resolved from
 /// the page index so the viewer always matches playback).
@@ -158,7 +159,7 @@ class _FloatingQuranControlsState
     final raw = _pos ?? _defaultPos(size);
     final isPanelOpen = _panel != _PanelKind.none;
     final width = isPanelOpen ? _panelWidth : _bubbleSize;
-    final maxPanelHeight = _panel == _PanelKind.ayah ? 360.0 : 190.0;
+    final maxPanelHeight = _panel == _PanelKind.ayah ? 360.0 : 236.0;
     final height = isPanelOpen ? maxPanelHeight : _bubbleSize * 2 + 10;
 
     // Keep the group on-screen for any drag/rotation/panel size.
@@ -263,6 +264,47 @@ class _FloatingQuranControlsState
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Reciter selection — same picker as the text reader, switchable
+          // before playback or mid-recitation (resumes at the same ayah).
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 6),
+            child: InkWell(
+              onTap: () {
+                _restartCollapseTimer();
+                showReciterPicker(context, ref);
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white24),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.person_outline,
+                        color: Colors.white70, size: 16),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        ref.watch(quranAudioProvider
+                            .select((s) => s.reciter.nameAr)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.cairo(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const Icon(Icons.arrow_drop_down,
+                        color: Colors.white70, size: 18),
+                  ],
+                ),
+              ),
+            ),
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
