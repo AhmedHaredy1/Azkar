@@ -6,13 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/surah_names.dart';
 import '../../../core/theme/tokens.dart';
 import '../../quran/presentation/providers/quran_audio_provider.dart';
+import '../../quran/presentation/providers/quran_provider.dart';
 import '../../quran/presentation/widgets/mushaf_ayah_actions_sheet.dart';
-import '../../quran/presentation/widgets/quran_audio_bar.dart';
 import '../domain/models/mushaf_type.dart';
 import 'providers/mushaf_provider.dart';
+import 'widgets/pdf_audio_player.dart';
 
 class MushafPdfScreen extends ConsumerStatefulWidget {
   final MushafType mushaf;
@@ -40,6 +40,8 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
       TransformationController();
   double _zoomLevel = 1.0;
   bool _isZoomedIn = false;
+  // Recitation page-follow: auto-turn to the playing ayah's page.
+  bool _followRecitation = true;
   // Fit-to-page is the useful minimum: the zero boundary margin keeps the
   // page anchored, so zooming below 100% would only show dead space.
   static const double _minZoom = 1.0;
@@ -188,6 +190,14 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Follow the recitation across pages while enabled.
+    ref.listen(quranAudioProvider.select((s) => s.playingAyah),
+        (prev, next) {
+      if (_followRecitation && next != null) {
+        _syncPageToAyah(prev, next);
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: KeyboardListener(
@@ -260,26 +270,48 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
     );
   }
 
-  /// Same playback bar as the text reader, shown while recitation is active
-  /// and the chrome is hidden (the chrome's own bars take over otherwise).
+  /// Floating recitation player — always reachable while audio is active,
+  /// raised above the chrome's bottom bar when the chrome is visible.
   Widget _buildAudioBar() {
     final audioActive =
         ref.watch(quranAudioProvider.select((s) => s.currentSurah != null));
-    if (!audioActive || _showControls) return const SizedBox.shrink();
-    final surah =
-        _activeMushaf.getSurahForPage(_currentPdfPage) ?? 1;
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: SafeArea(
-        top: false,
-        child: QuranAudioBar(
-          surahNumber: surah,
-          surahName: kSurahNamesAr[surah] ?? 'سورة $surah',
-        ),
+    if (!audioActive) return const SizedBox.shrink();
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      // Clears the floating tools button on the left and, when the chrome
+      // is open, sits above its bottom bar instead of underneath it.
+      bottom: _showControls ? bottomInset + 196 : bottomInset + 14,
+      left: 70,
+      right: 14,
+      child: PdfAudioPlayer(
+        followEnabled: _followRecitation,
+        onToggleFollow: () =>
+            setState(() => _followRecitation = !_followRecitation),
       ),
     );
+  }
+
+  /// Recitation page-follow: when the playing ayah moves to a page other
+  /// than the visible one, turn to it — but only if the reader was already
+  /// on the recitation's page, so manual browsing is never hijacked.
+  Future<void> _syncPageToAyah(
+      PlayingAyahInfo? prev, PlayingAyahInfo next) async {
+    if (prev?.page == next.page) return;
+    final mushafId = _activeMushaf.id;
+    final targetPdf = await ref.read(
+      textToPdfPageProvider((mushafId: mushafId, textPage: next.page)).future,
+    );
+    if (!mounted || targetPdf == _currentPdfPage) return;
+    if (prev != null) {
+      final prevPdf = await ref.read(
+        textToPdfPageProvider((mushafId: mushafId, textPage: prev.page))
+            .future,
+      );
+      if (!mounted || prevPdf != _currentPdfPage) return;
+    }
+    _goToPdfPage(targetPdf);
   }
 
   /// Fades + slides the reader chrome in and out instead of popping it.

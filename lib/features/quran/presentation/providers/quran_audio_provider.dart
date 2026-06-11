@@ -157,6 +157,7 @@ class QuranAudioState {
   final Duration duration;
   final String? error;
   final PlayingAyahInfo? playingAyah; // currently playing ayah for highlighting
+  final double speed; // playback speed (1.0 = normal)
 
   const QuranAudioState({
     this.isPlaying = false,
@@ -169,6 +170,7 @@ class QuranAudioState {
     this.duration = Duration.zero,
     this.error,
     this.playingAyah,
+    this.speed = 1.0,
   });
 
   Reciter get reciter =>
@@ -186,6 +188,7 @@ class QuranAudioState {
     Duration? duration,
     String? error,
     PlayingAyahInfo? playingAyah,
+    double? speed,
     bool clearError = false,
     bool clearSurah = false,
     bool clearAyah = false,
@@ -201,6 +204,7 @@ class QuranAudioState {
       duration: duration ?? this.duration,
       error: clearError ? null : (error ?? this.error),
       playingAyah: clearAyah ? null : (playingAyah ?? this.playingAyah),
+      speed: speed ?? this.speed,
     );
   }
 }
@@ -480,6 +484,21 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
 
   Future<void> resume() async {
     await _player.play();
+  }
+
+  /// Recitation speeds offered by the players' speed button.
+  static const List<double> speedSteps = [0.75, 1.0, 1.25, 1.5, 2.0];
+
+  /// Set playback speed (persists for the rest of the session).
+  Future<void> setSpeed(double speed) async {
+    await _player.setSpeed(speed);
+    state = state.copyWith(speed: speed);
+  }
+
+  /// Cycle to the next speed step (٠٫٧٥× → ١× → ١٫٢٥× → ١٫٥× → ٢×).
+  Future<void> cycleSpeed() async {
+    final i = speedSteps.indexOf(state.speed);
+    await setSpeed(speedSteps[(i + 1) % speedSteps.length]);
   }
 
   Future<void> stop() async {
