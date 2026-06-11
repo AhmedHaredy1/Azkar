@@ -12,7 +12,7 @@ import '../../quran/presentation/providers/quran_provider.dart';
 import '../../quran/presentation/widgets/mushaf_ayah_actions_sheet.dart';
 import '../domain/models/mushaf_type.dart';
 import 'providers/mushaf_provider.dart';
-import 'widgets/pdf_audio_player.dart';
+import 'widgets/floating_quran_controls.dart';
 
 class MushafPdfScreen extends ConsumerStatefulWidget {
   final MushafType mushaf;
@@ -270,27 +270,32 @@ class _MushafPdfScreenState extends ConsumerState<MushafPdfScreen> {
     );
   }
 
-  /// Floating recitation player — always reachable while audio is active,
-  /// raised above the chrome's bottom bar when the chrome is visible.
+  /// Floating, draggable bubble group: headphone bubble (audio transport
+  /// panel with auto-collapse + pin) and, during recitation, the live
+  /// current-ayah viewer bubble.
   Widget _buildAudioBar() {
-    final audioActive =
-        ref.watch(quranAudioProvider.select((s) => s.currentSurah != null));
-    if (!audioActive) return const SizedBox.shrink();
-    final bottomInset = MediaQuery.of(context).padding.bottom;
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      // Clears the floating tools button on the left and, when the chrome
-      // is open, sits above its bottom bar instead of underneath it.
-      bottom: _showControls ? bottomInset + 196 : bottomInset + 14,
-      left: 70,
-      right: 14,
-      child: PdfAudioPlayer(
-        followEnabled: _followRecitation,
-        onToggleFollow: () =>
-            setState(() => _followRecitation = !_followRecitation),
-      ),
+    return FloatingQuranControls(
+      followEnabled: _followRecitation,
+      onToggleFollow: () =>
+          setState(() => _followRecitation = !_followRecitation),
+      onPlayCurrentPage: _playCurrentPage,
     );
+  }
+
+  /// Start recitation from the first ayah of the visible page (used by the
+  /// floating player's play button when nothing is loaded yet).
+  Future<void> _playCurrentPage() async {
+    final textPage = await ref.read(
+      pdfToTextPageProvider(
+              (mushafId: _activeMushaf.id, pdfPage: _currentPdfPage))
+          .future,
+    );
+    final pages = await ref.read(pageIndexProvider.future);
+    final first = pages[textPage]?.sections.firstOrNull?.ayahs.firstOrNull;
+    if (first == null || !mounted) return;
+    await ref
+        .read(quranAudioProvider.notifier)
+        .playFromAyah(first.surahNumber, first.ayahNumber);
   }
 
   /// Recitation page-follow: when the playing ayah moves to a page other
