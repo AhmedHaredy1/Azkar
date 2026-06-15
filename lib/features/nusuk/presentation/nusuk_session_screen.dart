@@ -83,9 +83,13 @@ class NusukSessionScreen extends ConsumerWidget {
           NusukProgressHeader(
             type: session.type,
             completedCount: session.completedStepIds.length,
-            totalCount: steps.length,
+            totalCount: session.requiredCount(steps.length),
             currentStepTitle: current < steps.length ? steps[current].title : '',
           ),
+          if (session.mode == NusukMode.practice) ...[
+            const SizedBox(height: AppSpacing.md),
+            const _PracticeBanner(),
+          ],
           const SizedBox(height: AppSpacing.lg),
           for (int i = 0; i < steps.length; i++)
             Padding(
@@ -107,6 +111,10 @@ class NusukSessionScreen extends ConsumerWidget {
     final step = steps[index];
     final number = index + 1;
 
+    if (session.isStepSkipped(step.id)) {
+      return _SkippedTile(number: number, title: step.title);
+    }
+
     if (session.isStepCompleted(step.id)) {
       return _CompletedTile(
         number: number,
@@ -120,9 +128,12 @@ class NusukSessionScreen extends ConsumerWidget {
         number: number,
         step: step,
         session: session,
+        gate: nusukDateGate(session, step),
         onStart: () => notifier.startStep(step.id),
-        onComplete: () => _handle(context, notifier.completeStep(step.id)),
-        onIncrement: () => _handle(context, notifier.incrementCounter(step.id)),
+        onComplete: () =>
+            _handle(context, notifier.completeStep(step.id), session.mode),
+        onIncrement: () =>
+            _handle(context, notifier.incrementCounter(step.id), session.mode),
         onSelectChoice: (id) => notifier.selectChoice(step.id, id),
       );
     }
@@ -130,11 +141,13 @@ class NusukSessionScreen extends ConsumerWidget {
     return _LockedTile(number: number, title: step.title);
   }
 
-  /// If an action finalized the rite, jump to the completion screen.
-  void _handle(BuildContext context, NusukRecord? finished) {
+  /// If an action finalized the rite, jump to the completion screen. Practice
+  /// runs pass `practice=1` so the celebration omits the (empty) record log.
+  void _handle(BuildContext context, NusukRecord? finished, NusukMode mode) {
     if (finished != null) {
+      final practice = mode == NusukMode.practice ? '&practice=1' : '';
       context.pushReplacement(
-        '/nusuk-complete?record=${finished.recordId}',
+        '/nusuk-complete?record=${finished.recordId}$practice',
         extra: finished,
       );
     }
@@ -228,6 +241,7 @@ class _ActiveStepCard extends StatelessWidget {
   final int number;
   final NusukStep step;
   final NusukSession session;
+  final NusukStepGate gate;
   final VoidCallback onStart;
   final VoidCallback onComplete;
   final VoidCallback onIncrement;
@@ -237,6 +251,7 @@ class _ActiveStepCard extends StatelessWidget {
     required this.number,
     required this.step,
     required this.session,
+    required this.gate,
     required this.onStart,
     required this.onComplete,
     required this.onIncrement,
@@ -276,6 +291,7 @@ class _ActiveStepCard extends StatelessWidget {
           NusukStepView(
             step: step,
             session: session,
+            gate: gate,
             onStart: onStart,
             onComplete: onComplete,
             onIncrement: onIncrement,
@@ -333,6 +349,95 @@ class _CompletedTile extends StatelessWidget {
                 color: AppColors.success,
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A step dropped by التعجّل (early departure) — shown greyed with a skip mark.
+class _SkippedTile extends StatelessWidget {
+  final int number;
+  final String title;
+
+  const _SkippedTile({required this.number, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSunk,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.skip_next_rounded, size: 20, color: AppColors.textTertiary),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              title,
+              style: GoogleFonts.cairo(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textTertiary,
+                decoration: TextDecoration.lineThrough,
+                decorationColor: AppColors.textTertiary,
+              ),
+            ),
+          ),
+          Text(
+            'تُجووِزت — التعجّل',
+            style: GoogleFonts.cairo(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textTertiary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Header strip clarifying that date locks are off in practice mode.
+class _PracticeBanner extends StatelessWidget {
+  const _PracticeBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppColors.secondaryDark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm + 2,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.30)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.science_outlined, size: 18, color: accent),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'وضع التدريب والاستعراض — قيود التواريخ غير مُفعّلة، يمكنك تجربة '
+              'جميع الخطوات.',
+              style: GoogleFonts.cairo(
+                fontSize: 12,
+                height: 1.6,
+                fontWeight: FontWeight.w600,
+                color: accent,
+              ),
+            ),
+          ),
         ],
       ),
     );

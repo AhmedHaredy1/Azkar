@@ -3,8 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../core/utils/arabic_number_utils.dart';
 import '../../domain/nusuk_session.dart';
 import '../../domain/nusuk_step.dart';
+import '../providers/nusuk_provider.dart';
 import 'nusuk_counter_tracker.dart';
 
 /// Renders the body + action area of the *active* step. Purely presentational:
@@ -13,6 +15,10 @@ import 'nusuk_counter_tracker.dart';
 class NusukStepView extends StatelessWidget {
   final NusukStep step;
   final NusukSession session;
+
+  /// Hijri-date verdict for this step. When [NusukStepGate.dateLocked] the
+  /// action area is replaced by a countdown callout and no input is accepted.
+  final NusukStepGate gate;
   final VoidCallback onStart;
   final VoidCallback onComplete;
   final VoidCallback onIncrement;
@@ -22,6 +28,7 @@ class NusukStepView extends StatelessWidget {
     super.key,
     required this.step,
     required this.session,
+    required this.gate,
     required this.onStart,
     required this.onComplete,
     required this.onIncrement,
@@ -74,6 +81,13 @@ class NusukStepView extends StatelessWidget {
   }
 
   Widget _action(BuildContext context) {
+    // Calendar lock takes precedence over the step's own controls.
+    if (gate.dateLocked) {
+      return _DateLockCallout(
+        validDateLabel: gate.validDateLabel,
+        remainingDays: gate.remainingDays,
+      );
+    }
     switch (step.kind) {
       case NusukStepKind.counter:
         return NusukCounterTracker(
@@ -274,6 +288,96 @@ class _DayChip extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Shown in place of the action controls when a step is locked to a future
+/// Hijri date (live mode). The pilgrim can still read the step above to prepare.
+class _DateLockCallout extends StatelessWidget {
+  final String? validDateLabel;
+  final int? remainingDays;
+
+  const _DateLockCallout({this.validDateLabel, this.remainingDays});
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppColors.secondaryDark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.lock_clock_outlined, size: 18, color: accent),
+              const SizedBox(width: 6),
+              Text(
+                'هذه الخطوة مرتبطة بموعدها',
+                style: GoogleFonts.cairo(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.bold,
+                  color: accent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            validDateLabel == null
+                ? 'تُؤدّى هذه الخطوة في يومها من ذي الحجة، ولا يمكن إتمامها قبل '
+                    'حلول موعدها.'
+                : 'تُؤدّى هذه الخطوة يوم $validDateLabel، ولا يمكن إتمامها قبل '
+                    'حلول موعدها.',
+            style: GoogleFonts.cairo(
+              fontSize: 13,
+              height: 1.7,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          if (remainingDays != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.hourglass_bottom_rounded, size: 14, color: accent),
+                  const SizedBox(width: 5),
+                  Text(
+                    _remainingLabel(remainingDays!),
+                    style: GoogleFonts.cairo(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                      color: accent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// «باقٍ يومٌ واحد» / «باقيان يومان» / «باقٍ ٣ أيام» / «باقٍ ٢٠ يوماً».
+  static String _remainingLabel(int n) {
+    if (n == 1) return 'باقٍ يومٌ واحد';
+    if (n == 2) return 'باقيان يومان';
+    final num = ArabicNumberUtils.toEasternArabic(n);
+    if (n >= 3 && n <= 10) return 'باقٍ $num أيام';
+    return 'باقٍ $num يوماً';
   }
 }
 

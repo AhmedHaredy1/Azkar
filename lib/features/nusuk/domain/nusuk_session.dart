@@ -1,5 +1,19 @@
 import 'nusuk_type.dart';
 
+/// How strictly the Hijri calendar is enforced for a Hajj session.
+///  - [live]     → dated steps are locked until their valid Dhul-Ḥijjah day
+///                 (a real pilgrimage companion).
+///  - [practice] → no date lock; the whole flow can be walked through any time
+///                 (learning / preview / off-season review).
+/// Umrah has no dated steps, so its mode is immaterial (always stored [live]).
+enum NusukMode { live, practice }
+
+/// Parse a persisted [NusukMode] name, defaulting to [NusukMode.live].
+NusukMode nusukModeFromName(String? name) => NusukMode.values.firstWhere(
+      (m) => m.name == name,
+      orElse: () => NusukMode.live,
+    );
+
 /// Runtime state of an in-progress ritual. Immutable — mutations go through
 /// [copyWith] so the StateNotifier emits a fresh instance each time.
 ///
@@ -27,8 +41,17 @@ class NusukSession {
   /// stepId → chosen option id, for choice steps (e.g. 'halq'/'taqsir').
   final Map<String, String> choices;
 
+  /// Ids of steps that were intentionally dropped from this rite — currently
+  /// the 13 Dhul-Ḥijjah steps when the pilgrim chooses التعجّل (early departure).
+  /// They count as resolved (neither pending nor locked) for progress/finish.
+  final Set<String> skippedStepIds;
+
+  /// Date-enforcement mode for this session (Hajj only — see [NusukMode]).
+  final NusukMode mode;
+
   /// Hijri year at the moment the session was created — used to enforce the
-  /// one-Hajj-per-Hijri-year rule even while the rite is still in progress.
+  /// one-Hajj-per-Hijri-year rule even while the rite is still in progress,
+  /// and as the reference year for date-gating dated Hajj steps.
   final int hijriYear;
 
   const NusukSession({
@@ -36,25 +59,36 @@ class NusukSession {
     required this.type,
     required this.startedAt,
     required this.hijriYear,
+    this.mode = NusukMode.live,
     this.currentStepIndex = 0,
     this.startedStepIds = const {},
     this.completedStepIds = const {},
     this.counters = const {},
     this.choices = const {},
+    this.skippedStepIds = const {},
   });
 
   bool isStepStarted(String id) => startedStepIds.contains(id);
   bool isStepCompleted(String id) => completedStepIds.contains(id);
+  bool isStepSkipped(String id) => skippedStepIds.contains(id);
   int counterOf(String id) => counters[id] ?? 0;
   String? choiceOf(String id) => choices[id];
 
-  /// Completion ratio in `[0,1]`, given the total number of steps in the flow.
-  double progressFraction(int totalSteps) =>
-      totalSteps == 0 ? 0 : completedStepIds.length / totalSteps;
+  /// Steps that actually count toward this rite (total minus skipped).
+  int requiredCount(int totalSteps) =>
+      (totalSteps - skippedStepIds.length).clamp(0, totalSteps);
 
-  /// Whether every step in a flow of [totalSteps] steps is done.
-  bool isFinished(int totalSteps) =>
-      totalSteps > 0 && completedStepIds.length >= totalSteps;
+  /// Completion ratio in `[0,1]` over the *required* steps (skipped excluded).
+  double progressFraction(int totalSteps) {
+    final required = requiredCount(totalSteps);
+    return required == 0 ? 0 : completedStepIds.length / required;
+  }
+
+  /// Whether every required step in a flow of [totalSteps] steps is done.
+  bool isFinished(int totalSteps) {
+    final required = requiredCount(totalSteps);
+    return required > 0 && completedStepIds.length >= required;
+  }
 
   NusukSession copyWith({
     int? currentStepIndex,
@@ -62,17 +96,20 @@ class NusukSession {
     Set<String>? completedStepIds,
     Map<String, int>? counters,
     Map<String, String>? choices,
+    Set<String>? skippedStepIds,
   }) {
     return NusukSession(
       sessionId: sessionId,
       type: type,
       startedAt: startedAt,
       hijriYear: hijriYear,
+      mode: mode,
       currentStepIndex: currentStepIndex ?? this.currentStepIndex,
       startedStepIds: startedStepIds ?? this.startedStepIds,
       completedStepIds: completedStepIds ?? this.completedStepIds,
       counters: counters ?? this.counters,
       choices: choices ?? this.choices,
+      skippedStepIds: skippedStepIds ?? this.skippedStepIds,
     );
   }
 
@@ -80,11 +117,13 @@ class NusukSession {
         'sessionId': sessionId,
         'type': type.id,
         'startedAt': startedAt.toIso8601String(),
+        'mode': mode.name,
         'currentStepIndex': currentStepIndex,
         'startedStepIds': startedStepIds.toList(),
         'completedStepIds': completedStepIds.toList(),
         'counters': counters,
         'choices': choices,
+        'skippedStepIds': skippedStepIds.toList(),
         'hijriYear': hijriYear,
       };
 
@@ -94,12 +133,14 @@ class NusukSession {
       type: NusukTypeX.fromId(json['type']?.toString()) ?? NusukType.umrah,
       startedAt:
           DateTime.tryParse(json['startedAt']?.toString() ?? '') ?? DateTime.now(),
+      mode: nusukModeFromName(json['mode']?.toString()),
       hijriYear: _toInt(json['hijriYear']),
       currentStepIndex: _toInt(json['currentStepIndex']),
       startedStepIds: _toStringSet(json['startedStepIds']),
       completedStepIds: _toStringSet(json['completedStepIds']),
       counters: _toIntMap(json['counters']),
       choices: _toStringMap(json['choices']),
+      skippedStepIds: _toStringSet(json['skippedStepIds']),
     );
   }
 

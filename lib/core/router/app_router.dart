@@ -331,6 +331,7 @@ GoRouter createRouter({StorageService? storage}) {
           return NusukCompletionScreen(
             record: extra is NusukRecord ? extra : null,
             recordId: state.uri.queryParameters['record'],
+            isPractice: state.uri.queryParameters['practice'] == '1',
           );
         },
       ),

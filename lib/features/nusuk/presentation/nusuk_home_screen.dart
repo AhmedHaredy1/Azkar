@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/utils/arabic_number_utils.dart';
 import '../domain/nusuk_flows.dart';
+import '../domain/nusuk_session.dart';
 import '../domain/nusuk_type.dart';
 import 'providers/nusuk_provider.dart';
 import 'widgets/nusuk_type_card.dart';
@@ -22,10 +23,14 @@ class NusukHomeScreen extends ConsumerWidget {
     final history = ref.watch(nusukHistoryProvider);
     final hijriYear = currentHijriYear();
 
-    // A Hajj is "taken" for the year if completed in history or in progress now.
+    // A Hajj is "taken" for the year if completed in history or a *live* rite is
+    // in progress now. Practice/training sessions never count.
     final hajjThisYear =
         history.any((r) => r.type.isHajj && r.hijriYear == hijriYear) ||
-            (active != null && active.type.isHajj && active.hijriYear == hijriYear);
+            (active != null &&
+                active.type.isHajj &&
+                active.hijriYear == hijriYear &&
+                active.mode == NusukMode.live);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -47,7 +52,7 @@ class NusukHomeScreen extends ConsumerWidget {
             _ResumeCard(
               typeName: active.type.arabicName,
               completed: active.completedStepIds.length,
-              total: stepCountForType(active.type),
+              total: active.requiredCount(stepCountForType(active.type)),
               onTap: () => context.push('/nusuk-session'),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -111,13 +116,65 @@ class NusukHomeScreen extends ConsumerWidget {
       if (confirmed != true) return;
       notifier.cancelSession();
     }
+    if (!context.mounted) return;
 
-    final result = notifier.startSession(type);
+    // Hajj rites are date-driven — let the pilgrim choose live enforcement or a
+    // no-date practice walkthrough. Umrah has no dated steps, so skip the prompt.
+    var mode = NusukMode.live;
+    if (type.isHajj) {
+      final chosen = await _pickMode(context);
+      if (chosen == null) return; // dismissed
+      mode = chosen;
+    }
+
+    final result = notifier.startSession(type, mode: mode);
     if (result == StartResult.blockedHajj) {
       if (context.mounted) _showHajjBlocked(context);
       return;
     }
     if (context.mounted) context.push('/nusuk-session');
+  }
+
+  /// Two-way picker: Live (Hijri dates enforced) vs Practice (no date locks).
+  Future<NusukMode?> _pickMode(BuildContext context) {
+    return showDialog<NusukMode>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(
+          'اختر وضع التتبّع',
+          style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ModeOption(
+              icon: Icons.event_available_rounded,
+              title: 'أداء فعلي',
+              subtitle: 'تتبّع المناسك في وقتها الحقيقي مع تطبيق تواريخ الحج؛ '
+                  'تُقفل كل خطوة حتى يحلّ يومها من ذي الحجة.',
+              color: AppColors.primary,
+              onTap: () => Navigator.pop(ctx, NusukMode.live),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _ModeOption(
+              icon: Icons.science_outlined,
+              title: 'تدريب واستعراض',
+              subtitle: 'تصفّح كامل الخطوات في أي وقت بدون قيود التواريخ — '
+                  'للتعلّم والمعاينة قبل الحج.',
+              color: AppColors.secondaryDark,
+              onTap: () => Navigator.pop(ctx, NusukMode.practice),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('تراجع', style: GoogleFonts.cairo()),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showHajjBlocked(BuildContext context) {
@@ -178,6 +235,70 @@ class NusukHomeScreen extends ConsumerWidget {
             child: Text(confirmLabel, style: GoogleFonts.cairo()),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ModeOption extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ModeOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: color.withValues(alpha: 0.30)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 22, color: color),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.cairo(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.cairo(
+                      fontSize: 12,
+                      height: 1.6,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

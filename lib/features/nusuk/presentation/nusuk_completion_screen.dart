@@ -18,12 +18,21 @@ class NusukCompletionScreen extends ConsumerWidget {
   final NusukRecord? record;
   final String? recordId;
 
-  const NusukCompletionScreen({super.key, this.record, this.recordId});
+  /// A training run — celebrated, but never written to «سجلّ مناسكي».
+  final bool isPractice;
+
+  const NusukCompletionScreen({
+    super.key,
+    this.record,
+    this.recordId,
+    this.isPractice = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(nusukHistoryProvider);
-    final resolved = record ?? _lookup(history);
+    // Practice runs are never recorded, so don't try to resolve from history.
+    final resolved = record ?? (isPractice ? null : _lookup(history));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -57,25 +66,48 @@ class NusukCompletionScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
+              if (isPractice) ...[
+                const _PracticeNote(),
+                const SizedBox(height: AppSpacing.lg),
+              ],
               if (resolved != null) _SummaryCard(record: resolved),
               const SizedBox(height: AppSpacing.xl),
-              FilledButton.icon(
-                onPressed: () => context.go('/nusuk-history'),
-                icon: const Icon(Icons.history_rounded, size: 20),
-                label: Text(
-                  'عرض السجل',
-                  style:
-                      GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.textOnPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
+              if (!isPractice)
+                FilledButton.icon(
+                  onPressed: () => context.go('/nusuk-history'),
+                  icon: const Icon(Icons.history_rounded, size: 20),
+                  label: Text(
+                    'عرض السجل',
+                    style: GoogleFonts.cairo(
+                        fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.textOnPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
                   ),
                 ),
-              ),
+              if (isPractice)
+                FilledButton.icon(
+                  onPressed: () => context.go('/nusuk'),
+                  icon: const Icon(Icons.check_rounded, size: 20),
+                  label: Text(
+                    'إنهاء التدريب',
+                    style: GoogleFonts.cairo(
+                        fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.textOnPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                  ),
+                ),
               const SizedBox(height: AppSpacing.sm),
               TextButton(
                 onPressed: () => context.go('/home'),
@@ -123,6 +155,42 @@ class _Medallion extends StatelessWidget {
   }
 }
 
+/// Clarifies that a training run leaves no entry in «سجلّ مناسكي».
+class _PracticeNote extends StatelessWidget {
+  const _PracticeNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppColors.secondaryDark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.30)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.science_outlined, size: 20, color: accent),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'جلسة تدريب واستعراض — لم تُسجَّل في «سجلّ مناسكي».',
+              style: GoogleFonts.cairo(
+                fontSize: 12.5,
+                height: 1.6,
+                fontWeight: FontWeight.w600,
+                color: accent,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SummaryCard extends StatelessWidget {
   final NusukRecord record;
 
@@ -130,7 +198,7 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final steps = stepCountForType(record.type);
+    final steps = record.stepsCompleted ?? stepCountForType(record.type);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(

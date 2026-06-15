@@ -41,6 +41,13 @@ class NusukStep {
   /// Day/time context for multi-day Hajj steps, e.g. «يوم التروية — ٨ ذو الحجة».
   final String? dayLabel;
 
+  /// The Dhul-Ḥijjah day (8…13) on which this step first becomes valid, used
+  /// for Hijri-date enforcement in [NusukMode.live]. `null` = not date-gated
+  /// (available whenever the sequence reaches it — e.g. ihram, Tawaf, Saʿy).
+  /// The month is always Dhul-Ḥijjah (12) for Hajj-season rites, so only the
+  /// day is stored. Steps tagged with day 13 are the ones dropped on التعجّل.
+  final int? hajjDay;
+
   /// Number of repetitions for a [NusukStepKind.counter] step (e.g. 7).
   final int? counterTarget;
 
@@ -59,6 +66,7 @@ class NusukStep {
     this.talbiyah,
     this.guidance,
     this.dayLabel,
+    this.hajjDay,
     this.counterTarget,
     this.counterUnit = 'شوط',
     this.choices = const [],

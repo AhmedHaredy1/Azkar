@@ -79,7 +79,9 @@ class NusukRepository {
   // ───────────────────── Hajj one-per-Hijri-year rule ─────────────────────
 
   /// True when a Hajj (any of Tamattuʿ/Qirān/Ifrād) is already recorded — or
-  /// currently in progress — for [hijriYear]. Umrah is never restricted.
+  /// currently in progress — for [hijriYear]. Umrah is never restricted, and
+  /// **practice/training sessions are ignored** (they are never recorded and
+  /// must not consume the year's single real Hajj).
   bool hasHajjInHijriYear(int hijriYear) {
     final inHistory = loadHistory()
         .any((r) => r.type.isHajj && r.hijriYear == hijriYear);
@@ -88,6 +90,7 @@ class NusukRepository {
     final active = loadActiveSession();
     return active != null &&
         active.type.isHajj &&
-        active.hijriYear == hijriYear;
+        active.hijriYear == hijriYear &&
+        active.mode == NusukMode.live;
   }
 }
