@@ -25,6 +25,11 @@ import '../services/storage_service.dart';
 import '../../features/quran_listen/presentation/quran_listen_screen.dart';
 import '../../features/live_radio/presentation/live_radio_screen.dart';
 import '../../features/hajj_umrah/presentation/hajj_umrah_screen.dart';
+import '../../features/nusuk/domain/nusuk_record.dart';
+import '../../features/nusuk/presentation/nusuk_home_screen.dart';
+import '../../features/nusuk/presentation/nusuk_history_screen.dart';
+import '../../features/nusuk/presentation/nusuk_session_screen.dart';
+import '../../features/nusuk/presentation/nusuk_completion_screen.dart';
 import '../../features/notifications/presentation/notification_status_screen.dart';
 import '../../features/post_prayer_dhikr/presentation/post_prayer_dhikr_screen.dart';
 import '../../features/ramadan/presentation/ramadan_screen.dart';
@@ -188,6 +193,17 @@ GoRouter createRouter({StorageService? storage}) {
             name: 'hajj-umrah',
             builder: (context, state) => const HajjUmrahScreen(),
           ),
+          // Interactive Nusuk tracker hub + history (browsing — in shell).
+          GoRoute(
+            path: '/nusuk',
+            name: 'nusuk',
+            builder: (context, state) => const NusukHomeScreen(),
+          ),
+          GoRoute(
+            path: '/nusuk-history',
+            name: 'nusuk-history',
+            builder: (context, state) => const NusukHistoryScreen(),
+          ),
           GoRoute(
             path: '/settings',
             name: 'settings',
@@ -300,6 +316,24 @@ GoRouter createRouter({StorageService? storage}) {
         name: 'prayer-times-monthly',
         builder: (context, state) => const MonthlyPrayerTimesScreen(),
       ),
+
+      // Interactive Nusuk: immersive guided session + completion (no bottom nav).
+      GoRoute(
+        path: '/nusuk-session',
+        name: 'nusuk-session',
+        builder: (context, state) => const NusukSessionScreen(),
+      ),
+      GoRoute(
+        path: '/nusuk-complete',
+        name: 'nusuk-complete',
+        builder: (context, state) {
+          final extra = state.extra;
+          return NusukCompletionScreen(
+            record: extra is NusukRecord ? extra : null,
+            recordId: state.uri.queryParameters['record'],
+          );
+        },
+      ),
     ],
   );
 }
@@ -322,6 +356,7 @@ class MainShellScreen extends ConsumerWidget {
         location.startsWith('/quran-listen') ||
         location.startsWith('/live-radio') ||
         location.startsWith('/hajj-umrah') ||
+        location.startsWith('/nusuk') ||
         location.startsWith('/ramadan') ||
         location.startsWith('/khatma') ||
         location.startsWith('/asma-allah') ||

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -62,8 +63,14 @@ class HajjUmrahScreen extends ConsumerWidget {
             ],
           ),
         ),
-        body: dataAsync.when(
-          data: (data) => TabBarView(
+        body: Column(
+          children: [
+            // Additive entry to the interactive ritual tracker — the guide
+            // tabs below are unchanged.
+            const _NusukEntryBanner(),
+            Expanded(
+              child: dataAsync.when(
+                data: (data) => TabBarView(
             children: [
               _SectionsTab(
                 data: data['preparation'] as Map<String, dynamic>,
@@ -105,6 +112,9 @@ class HajjUmrahScreen extends ConsumerWidget {
               ),
             ),
           ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1122,6 +1132,111 @@ class _TypeBadge extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.bold,
           color: color,
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// Nusuk entry banner — additive call-to-action that opens the interactive
+// ritual tracker («نُسُكي»). Renders above the guide tabs; nothing in the
+// guide itself is removed or changed.
+// ──────────────────────────────────────────────
+
+class _NusukEntryBanner extends StatelessWidget {
+  const _NusukEntryBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = AppColors.primary;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        0,
+      ),
+      child: Material(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: InkWell(
+          onTap: () => context.push('/nusuk'),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              border: Border.all(color: primary.withValues(alpha: 0.30)),
+              gradient: LinearGradient(
+                colors: [
+                  primary.withValues(alpha: 0.10),
+                  primary.withValues(alpha: 0.02),
+                ],
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                  child: Icon(Icons.directions_walk_rounded,
+                      color: primary, size: 22),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'ابدأ نُسُكي',
+                            style: GoogleFonts.cairo(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 1),
+                            decoration: BoxDecoration(
+                              color:
+                                  AppColors.secondary.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'جديد',
+                              style: GoogleFonts.cairo(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.secondaryDark,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'تتبّع مناسكك خطوة بخطوة مع العدّادات والتقدّم',
+                        style: GoogleFonts.cairo(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_left_rounded, color: primary),
+              ],
+            ),
+          ),
         ),
       ),
     );

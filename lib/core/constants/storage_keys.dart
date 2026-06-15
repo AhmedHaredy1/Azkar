@@ -37,6 +37,13 @@ class StorageKeys {
   /// Per-mushaf last-page key — one entry per downloaded mushaf.
   static String mushafLastPage(String mushafId) => 'mushaf_lastpage_$mushafId';
 
+  // Nusuk (interactive Hajj/Umrah ritual tracker)
+  /// The single in-progress ritual session (JSON map), or absent when none.
+  static const String nusukActiveSession = 'nusukActiveSession';
+
+  /// The «سجلّ مناسكي» completed-ritual history (JSON list of records).
+  static const String nusukHistory = 'nusukHistory';
+
   // ── Favorites box ──
   // Each feature stores its favorites under its own namespaced list key,
   // so azkar / dua entries can never collide.
