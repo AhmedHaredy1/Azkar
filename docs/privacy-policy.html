@@ -61,7 +61,7 @@
 
 <div class="wrap">
 
-<p style="text-align:center"><strong>آخر تحديث: ١٢ سبتمبر ٢٠٢٦</strong></p>
+<p style="text-align:center"><strong>آخر تحديث: ٢٣ سبتمبر ٢٠٢٦</strong></p>
 
 <section>
   <h2>الخلاصة</h2>
@@ -83,6 +83,7 @@
     <li>الأذكار والأدعية المفضّلة، والعلامات المرجعية في المصحف، وآخر صفحة قراءة.</li>
     <li>عدّاد السبحة وإجماليها.</li>
     <li>سجل «ابدأ نُسُكي» (الحج والعمرة) والجلسة النشطة.</li>
+    <li>سجل «متابعة الصلاة» (إجاباتك على سؤال «هل صليت؟»).</li>
     <li>ملفات الصوت والمصاحف التي تختار تنزيلها للاستماع بدون إنترنت.</li>
   </ul>
   <p><strong>لا يستطيع المطوّر الوصول إلى أيٍّ من هذا.</strong></p>
@@ -90,7 +91,16 @@
 
 <section>
   <h2>٢. الموقع الجغرافي</h2>
-  <p>يطلب التطبيق إذن الموقع (<code>ACCESS_FINE_LOCATION</code> / <code>ACCESS_COARSE_LOCATION</code>) لغرض واحد: تحديد مكانك لحساب مواقيت الصلاة واتجاه القبلة بدقة. الإذن اختياري — يمكنك رفضه وإدخال مدينتك يدويًا، وسيعمل التطبيق بشكل كامل.</p>
+  <p>يطلب التطبيق إذن الموقع (<code>ACCESS_FINE_LOCATION</code> / <code>ACCESS_COARSE_LOCATION</code>) لغرض واحد: تحديد مكانك لحساب مواقيت الصلاة واتجاه القبلة بدقة. الإذن اختياري — إن رفضته يستمر التطبيق بآخر موقع محفوظ، وتعمل بقية الأقسام (القرآن والأذكار والأدعية والسبحة) بشكل كامل.</p>
+
+  <h3>الموقع في الخلفية («تحديث الموقع تلقائيًا»)</h3>
+  <p>عند تفعيل «تحديث الموقع تلقائيًا» يحدّث التطبيق موقعك <strong>مرة كل ساعة تقريبًا</strong> ليبقى وقت الأذان وتنبيهاته وسؤال «هل صليت؟» صحيحًا أثناء السفر. ولكي يعمل ذلك <strong>حتى عندما يكون التطبيق مغلقًا أو غير مستخدم</strong>، يطلب التطبيق إذن الموقع في الخلفية (<code>ACCESS_BACKGROUND_LOCATION</code> — «السماح طوال الوقت»):</p>
+  <ul>
+    <li>لا يُطلب هذا الإذن إلا من شاشة الإعدادات، بعد شرح واضح، وعند ضغطك أنت على «السماح بالتحديث والتطبيق مغلق».</li>
+    <li>الإذن اختياري؛ بدونه يُحدَّث الموقع عند فتح التطبيق فقط.</li>
+    <li>يُحفظ الموقع على جهازك فقط، ولا يُستخدم لأي إعلان أو تتبّع أو تحليلات، ولا يُرسَل إلى المطوّر.</li>
+    <li>يمكنك إيقافه في أي وقت بإيقاف «تحديث الموقع تلقائيًا» أو من إعدادات النظام.</li>
+  </ul>
 
   <h3>ما يُحسب داخل جهازك (لا يخرج الموقع)</h3>
   <ul>
@@ -106,7 +116,7 @@
       <td>تحويل الإحداثيات إلى اسم مدينة لعرضه في الشاشة الرئيسية</td>
       <td>خط الطول والعرض</td>
       <td>خدمة الترميز الجغرافي المدمجة في نظام أندرويد (Google Play Services) عبر مكتبة <code>geocoding</code></td>
-      <td>مرة واحدة عند تحديد الموقع، ثم يُحفظ الاسم محليًا ولا يُعاد الطلب</td>
+      <td>عند تحديد الموقع، وبعدها فقط عندما يتغيّر موقعك بأكثر من نصف كيلومتر تقريبًا؛ ويُحفظ الاسم محليًا</td>
     </tr>
     <tr>
       <td>شاشة «المساجد القريبة»</td>
@@ -129,6 +139,8 @@
     <tr><td><code>RECEIVE_BOOT_COMPLETED</code></td><td>إعادة جدولة التنبيهات بعد إعادة تشغيل الجهاز، وإلا لتوقّفت نهائيًا.</td></tr>
     <tr><td><code>WAKE_LOCK</code></td><td>إيقاظ الجهاز لحظة الأذان لتشغيل الصوت.</td></tr>
     <tr><td><code>FOREGROUND_SERVICE</code> و<code>FOREGROUND_SERVICE_MEDIA_PLAYBACK</code></td><td>تشغيل الأذان وتلاوة القرآن والإذاعة في الخلفية مع أزرار التحكم على شاشة القفل.</td></tr>
+    <tr><td><code>USE_FULL_SCREEN_INTENT</code></td><td>إظهار سؤال «هل صليت؟» في منتصف الشاشة، ومنها شاشة القفل، في وقته. يمكنك منعه من إعدادات النظام، فيصل السؤال كتنبيه عادي بنفس الأزرار.</td></tr>
+    <tr><td><code>ACCESS_BACKGROUND_LOCATION</code></td><td>تحديث الموقع تلقائيًا والتطبيق مغلق — انظر القسم ٢. اختياري ولا يُطلب إلا من الإعدادات.</td></tr>
     <tr><td><code>REQUEST_IGNORE_BATTERY_OPTIMIZATIONS</code></td><td>طلب استثناء التطبيق من قيود البطارية — بدونه تحذف بعض الأجهزة المنبّهات المجدولة. الطلب اختياري ويمكنك رفضه.</td></tr>
     <tr><td><code>VIBRATE</code></td><td>الاهتزاز عند العدّ في السبحة والتنبيهات.</td></tr>
     <tr><td><code>INTERNET</code></td><td>تشغيل التلاوات والإذاعة وتنزيل المصاحف.</td></tr>
@@ -169,7 +181,7 @@
 <section>
   <h2>٧. حقوقك والتحكّم في بياناتك</h2>
   <ul>
-    <li><strong>سحب إذن الموقع</strong> في أي وقت من إعدادات النظام؛ سيستمر التطبيق في العمل بالمدينة المحدَّدة يدويًا.</li>
+    <li><strong>سحب إذن الموقع</strong> (أو إذن الخلفية وحده) في أي وقت من إعدادات النظام؛ سيستمر التطبيق في العمل بآخر موقع محفوظ.</li>
     <li><strong>إيقاف التنبيهات</strong> كلها أو بعضها من داخل التطبيق أو من إعدادات النظام.</li>
     <li><strong>حذف كل بياناتك</strong> بإزالة التطبيق، أو عبر «إعدادات النظام ← التطبيقات ← رفيق المسلم ← التخزين ← حذف البيانات». لا توجد نسخة أخرى في أي مكان.</li>
   </ul>
@@ -211,6 +223,7 @@
     <li>Favourite adhkar and duas, Mushaf bookmarks, last-read page.</li>
     <li>Tasbeeh counter and total.</li>
     <li>Hajj &amp; Umrah ritual-tracker history and active session.</li>
+    <li>Prayer-tracking log (your answers to "Did you pray?").</li>
     <li>Any recitations or Mushaf files you choose to download for offline use.</li>
   </ul>
   <p><strong>The developer cannot access any of it.</strong></p>
@@ -218,7 +231,16 @@
 
 <section>
   <h2>2. Location</h2>
-  <p>The app requests location permission (<code>ACCESS_FINE_LOCATION</code> / <code>ACCESS_COARSE_LOCATION</code>) for one purpose: to determine where you are so prayer times and the Qibla direction are accurate. The permission is optional — you may decline it and enter your city manually, and the app remains fully functional.</p>
+  <p>The app requests location permission (<code>ACCESS_FINE_LOCATION</code> / <code>ACCESS_COARSE_LOCATION</code>) for one purpose: to determine where you are so prayer times and the Qibla direction are accurate. The permission is optional — if you decline it the app keeps using the last saved location, and every other section (Quran, adhkar, duas, tasbeeh) works fully.</p>
+
+  <h3>Background location ("Update location automatically")</h3>
+  <p>When "Update location automatically" is on, the app refreshes your location <strong>about once an hour</strong> so that prayer times, adhan alerts and the "Did you pray?" question stay correct while you travel. For this to work <strong>even when the app is closed or not in use</strong>, the app requests background location access (<code>ACCESS_BACKGROUND_LOCATION</code> — "Allow all the time"):</p>
+  <ul>
+    <li>It is requested only from the Settings screen, after a clear explanation, when you tap "Allow updating while the app is closed" yourself.</li>
+    <li>It is optional; without it the location is updated only when you open the app.</li>
+    <li>The location is stored on your device only. It is never used for advertising, tracking or analytics, and is never sent to the developer.</li>
+    <li>You can stop it at any time by turning "Update location automatically" off, or from system settings.</li>
+  </ul>
 
   <h3>Computed on-device (location does not leave)</h3>
   <ul>
@@ -234,7 +256,7 @@
       <td>Turning coordinates into a city name for the home screen</td>
       <td>Latitude and longitude</td>
       <td>The Android platform geocoder (Google Play Services) via the <code>geocoding</code> plugin</td>
-      <td>Once when your location is determined; the resulting name is cached locally and not requested again</td>
+      <td>When your location is first determined, and afterwards only when it changes by more than about half a kilometre; the name is cached locally</td>
     </tr>
     <tr>
       <td>The "Nearby mosques" screen</td>
@@ -257,6 +279,8 @@
     <tr><td><code>RECEIVE_BOOT_COMPLETED</code></td><td>To re-arm scheduled notifications after a device restart, without which they would stop permanently.</td></tr>
     <tr><td><code>WAKE_LOCK</code></td><td>To wake the device at prayer time so the audio plays.</td></tr>
     <tr><td><code>FOREGROUND_SERVICE</code>, <code>FOREGROUND_SERVICE_MEDIA_PLAYBACK</code></td><td>To play the adhan, Quran recitation and live radio in the background with lock-screen controls.</td></tr>
+    <tr><td><code>USE_FULL_SCREEN_INTENT</code></td><td>To show the "Did you pray?" question in the middle of the screen, including over the lock screen, at its time. You can disallow it in system settings; the question then arrives as a regular notification with the same buttons.</td></tr>
+    <tr><td><code>ACCESS_BACKGROUND_LOCATION</code></td><td>Updating the location automatically while the app is closed — see section 2. Optional, requested only from Settings.</td></tr>
     <tr><td><code>REQUEST_IGNORE_BATTERY_OPTIMIZATIONS</code></td><td>To ask to be exempt from battery restrictions — without it some devices delete scheduled alarms. The request is optional and you may decline.</td></tr>
     <tr><td><code>VIBRATE</code></td><td>Haptic feedback for the tasbeeh counter and alerts.</td></tr>
     <tr><td><code>INTERNET</code></td><td>Streaming recitations and radio, and downloading Mushaf files.</td></tr>
@@ -297,7 +321,7 @@
 <section>
   <h2>7. Your rights and control</h2>
   <ul>
-    <li><strong>Revoke location permission</strong> at any time in system settings; the app continues to work with a manually selected city.</li>
+    <li><strong>Revoke location permission</strong> (or just background access) at any time in system settings; the app continues to work with the last saved location.</li>
     <li><strong>Turn notifications off</strong> — all or individually — from inside the app or from system settings.</li>
     <li><strong>Delete all of your data</strong> by uninstalling the app, or via System Settings → Apps → Rafeeq El Muslim → Storage → Clear data. There is no other copy anywhere.</li>
   </ul>
@@ -319,7 +343,7 @@
 
 <p class="meta">
   رفيق المسلم · Rafeeq El Muslim · <code>com.rafeeqelmuslim.app</code><br>
-  Last updated: 12 September 2026
+  Last updated: 23 September 2026
 </p>
 
 </div>
